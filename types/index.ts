@@ -146,6 +146,15 @@ export interface JobDescription {
   keywords?: string[];
 }
 
+export interface JobAnalysis {
+  requiredEducation: string[];
+  requiredTechnicalSkills: string[];
+  preferredTechnicalSkills: string[];
+  requiredExperience: string[];
+  softSkills: string[];
+  keywords: string[];
+}
+
 export interface JobMatchResult {
   matchScore: number;
   matchedQualifications: string[];

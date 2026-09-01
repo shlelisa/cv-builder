@@ -1,0 +1,450 @@
+'use client';
+
+import { useState } from 'react';
+import { Input, Button, TextArea } from '@/components/ui';
+import {
+  UserProfile,
+  Certification,
+  Training,
+  Volunteering,
+  Achievement,
+  Reference,
+} from '@/types';
+
+interface AdditionalInfoFormProps {
+  profile: UserProfile;
+  onChange: (data: Partial<UserProfile>) => void;
+}
+
+const AdditionalInfoForm: React.FC<AdditionalInfoFormProps> = ({ profile, onChange }) => {
+  const [activeTab, setActiveTab] = useState<
+    'certifications' | 'training' | 'volunteering' | 'achievements' | 'references'
+  >('certifications');
+
+  const tabs = [
+    { id: 'certifications' as const, label: 'Certifications' },
+    { id: 'training' as const, label: 'Training' },
+    { id: 'volunteering' as const, label: 'Volunteering' },
+    { id: 'achievements' as const, label: 'Achievements' },
+    { id: 'references' as const, label: 'References' },
+  ];
+
+  const handleAddCertification = () => {
+    const newCert: Certification = {
+      id: `cert-${Date.now()}`,
+      name: '',
+      issuingOrganization: '',
+      date: '',
+    };
+    onChange({ certifications: [...profile.certifications, newCert] });
+  };
+
+  const handleRemoveCertification = (id: string) => {
+    onChange({ certifications: profile.certifications.filter((c) => c.id !== id) });
+  };
+
+  const handleUpdateCertification = (id: string, updates: Partial<Certification>) => {
+    onChange({
+      certifications: profile.certifications.map((c) =>
+        c.id === id ? { ...c, ...updates } : c
+      ),
+    });
+  };
+
+  const handleAddTraining = () => {
+    const newTraining: Training = {
+      id: `train-${Date.now()}`,
+      name: '',
+      institution: '',
+      duration: '',
+      skillsLearned: [],
+    };
+    onChange({ training: [...profile.training, newTraining] });
+  };
+
+  const handleUpdateTraining = (id: string, updates: Partial<Training>) => {
+    onChange({
+      training: profile.training.map((t) => (t.id === id ? { ...t, ...updates } : t)),
+    });
+  };
+
+  const handleRemoveTraining = (id: string) => {
+    onChange({ training: profile.training.filter((t) => t.id !== id) });
+  };
+
+  const handleAddVolunteering = () => {
+    const newVolunteer: Volunteering = {
+      id: `vol-${Date.now()}`,
+      organization: '',
+      position: '',
+      responsibilities: [],
+      achievements: [],
+    };
+    onChange({ volunteering: [...profile.volunteering, newVolunteer] });
+  };
+
+  const handleAddAchievement = () => {
+    const newAchievement: Achievement = {
+      id: `ach-${Date.now()}`,
+      title: '',
+      category: 'academic',
+      description: '',
+      date: '',
+    };
+    onChange({ achievements: [...profile.achievements, newAchievement] });
+  };
+
+  const handleAddReference = () => {
+    const newReference: Reference = {
+      id: `ref-${Date.now()}`,
+      name: '',
+      position: '',
+      organization: '',
+      email: '',
+      phone: '',
+    };
+    onChange({ references: [...profile.references, newReference] });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900">Additional Information</h3>
+        <p className="text-sm text-gray-500">
+          Add certifications, training, volunteering, and more to strengthen your CV.
+        </p>
+      </div>
+
+      <div className="flex flex-wrap gap-2 border-b border-gray-200 pb-2">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-3 py-2 rounded-md text-sm font-medium ${
+              activeTab === tab.id
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'certifications' && (
+        <div className="space-y-4">
+          <div className="flex justify-end">
+            <Button type="button" onClick={handleAddCertification} variant="outline" size="sm">
+              + Add Certification
+            </Button>
+          </div>
+          {profile.certifications.length === 0 && (
+            <p className="text-sm text-gray-400 text-center py-4">
+              No certifications added yet.
+            </p>
+          )}
+          {profile.certifications.map((cert) => (
+            <div key={cert.id} className="border rounded-lg p-4 space-y-3 bg-gray-50">
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-600 hover:bg-red-50"
+                  onClick={() => handleRemoveCertification(cert.id)}
+                >
+                  Remove
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Input
+                  label="Certification Name"
+                  placeholder="e.g., AWS Certified Cloud Practitioner"
+                  value={cert.name}
+                  onChange={(e) => handleUpdateCertification(cert.id, { name: e.target.value })}
+                />
+                <Input
+                  label="Issuing Organization"
+                  placeholder="e.g., Amazon Web Services"
+                  value={cert.issuingOrganization}
+                  onChange={(e) =>
+                    handleUpdateCertification(cert.id, { issuingOrganization: e.target.value })
+                  }
+                />
+                <Input
+                  label="Date"
+                  type="month"
+                  value={cert.date}
+                  onChange={(e) => handleUpdateCertification(cert.id, { date: e.target.value })}
+                />
+                <Input
+                  label="Credential URL"
+                  placeholder="e.g., https://credential.example"
+                  value={cert.credentialUrl || ''}
+                  onChange={(e) =>
+                    handleUpdateCertification(cert.id, { credentialUrl: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {activeTab === 'training' && (
+        <div className="space-y-4">
+          <div className="flex justify-end">
+            <Button type="button" onClick={handleAddTraining} variant="outline" size="sm">
+              + Add Training
+            </Button>
+          </div>
+          {profile.training.length === 0 && (
+            <p className="text-sm text-gray-400 text-center py-4">No training added yet.</p>
+          )}
+          {profile.training.map((training) => (
+            <div key={training.id} className="border rounded-lg p-4 space-y-3 bg-gray-50">
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-600 hover:bg-red-50"
+                  onClick={() => handleRemoveTraining(training.id)}
+                >
+                  Remove
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Input
+                  label="Training Name"
+                  placeholder="e.g., Full Stack Web Development"
+                  value={training.name}
+                  onChange={(e) => handleUpdateTraining(training.id, { name: e.target.value })}
+                />
+                <Input
+                  label="Institution"
+                  placeholder="e.g., Alem Training Center"
+                  value={training.institution}
+                  onChange={(e) =>
+                    handleUpdateTraining(training.id, { institution: e.target.value })
+                  }
+                />
+                <Input
+                  label="Duration"
+                  placeholder="e.g., 6 months"
+                  value={training.duration}
+                  onChange={(e) => handleUpdateTraining(training.id, { duration: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Skills Learned (comma separated)
+                </label>
+                <Input
+                  placeholder="e.g., React, Node.js, Express"
+                  value={training.skillsLearned.join(', ')}
+                  onChange={(e) =>
+                    handleUpdateTraining(training.id, {
+                      skillsLearned: e.target.value.split(',').map((s) => s.trim()).filter(Boolean),
+                    })
+                  }
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {activeTab === 'volunteering' && (
+        <div className="space-y-4">
+          <div className="flex justify-end">
+            <Button type="button" onClick={handleAddVolunteering} variant="outline" size="sm">
+              + Add Volunteering
+            </Button>
+          </div>
+          {profile.volunteering.length === 0 && (
+            <p className="text-sm text-gray-400 text-center py-4">No volunteering added yet.</p>
+          )}
+          {profile.volunteering.map((vol, index) => (
+            <div key={`${vol.organization}-${index}`} className="border rounded-lg p-4 space-y-3 bg-gray-50">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Input
+                  label="Organization"
+                  placeholder="e.g., Red Cross"
+                  onChange={(e) =>
+                    onChange({
+                      volunteering: profile.volunteering.map((v, i) =>
+                        i === index ? { ...v, organization: e.target.value } : v
+                      ),
+                    })
+                  }
+                />
+                <Input
+                  label="Position"
+                  placeholder="e.g., Volunteer Coordinator"
+                  onChange={(e) =>
+                    onChange({
+                      volunteering: profile.volunteering.map((v, i) =>
+                        i === index ? { ...v, position: e.target.value } : v
+                      ),
+                    })
+                  }
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {activeTab === 'achievements' && (
+        <div className="space-y-4">
+          <div className="flex justify-end">
+            <Button type="button" onClick={handleAddAchievement} variant="outline" size="sm">
+              + Add Achievement
+            </Button>
+          </div>
+          {profile.achievements.length === 0 && (
+            <p className="text-sm text-gray-400 text-center py-4">No achievements added yet.</p>
+          )}
+          {profile.achievements.map((achievement) => (
+            <div key={achievement.id} className="border rounded-lg p-4 space-y-3 bg-gray-50">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Input
+                  label="Title"
+                  placeholder="e.g., Dean's List Honors"
+                  value={achievement.title}
+                  onChange={(e) =>
+                    onChange({
+                      achievements: profile.achievements.map((a) =>
+                        a.id === achievement.id ? { ...a, title: e.target.value } : a
+                      ),
+                    })
+                  }
+                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Category
+                  </label>
+                  <select
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={achievement.category}
+                    onChange={(e) =>
+                      onChange({
+                        achievements: profile.achievements.map((a) =>
+                          a.id === achievement.id
+                            ? { ...a, category: e.target.value as Achievement['category'] }
+                            : a
+                        ),
+                      })
+                    }
+                  >
+                    <option value="award">Award</option>
+                    <option value="competition">Competition</option>
+                    <option value="scholarship">Scholarship</option>
+                    <option value="leadership">Leadership</option>
+                    <option value="academic">Academic</option>
+                    <option value="professional">Professional</option>
+                  </select>
+                </div>
+              </div>
+              <TextArea
+                label="Description"
+                rows={2}
+                placeholder="Describe the achievement"
+                value={achievement.description}
+                onChange={(e) =>
+                  onChange({
+                    achievements: profile.achievements.map((a) =>
+                      a.id === achievement.id ? { ...a, description: e.target.value } : a
+                    ),
+                  })
+                }
+              />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {activeTab === 'references' && (
+        <div className="space-y-4">
+          <div className="flex justify-end">
+            <Button type="button" onClick={handleAddReference} variant="outline" size="sm">
+              + Add Reference
+            </Button>
+          </div>
+          {profile.references.length === 0 && (
+            <p className="text-sm text-gray-400 text-center py-4">No references added yet.</p>
+          )}
+          {profile.references.map((reference) => (
+            <div key={reference.id} className="border rounded-lg p-4 space-y-3 bg-gray-50">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Input
+                  label="Name"
+                  placeholder="e.g., Dr. John Doe"
+                  value={reference.name}
+                  onChange={(e) =>
+                    onChange({
+                      references: profile.references.map((r) =>
+                        r.id === reference.id ? { ...r, name: e.target.value } : r
+                      ),
+                    })
+                  }
+                />
+                <Input
+                  label="Position"
+                  placeholder="e.g., Assistant Professor"
+                  value={reference.position}
+                  onChange={(e) =>
+                    onChange({
+                      references: profile.references.map((r) =>
+                        r.id === reference.id ? { ...r, position: e.target.value } : r
+                      ),
+                    })
+                  }
+                />
+                <Input
+                  label="Organization"
+                  placeholder="e.g., ABC University"
+                  value={reference.organization}
+                  onChange={(e) =>
+                    onChange({
+                      references: profile.references.map((r) =>
+                        r.id === reference.id ? { ...r, organization: e.target.value } : r
+                      ),
+                    })
+                  }
+                />
+                <Input
+                  label="Email"
+                  placeholder="e.g., john@example.com"
+                  value={reference.email}
+                  onChange={(e) =>
+                    onChange({
+                      references: profile.references.map((r) =>
+                        r.id === reference.id ? { ...r, email: e.target.value } : r
+                      ),
+                    })
+                  }
+                />
+                <Input
+                  label="Phone"
+                  placeholder="e.g., +251 900 000 000"
+                  value={reference.phone}
+                  onChange={(e) =>
+                    onChange({
+                      references: profile.references.map((r) =>
+                        r.id === reference.id ? { ...r, phone: e.target.value } : r
+                      ),
+                    })
+                  }
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default AdditionalInfoForm;
