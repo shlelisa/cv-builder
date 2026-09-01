@@ -1,0 +1,37 @@
+
+> cv-builder@0.1.0 dev
+> next dev
+
+▲ Next.js 16.3.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://172.16.239.61:3000
+- Environments: .env.local
+✓ Ready in 484ms
+✓ Running next.config.ts took 36ms
+
+ GET /templates 200 in 409ms (next.js: 201ms, application-code: 208ms)
+ GET /api/ai-status 200 in 79ms (next.js: 60ms, application-code: 20ms)
+ GET /api/ai-status 200 in 9ms (next.js: 3ms, application-code: 6ms)
+ GET /api/ai-status 200 in 10ms (next.js: 3ms, application-code: 7ms)
+[analyze-template] Error: gemini 404: {
+  "error": {
+    "code": 404,
+    "message": "This model models/gemini-2.5-flash is no longer available to new users. Please update your code to use models/gemini-3.6-flash for the latest features and improvements. We recommend you to use the Interactions API.",
+    "status": "NOT_FOUND"
+  }
+}
+
+    at geminiJson (lib\ai-http.ts:71:11)
+    at async POST (app\api\analyze-template\route.ts:29:17)
+  69 |   if (!res.ok) {
+  70 |     const txt = await res.text().catch(() => '');
+> 71 |     throw new Error(`gemini ${res.status}: ${txt.slice(0, 500)}`);
+     |           ^
+  72 |   }
+  73 |   const data = await res.json();
+  74 |   const textParts: string[] = (data.candidates?.[0]?.content?.parts || [])
+ POST /api/analyze-template 502 in 880ms (next.js: 211ms, application-code: 669ms)
+ GET /templates 200 in 61ms (next.js: 20ms, application-code: 41ms)
+  Reload env: .env.local
+ GET /templates 200 in 113ms (next.js: 69ms, application-code: 44ms)
+[?25h

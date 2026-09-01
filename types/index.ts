@@ -175,3 +175,63 @@ export interface GeneratedDocument {
   language: LanguageCode;
   generatedAt: Date;
 }
+
+export type TemplateFieldType =
+  | 'text'
+  | 'email'
+  | 'phone'
+  | 'url'
+  | 'textarea'
+  | 'select'
+  | 'date';
+
+export interface TemplateField {
+  id: string;
+  label: string;
+  type: TemplateFieldType;
+  required: boolean;
+  placeholder?: string;
+  options?: string[];
+  section: string;
+}
+
+export interface TemplateSection {
+  id: string;
+  name: string;
+  description: string;
+  repeatable: boolean;
+  maxEntries?: number;
+}
+
+export interface TemplateLayout {
+  type: 'single-column' | 'two-column' | 'sidebar-left' | 'sidebar-right';
+  orderedSections: string[];
+  sidebarSections?: string[];
+  photo?: {
+    included: boolean;
+    position: 'top-center' | 'top-left' | 'top-right' | 'sidebar';
+    shape: 'circle' | 'square' | 'rounded';
+    size: 'small' | 'medium' | 'large';
+  };
+}
+
+export interface TemplateStyle {
+  primaryColor: string;
+  secondaryColor: string;
+  backgroundColor: string;
+  textColor: string;
+  accentColor: string;
+  fontFamily: string;
+  headerStyle: 'centered' | 'left-aligned' | 'right-aligned';
+  sectionDivider: 'line' | 'space' | 'border';
+}
+
+export interface TemplateAnalysis {
+  templateName: string;
+  description: string;
+  layout: TemplateLayout;
+  style: TemplateStyle;
+  sections: TemplateSection[];
+  fields: TemplateField[];
+  confidence: number;
+}

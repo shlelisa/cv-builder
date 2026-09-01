@@ -1,4 +1,4 @@
-import { UserProfile, JobDescription, JobMatchResult, JobAnalysis, LanguageCode } from '@/types';
+import { UserProfile, JobDescription, JobMatchResult, JobAnalysis, LanguageCode, TemplateAnalysis } from '@/types';
 
 export class AIService {
   private static instance: AIService;
@@ -453,6 +453,192 @@ ${personalInfo.fullName}
     ];
     
     return strengths[Math.floor(Math.random() * strengths.length)];
+  }
+
+  async analyzeTemplate(_imageBase64: string, _language: LanguageCode = 'en'): Promise<TemplateAnalysis> {
+    await new Promise((resolve) => setTimeout(resolve, 1800));
+
+    const analyses: TemplateAnalysis[] = [
+      {
+        templateName: 'Modern Professional',
+        description:
+          'A clean, modern CV template with a dark navy sidebar for skills and contact details, and a white main column for experience and education. Includes a circular profile photo at the top of the sidebar.',
+        layout: {
+          type: 'sidebar-left',
+          orderedSections: ['personal', 'skills', 'education', 'experience', 'projects', 'references'],
+          sidebarSections: ['skills'],
+          photo: { included: true, position: 'sidebar', shape: 'circle', size: 'medium' },
+        },
+        style: {
+          primaryColor: '#1e40af',
+          secondaryColor: '#1e293b',
+          backgroundColor: '#ffffff',
+          textColor: '#1f2937',
+          accentColor: '#0ea5e9',
+          fontFamily: 'Inter, sans-serif',
+          headerStyle: 'left-aligned',
+          sectionDivider: 'line',
+        },
+        sections: [
+          { id: 'personal', name: 'Personal Information', description: 'Contact details and profile photo', repeatable: false },
+          { id: 'skills', name: 'Skills', description: 'Technical and soft skills', repeatable: false },
+          { id: 'education', name: 'Education', description: 'Academic qualifications', repeatable: true, maxEntries: 3 },
+          { id: 'experience', name: 'Work Experience', description: 'Professional experience', repeatable: true, maxEntries: 5 },
+          { id: 'projects', name: 'Projects', description: 'Notable projects', repeatable: true, maxEntries: 4 },
+          { id: 'references', name: 'References', description: 'Professional references', repeatable: true, maxEntries: 3 },
+        ],
+        fields: [
+          { id: 'fullName', label: 'Full Name', type: 'text', required: true, placeholder: 'e.g., John Smith', section: 'personal' },
+          { id: 'email', label: 'Email', type: 'email', required: true, placeholder: 'e.g., john@email.com', section: 'personal' },
+          { id: 'phone', label: 'Phone', type: 'phone', required: true, placeholder: 'e.g., +251 900 000 000', section: 'personal' },
+          { id: 'location', label: 'Location', type: 'text', required: true, placeholder: 'e.g., Addis Ababa', section: 'personal' },
+          { id: 'technicalSkills', label: 'Technical Skills', type: 'textarea', required: true, placeholder: 'e.g., JavaScript, Python, React (one per line)', section: 'skills' },
+          { id: 'softSkills', label: 'Soft Skills', type: 'textarea', required: false, placeholder: 'e.g., Communication, Teamwork (one per line)', section: 'skills' },
+          { id: 'university', label: 'University', type: 'text', required: true, placeholder: 'e.g., Addis Ababa University', section: 'education' },
+          { id: 'degree', label: 'Degree', type: 'text', required: true, placeholder: 'e.g., BSc in Software Engineering', section: 'education' },
+          { id: 'eduYear', label: 'Year', type: 'text', required: true, placeholder: 'e.g., 2020 - 2024', section: 'education' },
+          { id: 'company', label: 'Company', type: 'text', required: true, placeholder: 'e.g., ABC Technology', section: 'experience' },
+          { id: 'position', label: 'Position', type: 'text', required: true, placeholder: 'e.g., Software Developer', section: 'experience' },
+          { id: 'expDuration', label: 'Duration', type: 'text', required: true, placeholder: 'e.g., Jan 2024 - Present', section: 'experience' },
+          { id: 'expDescription', label: 'Description', type: 'textarea', required: false, placeholder: 'Key responsibilities and achievements (one per line)', section: 'experience' },
+          { id: 'projectName', label: 'Project Name', type: 'text', required: true, placeholder: 'e.g., E-Commerce Platform', section: 'projects' },
+          { id: 'projectDesc', label: 'Description', type: 'textarea', required: false, placeholder: 'Brief description and technologies used', section: 'projects' },
+          { id: 'refName', label: 'Reference Name', type: 'text', required: true, placeholder: 'e.g., Dr. Ahmed Hassan', section: 'references' },
+          { id: 'refPosition', label: 'Position & Organization', type: 'text', required: true, placeholder: 'e.g., Professor at AAU', section: 'references' },
+          { id: 'refContact', label: 'Contact (Email/Phone)', type: 'text', required: false, placeholder: 'e.g., ahmed@edu.com', section: 'references' },
+        ],
+        confidence: 0.92,
+      },
+      {
+        templateName: 'Classic Executive',
+        description:
+          'A traditional, formal CV template with a centered header, full-width sections, and minimal styling. Common in government and academic roles. Section titles use small-caps letters with thin rules.',
+        layout: {
+          type: 'single-column',
+          orderedSections: ['personal', 'summary', 'education', 'experience', 'certifications', 'references'],
+          photo: { included: false, position: 'top-center', shape: 'square', size: 'small' },
+        },
+        style: {
+          primaryColor: '#0f172a',
+          secondaryColor: '#e2e8f0',
+          backgroundColor: '#ffffff',
+          textColor: '#111827',
+          accentColor: '#7f1d1d',
+          fontFamily: 'Georgia, serif',
+          headerStyle: 'centered',
+          sectionDivider: 'line',
+        },
+        sections: [
+          { id: 'personal', name: 'Contact Information', description: 'Full name and contact details', repeatable: false },
+          { id: 'summary', name: 'Professional Summary', description: 'Career objective or summary', repeatable: false },
+          { id: 'education', name: 'Education', description: 'Academic background', repeatable: true, maxEntries: 3 },
+          { id: 'experience', name: 'Professional Experience', description: 'Work history', repeatable: true, maxEntries: 6 },
+          { id: 'certifications', name: 'Certifications', description: 'Professional certifications', repeatable: true, maxEntries: 5 },
+          { id: 'references', name: 'References', description: 'Available upon request', repeatable: false },
+        ],
+        fields: [
+          { id: 'fullName', label: 'Full Name', type: 'text', required: true, placeholder: 'e.g., John Smith', section: 'personal' },
+          { id: 'email', label: 'Email', type: 'email', required: true, placeholder: 'e.g., john@email.com', section: 'personal' },
+          { id: 'phone', label: 'Phone', type: 'phone', required: true, placeholder: 'e.g., +251 900 000 000', section: 'personal' },
+          { id: 'location', label: 'Location', type: 'text', required: true, placeholder: 'e.g., Addis Ababa', section: 'personal' },
+          { id: 'summary', label: 'Professional Summary', type: 'textarea', required: true, placeholder: 'Brief career summary (2-3 sentences)', section: 'summary' },
+          { id: 'university', label: 'University', type: 'text', required: true, placeholder: 'e.g., Addis Ababa University', section: 'education' },
+          { id: 'degree', label: 'Degree & Major', type: 'text', required: true, placeholder: 'e.g., BSc Computer Science', section: 'education' },
+          { id: 'eduYear', label: 'Graduation Year', type: 'text', required: true, placeholder: 'e.g., 2024', section: 'education' },
+          { id: 'company', label: 'Company', type: 'text', required: true, placeholder: 'e.g., Ministry of Innovation', section: 'experience' },
+          { id: 'position', label: 'Position', type: 'text', required: true, placeholder: 'e.g., IT Officer', section: 'experience' },
+          { id: 'expDuration', label: 'Duration', type: 'text', required: true, placeholder: 'e.g., 2024 - Present', section: 'experience' },
+          { id: 'expDuties', label: 'Key Duties', type: 'textarea', required: false, placeholder: 'Main duties and accomplishments (one per line)', section: 'experience' },
+          { id: 'certName', label: 'Certification Name', type: 'text', required: true, placeholder: 'e.g., AWS Cloud Practitioner', section: 'certifications' },
+          { id: 'certOrg', label: 'Issuing Organization', type: 'text', required: false, placeholder: 'e.g., Amazon Web Services', section: 'certifications' },
+          { id: 'refNote', label: 'References Note', type: 'text', required: false, placeholder: 'e.g., Available upon request', section: 'references' },
+        ],
+        confidence: 0.88,
+      },
+    ];
+
+    return analyses[Math.floor(Math.random() * analyses.length)];
+  }
+
+  generateFromTemplate(
+    analysis: TemplateAnalysis,
+    singletonValues: Record<string, string>,
+    entries: Record<string, Array<Record<string, string>>>,
+    hasPhoto: boolean,
+    _language: LanguageCode = 'en',
+  ): string {
+    const lines: string[] = [];
+    const { layout, sections } = analysis;
+
+    const resolveValue = (sectionId: string, fieldId: string, entry?: Record<string, string>): string =>
+      entry ? entry[fieldId] || '' : singletonValues[fieldId] || '';
+
+    const collectTextarea = (sectionId: string, fieldId: string, entry?: Record<string, string>): string[] =>
+      (entry ? entry[fieldId] || '' : singletonValues[fieldId] || '')
+        .split('\n')
+        .map((l) => l.trim())
+        .filter(Boolean);
+
+    layout.orderedSections.forEach((sectionId) => {
+      const section = sections.find((s) => s.id === sectionId);
+      if (!section) return;
+
+      const personalIds = new Set(['personal', 'contact']);
+      if (personalIds.has(section.id)) {
+        const name = resolveValue(section.id, 'fullName');
+        const contactParts = [
+          resolveValue(section.id, 'email'),
+          resolveValue(section.id, 'phone'),
+          resolveValue(section.id, 'location'),
+          resolveValue(section.id, 'refContract'),
+        ].filter(Boolean);
+        if (name) lines.push(`[${hasPhoto ? 'PHOTO] ' : ''}${name}`);
+        if (contactParts.length > 0) lines.push(contactParts.join(' | '));
+        const summary = resolveValue(section.id, 'summary');
+        if (summary) {
+          lines.push('');
+          lines.push(summary);
+        }
+        lines.push('');
+        return;
+      }
+
+      const sectionItems: string[] = [];
+      const collectItem = (values?: Record<string, string>) => {
+        const itemLines: string[] = [];
+        analysis.fields
+          .filter((f) => f.section === section.id)
+          .forEach((field) => {
+            const value = resolveValue(section.id, field.id, values);
+            if (!value.trim()) return;
+            if (field.type === 'textarea') {
+              collectTextarea(section.id, field.id, values).forEach((l) =>
+                itemLines.push(`  • ${l}`),
+              );
+            } else {
+              itemLines.push(`  • ${value}`);
+            }
+          });
+        if (itemLines.length > 0) sectionItems.push(itemLines.join('\n'));
+      };
+
+      if (section.repeatable) {
+        (entries[section.id] || []).forEach((entry) => collectItem(entry));
+      } else {
+        collectItem(undefined);
+      }
+
+      if (sectionItems.length === 0) return;
+
+      lines.push(section.name.toUpperCase());
+      lines.push('—'.repeat(40));
+      sectionItems.forEach((item) => {
+        lines.push(item);
+      });
+      lines.push('');
+    });
+
+    return lines.join('\n').trim();
   }
 }
 

@@ -12,12 +12,20 @@ export default function Home() {
             Create ATS-friendly CVs, cover letters, and application letters with
             AI-powered assistance. Perfect for students and fresh graduates.
           </p>
-          <Link
-            href="/builder"
-            className="inline-flex items-center px-8 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
-          >
-            Start Building Your CV
-          </Link>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href="/builder"
+              className="inline-flex items-center px-8 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
+            >
+              Start Building Your CV
+            </Link>
+            <Link
+              href="/templates"
+              className="inline-flex items-center px-8 py-3 rounded-lg bg-white dark:bg-zinc-800 text-blue-700 dark:text-blue-300 font-semibold hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors shadow-lg hover:shadow-xl border border-blue-200 dark:border-blue-900"
+            >
+              Build from a Template
+            </Link>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
@@ -54,6 +62,30 @@ export default function Home() {
               connect your qualifications to specific job requirements.
             </p>
           </div>
+        </div>
+
+        <div className="mb-16">
+          <Link
+            href="/templates"
+            className="block bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-gray-100 dark:border-zinc-800 p-8 hover:border-blue-300 dark:hover:border-blue-700 transition-colors"
+          >
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+              <div className="text-5xl">✨</div>
+              <div className="flex-1">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-zinc-100 mb-1">
+                  Upload Any CV Template
+                </h3>
+                <p className="text-gray-600 dark:text-zinc-400">
+                  Have a CV from a recruiter or a PDF you like? Upload the image and
+                  our AI understands the layout, identifies the required sections, and
+                  asks you for exactly the info it needs to match that template.
+                </p>
+              </div>
+              <span className="inline-flex px-4 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-semibold whitespace-nowrap">
+                Try it now →
+              </span>
+            </div>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
