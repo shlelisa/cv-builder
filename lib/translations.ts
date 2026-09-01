@@ -24,6 +24,8 @@ const en = {
       subtitle:
         'Build your professional CV step by step. Your information will be used to generate an ATS-friendly CV and other career documents.',
       generateSummary: 'Generate Professional Summary',
+      errorsSummary:
+        'Some required fields are still incomplete. Fill them in to get the best CV from your profile.',
     },
     steps: {
       personal: 'Personal Info',
@@ -132,6 +134,15 @@ const en = {
       a4Preview: 'A4 Page Preview',
       downloadPdf: 'Download PDF',
     },
+    validation: {
+      required: 'This field is required.',
+      invalidEmail: 'Enter a valid email address.',
+      invalidPhone: 'Enter a valid phone number.',
+      invalidUrl: 'Enter a valid URL (e.g., https://example.com).',
+      invalidYear: 'Enter a valid year.',
+      endBeforeStart: 'End date cannot be before start date.',
+      invalidNumber: 'Enter a valid number.',
+    },
     jobs: {
       title: 'Job Analyzer',
       subtitle:
@@ -198,6 +209,8 @@ const en = {
       subtitle:
         'CV keessan sadarkaa sadarkaan ijaaraa. Odeeffannoon keessan CV ATS-f mijataa fi barreeffamoota hojii biroo uumuuf itti fayyadama.',
       generateSummary: 'Cuunfaa Ogummaan Uumi',
+    errorsSummary:
+      'Gosa dirqama gariin amma gutamani hin jiran. CV keessaniif gaarii ta\u2019uuf isaan guutaa.',
     },
     steps: {
       personal: 'Odeeffannoo Dhuunfaa',
@@ -307,6 +320,15 @@ const en = {
       a4Preview: 'Mul\u2019isaa Fuula A4',
       downloadPdf: 'PDF Fayyadami',
     },
+    validation: {
+      required: 'Dirqama kana guuti.',
+      invalidEmail: 'Imeelii sirrii olii.',
+      invalidPhone: 'Lakkoofsa bilbilaa sirrii olii.',
+      invalidUrl: 'URL sirrii olii (fkn, https://example.com).',
+      invalidYear: 'Bara sirrii olii.',
+      endBeforeStart: 'Guyyaan xumuraa guyyaa jalqabaa dura hin turu.',
+      invalidNumber: 'Lakkoofsa sirrii olii.',
+    },
     jobs: {
       title: 'Qorannoo Hojii',
       subtitle:
@@ -333,6 +355,14 @@ const en = {
       matchedTechSkills: 'Dandeettii Teeknikaalaa Waliigalaa:',
       missingWeak: 'Dhabamaa ykn Dadhabaa:',
       recommendations: 'Gorsa:',
+      atsCheck: 'ATS Seensa Falannoonsa',
+      atsScore: 'ATS Walitti Dhufeenya:',
+      keywordSuggestions: 'Ergamaa Jechoo:',
+      structureSuggestions: 'Piroofaayilii Gosa Bonoo:',
+      contentSuggestions: 'Gosa Amaloo Fooyyessuu:',
+      atsScoreHigh: 'Gosa CV kee ATS barbaachisoota waliin walsimsise.',
+      atsScoreMed: 'ATS walitti dhufeenya fooyyessuu barbaachisa.',
+      atsScoreLow: 'ATS walgahii fooyyessuu baayyee barbaachisa.',
     },
   },
   am: {
@@ -359,6 +389,8 @@ const en = {
       subtitle:
         'የፕሮፌሽናል CV እርምጃ በእርምጃ ይገንቡ። መረጃዎ ለኤቲኤስ የተመቸ የCV እና ሌሎች የስራ ሰነዶች ለማመንጨት ይጠቅማል።',
       generateSummary: 'ሙያዊ ማጠቃለያ አመንጭ',
+    errorsSummary:
+      'አንዳንድ አስፈላጊ መስኮች ገና አልተሞሉም። ለምርጥ CV ይሞሉዋቸው።',
     },
     steps: {
       personal: 'የግል መረጃ',
@@ -468,6 +500,15 @@ const en = {
       a4Preview: 'የA4 ገጽ እይታ',
       downloadPdf: 'PDF አውርድ',
     },
+    validation: {
+      required: 'ይህ መስክ አስፈላጊ ነው።',
+      invalidEmail: 'ትክክለኛ ኢሜይል ያስገቡ።',
+      invalidPhone: 'ትክክለኛ የስልክ ቁጥር ያስገቡ።',
+      invalidUrl: 'ትክክለኛ URL ያስገቡ (ለምሳሌ https://example.com)።',
+      invalidYear: 'ትክክለኛ ዓመት ያስገቡ።',
+      endBeforeStart: 'የመጨረሻ ቀን ከመጀመሪያ ቀን በፊት ሊሆን አይችልም።',
+      invalidNumber: 'ትክክለኛ ቁጥር ያስገቡ።',
+    },
     jobs: {
       title: 'የስራ ትንታኔ',
       subtitle:
@@ -493,14 +534,14 @@ const en = {
       matchedTechSkills: 'የተዛመዱ ቴክኒካል ክህሎቶች:',
       missingWeak: 'የጎደሉ ወይም ደካማ:',
       recommendations: 'ምክሮች:',
-      atsCheck: 'ATS Piiinsa Falannoonsa',
-      atsScore: 'ATS Walitti Dhufeenya:',
-      keywordSuggestions: 'Ergamaa Jechoo:',
-      structureSuggestions: 'Piroofaayilii Gosa Bonoo:',
-      contentSuggestions: 'Gosa Amaloo Fooyyessuu:',
-      atsScoreHigh: 'Gosa CV kee ATS barbaachisoota waliin walsimsise.',
-      atsScoreMed: 'ATS walitti dhufeenya fooyyessuu barbaachisa.',
-      atsScoreLow: 'ATS walgahii fooyyessuu baayyee barbaachisa.',
+      atsCheck: 'ATS ተኳኋኝነት ምርመራ',
+      atsScore: 'ATS ተኳኋኝነት ውጤት:',
+      keywordSuggestions: 'ቁልፍ ቃል ምክሮች:',
+      structureSuggestions: 'የፕሮፋይል መዋቅር ምክሮች:',
+      contentSuggestions: 'የይዘት ማሻሻያ ምክሮች:',
+      atsScoreHigh: 'የCV ይዘትዎ ከATS መስፈርቶች ጋር በሚገባ የተስተካከለ ነው።',
+      atsScoreMed: 'ለተሻለ ATS ተኳኋኝነት አንዳንድ ማሻሻያዎች ያስፈልጋሉ።',
+      atsScoreLow: 'ለATS ተደራሽነት ከፍተኛ ማሻሻያዎች ይመከራሉ።',
     },
   },
 };

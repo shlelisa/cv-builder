@@ -3,6 +3,8 @@
 import { Input, Button, TextArea } from '@/components/ui';
 import { useApp } from '@/lib/AppContext';
 import { Internship } from '@/types';
+import { validateInternshipList, fieldError } from '@/lib/validation';
+import { useTouched } from '@/lib/useTouched';
 
 interface InternshipFormProps {
   value: Internship[];
@@ -11,6 +13,10 @@ interface InternshipFormProps {
 
 const InternshipForm: React.FC<InternshipFormProps> = ({ value, onChange }) => {
   const { t } = useApp();
+  const { touched, markTouched } = useTouched();
+  const errors = validateInternshipList(value);
+  const showError = (index: number, field: string) =>
+    fieldError(t, errors, touched, `${index}.${field}`);
 
   const handleAdd = () => {
     const newInternship: Internship = {
@@ -68,14 +74,22 @@ const InternshipForm: React.FC<InternshipFormProps> = ({ value, onChange }) => {
               label={t.form.organization}
               placeholder="e.g., XYZ Bank"
               value={intern.organization}
-              onChange={(e) => handleUpdate(intern.id, { organization: e.target.value })}
+              onChange={(e) => {
+                markTouched(`${index}.organization`);
+                handleUpdate(intern.id, { organization: e.target.value });
+              }}
+              error={showError(index, 'organization')}
               required
             />
             <Input
               label={t.form.position}
               placeholder="e.g., Software Development Intern"
               value={intern.position}
-              onChange={(e) => handleUpdate(intern.id, { position: e.target.value })}
+              onChange={(e) => {
+                markTouched(`${index}.position`);
+                handleUpdate(intern.id, { position: e.target.value });
+              }}
+              error={showError(index, 'position')}
               required
             />
             <Input

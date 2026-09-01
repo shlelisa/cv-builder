@@ -37,6 +37,12 @@ const JobAnalyzer: React.FC = () => {
   const [requirements, setRequirements] = useState('');
   const [analysis, setAnalysis] = useState<JobAnalysis | null>(null);
   const [matchResult, setMatchResult] = useState<JobMatchResult | null>(null);
+  const [atsResult, setAtsResult] = useState<{
+    keywordSuggestions: string[];
+    structureSuggestions: string[];
+    contentSuggestions: string[];
+    atsScore: number;
+  } | null>(null);
   const [profileInput, setProfileInput] = useState('');
 
   const parseUnstructuredProfile = (text: string): Pick<UserProfile, 'education' | 'skills' | 'experience' | 'projects'> => {
@@ -96,6 +102,9 @@ const JobAnalyzer: React.FC = () => {
 
     const match = aiService.matchJobRequirements(parsedProfile, jobDescription);
     setMatchResult(match);
+
+    const ats = aiService.checkATS(parsedProfile, jobDescription);
+    setAtsResult(ats);
   };
 
   return (
@@ -287,6 +296,75 @@ const JobAnalyzer: React.FC = () => {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {atsResult && (
+        <div className="bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 p-6">
+          <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-zinc-100">{t.jobs.atsCheck}</h3>
+
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-700 dark:text-zinc-300">{t.jobs.atsScore}</span>
+              <span className={`text-2xl font-bold ${
+                atsResult.atsScore >= 70 ? 'text-green-600 dark:text-green-400' :
+                atsResult.atsScore >= 40 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'
+              }`}>
+                {atsResult.atsScore}%
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 dark:bg-zinc-700 rounded-full h-3">
+              <div
+                className={`h-3 rounded-full transition-all ${
+                  atsResult.atsScore >= 70 ? 'bg-green-600' :
+                  atsResult.atsScore >= 40 ? 'bg-yellow-600' : 'bg-red-600'
+                }`}
+                style={{ width: `${atsResult.atsScore}%` }}
+              />
+            </div>
+            <p className="text-sm mt-1 text-gray-600 dark:text-zinc-400">
+              {atsResult.atsScore >= 70 ? t.jobs.atsScoreHigh :
+               atsResult.atsScore >= 40 ? t.jobs.atsScoreMed : t.jobs.atsScoreLow}
+            </p>
+          </div>
+
+          <div className="space-y-4 text-sm">
+            {atsResult.keywordSuggestions.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-blue-700 dark:text-blue-400 mb-1">{t.jobs.keywordSuggestions}</h4>
+                <ul className="list-disc list-inside space-y-1">
+                  {atsResult.keywordSuggestions.map((item: string, i: number) => (
+                    <li key={i}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {atsResult.structureSuggestions.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-yellow-700 dark:text-yellow-400 mb-1">{t.jobs.structureSuggestions}</h4>
+                <ul className="list-disc list-inside space-y-1">
+                  {atsResult.structureSuggestions.map((item: string, i: number) => (
+                    <li key={i}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {atsResult.contentSuggestions.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-purple-700 dark:text-purple-400 mb-1">{t.jobs.contentSuggestions}</h4>
+                <ul className="list-disc list-inside space-y-1">
+                  {atsResult.contentSuggestions.map((item: string, i: number) => (
+                    <li key={i}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {atsResult.keywordSuggestions.length === 0 && atsResult.structureSuggestions.length === 0 && atsResult.contentSuggestions.length === 0 && (
+              <p className="text-gray-500 dark:text-zinc-400">
+                {t.jobs.profileHint}
+              </p>
+            )}
+          </div>
         </div>
       )}
     </div>

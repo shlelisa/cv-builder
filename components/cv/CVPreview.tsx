@@ -87,19 +87,25 @@ const CVPreview: React.FC<CVPreviewProps> = ({ profile, enhancedSummary }) => {
       </div>
 
       <div id="cv-print-root">
-        <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-8 mx-auto"
-        style={{
-          width: `${794 * zoom}px`,
-          minHeight: `${1123 * zoom}px`,
-          maxWidth: '100%',
-          overflow: 'hidden',
-          transform: `scale(${zoom})`,
-          transformOrigin: 'top left',
-        }}
-      >
-        <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top left', width: '794px' }}>
-          <div className="cv-page bg-white text-black p-8" style={{ width: '794px', minHeight: '1123px' }}>
-            <header className="text-center mb-6">
+        <div className="overflow-x-auto pb-2">
+          <div
+            className="cv-scale bg-white shadow-lg rounded-lg mx-auto"
+            style={{
+              width: `${794 * zoom}px`,
+              height: `${1123 * zoom}px`,
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              className="cv-page bg-white text-black p-8"
+              style={{
+                width: '794px',
+                minHeight: '1123px',
+                transform: `scale(${zoom})`,
+                transformOrigin: 'top left',
+              }}
+            >
+              <header className="text-center mb-6">
               <h1 className="text-3xl font-bold uppercase tracking-wide mb-2">
                 {personalInfo.fullName || 'Your Name'}
               </h1>
@@ -406,6 +412,7 @@ const CVPreview: React.FC<CVPreviewProps> = ({ profile, enhancedSummary }) => {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };

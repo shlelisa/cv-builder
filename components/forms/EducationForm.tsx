@@ -3,6 +3,8 @@
 import { Input, Button } from '@/components/ui';
 import { useApp } from '@/lib/AppContext';
 import { Education } from '@/types';
+import { validateEducationList, fieldError } from '@/lib/validation';
+import { useTouched } from '@/lib/useTouched';
 
 interface EducationFormProps {
   value: Education[];
@@ -56,6 +58,10 @@ const Departments = [
 
 const EducationForm: React.FC<EducationFormProps> = ({ value, onChange }) => {
   const { t } = useApp();
+  const { touched, markTouched } = useTouched();
+  const errors = validateEducationList(value);
+  const showError = (index: number, field: string) =>
+    fieldError(t, errors, touched, `${index}.${field}`);
 
   const handleAdd = () => {
     const newEducation: Education = {
@@ -122,7 +128,11 @@ const EducationForm: React.FC<EducationFormProps> = ({ value, onChange }) => {
               label={t.form.university}
               placeholder="e.g., Addis Ababa University"
               value={edu.university}
-              onChange={(e) => handleUpdate(edu.id, { university: e.target.value })}
+              onChange={(e) => {
+                markTouched(`${index}.university`);
+                handleUpdate(edu.id, { university: e.target.value });
+              }}
+              error={showError(index, 'university')}
               required
             />
             <div>
@@ -130,13 +140,25 @@ const EducationForm: React.FC<EducationFormProps> = ({ value, onChange }) => {
                 {t.form.department}
               </label>
               <input
-                className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
+                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 ${
+                  showError(index, 'department')
+                    ? 'border-red-500'
+                    : 'border-gray-300 dark:border-zinc-700'
+                }`}
                 list="departments-list"
                 placeholder="e.g., Software Engineering"
                 value={edu.department}
-                onChange={(e) => handleUpdate(edu.id, { department: e.target.value })}
+                onChange={(e) => {
+                  markTouched(`${index}.department`);
+                  handleUpdate(edu.id, { department: e.target.value });
+                }}
                 required
               />
+              {showError(index, 'department') && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {showError(index, 'department')}
+                </p>
+              )}
               <datalist id="departments-list">
                 {Departments.map((dept) => (
                   <option key={dept} value={dept} />
@@ -208,7 +230,11 @@ const EducationForm: React.FC<EducationFormProps> = ({ value, onChange }) => {
               min="1990"
               max="2030"
               value={edu.startYear}
-              onChange={(e) => handleUpdate(edu.id, { startYear: parseInt(e.target.value) || 0 })}
+              onChange={(e) => {
+                markTouched(`${index}.startYear`);
+                handleUpdate(edu.id, { startYear: parseInt(e.target.value) || 0 });
+              }}
+              error={showError(index, 'startYear')}
             />
             <Input
               label={t.form.gradYear}
@@ -216,7 +242,11 @@ const EducationForm: React.FC<EducationFormProps> = ({ value, onChange }) => {
               min="1990"
               max="2030"
               value={edu.graduationYear}
-              onChange={(e) => handleUpdate(edu.id, { graduationYear: parseInt(e.target.value) || 0 })}
+              onChange={(e) => {
+                markTouched(`${index}.graduationYear`);
+                handleUpdate(edu.id, { graduationYear: parseInt(e.target.value) || 0 });
+              }}
+              error={showError(index, 'graduationYear')}
             />
           </div>
 

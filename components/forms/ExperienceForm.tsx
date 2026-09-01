@@ -3,6 +3,8 @@
 import { Input, Button } from '@/components/ui';
 import { useApp } from '@/lib/AppContext';
 import { Experience } from '@/types';
+import { validateExperienceList, fieldError } from '@/lib/validation';
+import { useTouched } from '@/lib/useTouched';
 
 interface ExperienceFormProps {
   value: Experience[];
@@ -11,6 +13,10 @@ interface ExperienceFormProps {
 
 const ExperienceForm: React.FC<ExperienceFormProps> = ({ value, onChange }) => {
   const { t } = useApp();
+  const { touched, markTouched } = useTouched();
+  const errors = validateExperienceList(value);
+  const showError = (index: number, field: string) =>
+    fieldError(t, errors, touched, `${index}.${field}`);
 
   const handleAdd = () => {
     const newExperience: Experience = {
@@ -77,14 +83,22 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ value, onChange }) => {
               label={t.form.company}
               placeholder="e.g., ABC Technology"
               value={exp.company}
-              onChange={(e) => handleUpdate(exp.id, { company: e.target.value })}
+              onChange={(e) => {
+                markTouched(`${index}.company`);
+                handleUpdate(exp.id, { company: e.target.value });
+              }}
+              error={showError(index, 'company')}
               required
             />
             <Input
               label={t.form.position}
               placeholder="e.g., Software Developer"
               value={exp.position}
-              onChange={(e) => handleUpdate(exp.id, { position: e.target.value })}
+              onChange={(e) => {
+                markTouched(`${index}.position`);
+                handleUpdate(exp.id, { position: e.target.value });
+              }}
+              error={showError(index, 'position')}
               required
             />
             <div>
@@ -108,7 +122,11 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ value, onChange }) => {
                   label={t.form.startDate}
                   type="month"
                   value={exp.startDate}
-                  onChange={(e) => handleUpdate(exp.id, { startDate: e.target.value })}
+                  onChange={(e) => {
+                    markTouched(`${index}.startDate`);
+                    handleUpdate(exp.id, { startDate: e.target.value });
+                  }}
+                  error={showError(index, 'startDate')}
                   required
                 />
               </div>
@@ -118,7 +136,11 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ value, onChange }) => {
                     label={t.form.endDate}
                     type="month"
                     value={exp.endDate || ''}
-                    onChange={(e) => handleUpdate(exp.id, { endDate: e.target.value })}
+                    onChange={(e) => {
+                      markTouched(`${index}.endDate`);
+                      handleUpdate(exp.id, { endDate: e.target.value });
+                    }}
+                    error={showError(index, 'endDate')}
                   />
                 </div>
               )}

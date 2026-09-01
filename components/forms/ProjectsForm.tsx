@@ -3,6 +3,8 @@
 import { Input, Button, TextArea } from '@/components/ui';
 import { useApp } from '@/lib/AppContext';
 import { Project } from '@/types';
+import { validateProjectsList, fieldError } from '@/lib/validation';
+import { useTouched } from '@/lib/useTouched';
 
 interface ProjectsFormProps {
   value: Project[];
@@ -11,6 +13,10 @@ interface ProjectsFormProps {
 
 const ProjectsForm: React.FC<ProjectsFormProps> = ({ value, onChange }) => {
   const { t } = useApp();
+  const { touched, markTouched } = useTouched();
+  const errors = validateProjectsList(value);
+  const showError = (index: number, field: string) =>
+    fieldError(t, errors, touched, `${index}.${field}`);
 
   const handleAdd = () => {
     const newProject: Project = {
@@ -74,7 +80,11 @@ const ProjectsForm: React.FC<ProjectsFormProps> = ({ value, onChange }) => {
               label={t.form.projectName}
               placeholder="e.g., Digital Library Management System"
               value={project.name}
-              onChange={(e) => handleUpdate(project.id, { name: e.target.value })}
+              onChange={(e) => {
+                markTouched(`${index}.name`);
+                handleUpdate(project.id, { name: e.target.value });
+              }}
+              error={showError(index, 'name')}
               required
             />
             <Input
@@ -136,13 +146,21 @@ const ProjectsForm: React.FC<ProjectsFormProps> = ({ value, onChange }) => {
               label={t.form.githubUrl}
               placeholder="e.g., https://github.com/john/project"
               value={project.githubUrl || ''}
-              onChange={(e) => handleUpdate(project.id, { githubUrl: e.target.value })}
+              onChange={(e) => {
+                markTouched(`${index}.githubUrl`);
+                handleUpdate(project.id, { githubUrl: e.target.value });
+              }}
+              error={showError(index, 'githubUrl')}
             />
             <Input
               label={t.form.demoUrl}
               placeholder="e.g., https://project-demo.com"
               value={project.demoUrl || ''}
-              onChange={(e) => handleUpdate(project.id, { demoUrl: e.target.value })}
+              onChange={(e) => {
+                markTouched(`${index}.demoUrl`);
+                handleUpdate(project.id, { demoUrl: e.target.value });
+              }}
+              error={showError(index, 'demoUrl')}
             />
           </div>
         </div>

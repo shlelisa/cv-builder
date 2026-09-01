@@ -3,6 +3,8 @@
 import { Input } from '@/components/ui';
 import { useApp } from '@/lib/AppContext';
 import { PersonalInfo } from '@/types';
+import { validatePersonalInfo, fieldError } from '@/lib/validation';
+import { useTouched } from '@/lib/useTouched';
 
 interface PersonalInfoFormProps {
   value: PersonalInfo;
@@ -11,6 +13,10 @@ interface PersonalInfoFormProps {
 
 const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ value, onChange }) => {
   const { t } = useApp();
+  const { touched, markTouched } = useTouched();
+  const errors = validatePersonalInfo(value);
+  const showError = (field: keyof PersonalInfo) =>
+    fieldError(t, errors, touched, field);
 
   return (
     <div className="space-y-4">
@@ -24,7 +30,11 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ value, onChange }) 
           label={t.form.fullName}
           placeholder="e.g., John Smith"
           value={value.fullName}
-          onChange={(e) => onChange({ ...value, fullName: e.target.value })}
+          onChange={(e) => {
+            markTouched('fullName');
+            onChange({ ...value, fullName: e.target.value });
+          }}
+          error={showError('fullName')}
           required
         />
         <Input
@@ -32,40 +42,64 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ value, onChange }) 
           type="email"
           placeholder="e.g., john@email.com"
           value={value.email}
-          onChange={(e) => onChange({ ...value, email: e.target.value })}
+          onChange={(e) => {
+            markTouched('email');
+            onChange({ ...value, email: e.target.value });
+          }}
+          error={showError('email')}
           required
         />
         <Input
           label={t.form.phone}
           placeholder="e.g., +251 900 000 000"
           value={value.phone}
-          onChange={(e) => onChange({ ...value, phone: e.target.value })}
+          onChange={(e) => {
+            markTouched('phone');
+            onChange({ ...value, phone: e.target.value });
+          }}
+          error={showError('phone')}
           required
         />
         <Input
           label={t.form.location}
           placeholder="e.g., Addis Ababa, Ethiopia"
           value={value.location}
-          onChange={(e) => onChange({ ...value, location: e.target.value })}
+          onChange={(e) => {
+            markTouched('location');
+            onChange({ ...value, location: e.target.value });
+          }}
+          error={showError('location')}
           required
         />
         <Input
           label={t.form.linkedin}
           placeholder="e.g., https://linkedin.com/in/john"
           value={value.linkedin || ''}
-          onChange={(e) => onChange({ ...value, linkedin: e.target.value })}
+          onChange={(e) => {
+            markTouched('linkedin');
+            onChange({ ...value, linkedin: e.target.value });
+          }}
+          error={showError('linkedin')}
         />
         <Input
           label={t.form.github}
           placeholder="e.g., https://github.com/john"
           value={value.github || ''}
-          onChange={(e) => onChange({ ...value, github: e.target.value })}
+          onChange={(e) => {
+            markTouched('github');
+            onChange({ ...value, github: e.target.value });
+          }}
+          error={showError('github')}
         />
         <Input
           label={t.form.portfolio}
           placeholder="e.g., https://john.dev"
           value={value.portfolio || ''}
-          onChange={(e) => onChange({ ...value, portfolio: e.target.value })}
+          onChange={(e) => {
+            markTouched('portfolio');
+            onChange({ ...value, portfolio: e.target.value });
+          }}
+          error={showError('portfolio')}
         />
         <Input
           label={t.form.nationality}

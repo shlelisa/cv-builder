@@ -11,6 +11,8 @@ import {
   Achievement,
   Reference,
 } from '@/types';
+import { validateAdditional, fieldError } from '@/lib/validation';
+import { useTouched } from '@/lib/useTouched';
 
 interface AdditionalInfoFormProps {
   profile: UserProfile;
@@ -19,6 +21,9 @@ interface AdditionalInfoFormProps {
 
 const AdditionalInfoForm: React.FC<AdditionalInfoFormProps> = ({ profile, onChange }) => {
   const { t } = useApp();
+  const { touched, markTouched } = useTouched();
+  const errors = validateAdditional(profile);
+  const showError = (field: string) => fieldError(t, errors, touched, field);
   const [activeTab, setActiveTab] = useState<
     'certifications' | 'training' | 'volunteering' | 'achievements' | 'references'
   >('certifications');
@@ -145,7 +150,7 @@ const AdditionalInfoForm: React.FC<AdditionalInfoFormProps> = ({ profile, onChan
               No certifications added yet.
             </p>
           )}
-          {profile.certifications.map((cert) => (
+          {profile.certifications.map((cert, index) => (
             <div key={cert.id} className="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 space-y-3 bg-gray-50 dark:bg-zinc-800/50">
               <div className="flex justify-end">
                 <Button
@@ -163,7 +168,11 @@ const AdditionalInfoForm: React.FC<AdditionalInfoFormProps> = ({ profile, onChan
                   label="Certification Name"
                   placeholder="e.g., AWS Certified Cloud Practitioner"
                   value={cert.name}
-                  onChange={(e) => handleUpdateCertification(cert.id, { name: e.target.value })}
+                  onChange={(e) => {
+                    markTouched(`cert-${index}.name`);
+                    handleUpdateCertification(cert.id, { name: e.target.value });
+                  }}
+                  error={showError(`cert-${index}.name`)}
                 />
                 <Input
                   label="Issuing Organization"
@@ -203,7 +212,7 @@ const AdditionalInfoForm: React.FC<AdditionalInfoFormProps> = ({ profile, onChan
           {profile.training.length === 0 && (
             <p className="text-sm text-gray-400 dark:text-zinc-500 text-center py-4">No training added yet.</p>
           )}
-          {profile.training.map((training) => (
+          {profile.training.map((training, index) => (
             <div key={training.id} className="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 space-y-3 bg-gray-50 dark:bg-zinc-800/50">
               <div className="flex justify-end">
                 <Button
@@ -221,7 +230,11 @@ const AdditionalInfoForm: React.FC<AdditionalInfoFormProps> = ({ profile, onChan
                   label="Training Name"
                   placeholder="e.g., Full Stack Web Development"
                   value={training.name}
-                  onChange={(e) => handleUpdateTraining(training.id, { name: e.target.value })}
+                  onChange={(e) => {
+                    markTouched(`train-${index}.name`);
+                    handleUpdateTraining(training.id, { name: e.target.value });
+                  }}
+                  error={showError(`train-${index}.name`)}
                 />
                 <Input
                   label="Institution"
@@ -273,13 +286,15 @@ const AdditionalInfoForm: React.FC<AdditionalInfoFormProps> = ({ profile, onChan
                 <Input
                   label="Organization"
                   placeholder="e.g., Red Cross"
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    markTouched(`vol-${index}.organization`);
                     onChange({
                       volunteering: profile.volunteering.map((v, i) =>
                         i === index ? { ...v, organization: e.target.value } : v
                       ),
-                    })
-                  }
+                    });
+                  }}
+                  error={showError(`vol-${index}.organization`)}
                 />
                 <Input
                   label="Position"
@@ -308,20 +323,22 @@ const AdditionalInfoForm: React.FC<AdditionalInfoFormProps> = ({ profile, onChan
           {profile.achievements.length === 0 && (
             <p className="text-sm text-gray-400 dark:text-zinc-500 text-center py-4">No achievements added yet.</p>
           )}
-          {profile.achievements.map((achievement) => (
+          {profile.achievements.map((achievement, index) => (
             <div key={achievement.id} className="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 space-y-3 bg-gray-50 dark:bg-zinc-800/50">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Input
                   label="Title"
                   placeholder="e.g., Dean's List Honors"
                   value={achievement.title}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    markTouched(`ach-${index}.title`);
                     onChange({
                       achievements: profile.achievements.map((a) =>
                         a.id === achievement.id ? { ...a, title: e.target.value } : a
                       ),
-                    })
-                  }
+                    });
+                  }}
+                  error={showError(`ach-${index}.title`)}
                 />
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">
@@ -377,20 +394,22 @@ const AdditionalInfoForm: React.FC<AdditionalInfoFormProps> = ({ profile, onChan
           {profile.references.length === 0 && (
             <p className="text-sm text-gray-400 dark:text-zinc-500 text-center py-4">No references added yet.</p>
           )}
-          {profile.references.map((reference) => (
+          {profile.references.map((reference, index) => (
             <div key={reference.id} className="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 space-y-3 bg-gray-50 dark:bg-zinc-800/50">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Input
                   label="Name"
                   placeholder="e.g., Dr. John Doe"
                   value={reference.name}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    markTouched(`ref-${index}.name`);
                     onChange({
                       references: profile.references.map((r) =>
                         r.id === reference.id ? { ...r, name: e.target.value } : r
                       ),
-                    })
-                  }
+                    });
+                  }}
+                  error={showError(`ref-${index}.name`)}
                 />
                 <Input
                   label="Position"
@@ -420,25 +439,29 @@ const AdditionalInfoForm: React.FC<AdditionalInfoFormProps> = ({ profile, onChan
                   label="Email"
                   placeholder="e.g., john@example.com"
                   value={reference.email}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    markTouched(`ref-${index}.email`);
                     onChange({
                       references: profile.references.map((r) =>
                         r.id === reference.id ? { ...r, email: e.target.value } : r
                       ),
-                    })
-                  }
+                    });
+                  }}
+                  error={showError(`ref-${index}.email`)}
                 />
                 <Input
                   label="Phone"
                   placeholder="e.g., +251 900 000 000"
                   value={reference.phone}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    markTouched(`ref-${index}.phone`);
                     onChange({
                       references: profile.references.map((r) =>
                         r.id === reference.id ? { ...r, phone: e.target.value } : r
                       ),
-                    })
-                  }
+                    });
+                  }}
+                  error={showError(`ref-${index}.phone`)}
                 />
               </div>
             </div>

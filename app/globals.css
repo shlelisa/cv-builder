@@ -53,8 +53,18 @@ body {
     padding: 0;
   }
 
+  #cv-print-root .cv-scale {
+    width: auto !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
   .cv-page {
     width: 210mm !important;
+    transform: none !important;
     min-height: 297mm !important;
     padding: 12mm !important;
     margin: 0 !important;
