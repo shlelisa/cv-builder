@@ -1,6 +1,7 @@
 'use client';
 
 import { Input } from '@/components/ui';
+import { useApp } from '@/lib/AppContext';
 import { Skills } from '@/types';
 
 interface SkillsFormProps {
@@ -9,6 +10,8 @@ interface SkillsFormProps {
 }
 
 const SkillsForm: React.FC<SkillsFormProps> = ({ value, onChange }) => {
+  const { t } = useApp();
+
   const handleUpdate = (field: keyof Skills, text: string) => {
     const items = text.split(',').map(s => s.trim()).filter(Boolean);
     onChange({ ...value, [field]: items });
@@ -30,14 +33,14 @@ const SkillsForm: React.FC<SkillsFormProps> = ({ value, onChange }) => {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900">Skills</h3>
-        <p className="text-sm text-gray-500">List your skills to help with job matching and CV generation</p>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-100">{t.form.skillsTitle}</h3>
+        <p className="text-sm text-gray-500 dark:text-zinc-400">{t.form.skillsSubtitle}</p>
       </div>
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Technical Skills
+          <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">
+            {t.form.technicalSkills}
           </label>
           <Input
             placeholder="e.g., Web Development, Database Design, API Design, Testing"
@@ -47,8 +50,8 @@ const SkillsForm: React.FC<SkillsFormProps> = ({ value, onChange }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Programming Languages
+          <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">
+            {t.form.programmingLanguages}
           </label>
           <Input
             placeholder="e.g., JavaScript, Python, Java, C++, TypeScript"
@@ -58,8 +61,8 @@ const SkillsForm: React.FC<SkillsFormProps> = ({ value, onChange }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Frameworks
+          <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">
+            {t.form.frameworks}
           </label>
           <Input
             placeholder="e.g., React, Node.js, Django, Spring Boot, Angular"
@@ -69,8 +72,8 @@ const SkillsForm: React.FC<SkillsFormProps> = ({ value, onChange }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Databases
+          <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">
+            {t.form.databases}
           </label>
           <Input
             placeholder="e.g., MySQL, PostgreSQL, MongoDB, SQL Server"
@@ -81,8 +84,8 @@ const SkillsForm: React.FC<SkillsFormProps> = ({ value, onChange }) => {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Networking
+            <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">
+              {t.form.networking}
             </label>
             <Input
               placeholder="e.g., TCP/IP, DNS, HTTP, Routing"
@@ -91,8 +94,8 @@ const SkillsForm: React.FC<SkillsFormProps> = ({ value, onChange }) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Cloud
+            <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">
+              {t.form.cloud}
             </label>
             <Input
               placeholder="e.g., AWS, Azure, Google Cloud"
@@ -103,8 +106,8 @@ const SkillsForm: React.FC<SkillsFormProps> = ({ value, onChange }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Office/Productivity Tools
+          <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">
+            {t.form.officeTools}
           </label>
           <Input
             placeholder="e.g., Microsoft Office, Excel, PowerPoint, Google Workspace"
@@ -114,8 +117,8 @@ const SkillsForm: React.FC<SkillsFormProps> = ({ value, onChange }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Soft Skills
+          <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">
+            {t.form.softSkills}
           </label>
           <Input
             placeholder="e.g., Communication, Teamwork, Time Management, Problem-Solving"
@@ -125,17 +128,17 @@ const SkillsForm: React.FC<SkillsFormProps> = ({ value, onChange }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Languages
+          <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">
+            {t.form.languages}
           </label>
           <div className="space-y-2">
             {['English', 'Afaan Oromo', 'Amharic', 'Other'].map((lang) => {
               const current = value.languages.find(l => l.name === lang);
               return (
                 <div key={lang} className="flex items-center space-x-3">
-                  <span className="w-32 text-sm text-gray-600">{lang}</span>
+                  <span className="w-32 text-sm text-gray-600 dark:text-zinc-400">{lang}</span>
                   <select
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
                     value={current?.proficiency || ''}
                     onChange={(e) => handleLanguagesChange(lang, e.target.value as Skills['languages'][number]['proficiency'])}
                   >

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui';
+import { useApp } from '@/lib/AppContext';
 import PersonalInfoForm from '@/components/forms/PersonalInfoForm';
 import EducationForm from '@/components/forms/EducationForm';
 import ExperienceForm from '@/components/forms/ExperienceForm';
@@ -12,17 +13,6 @@ import AdditionalInfoForm from '@/components/forms/AdditionalInfoForm';
 import CVPreview from '@/components/cv/CVPreview';
 import { UserProfile } from '@/types';
 import { aiService } from '@/services/ai';
-
-const STEPS = [
-  'Personal Info',
-  'Education',
-  'Experience',
-  'Internship',
-  'Projects',
-  'Skills',
-  'Additional Info',
-  'Preview & Generate',
-];
 
 const emptyProfile: UserProfile = {
   personalInfo: {
@@ -54,9 +44,21 @@ const emptyProfile: UserProfile = {
 };
 
 export default function CVBuilder() {
+  const { t } = useApp();
   const [currentStep, setCurrentStep] = useState(0);
   const [profile, setProfile] = useState<UserProfile>(emptyProfile);
   const [generatedSummary, setGeneratedSummary] = useState('');
+
+  const STEPS = [
+    t.steps.personal,
+    t.steps.education,
+    t.steps.experience,
+    t.steps.internship,
+    t.steps.projects,
+    t.steps.skills,
+    t.steps.additional,
+    t.steps.preview,
+  ];
 
   const updateSection = (key: keyof UserProfile, value: unknown) => {
     setProfile((prev) => ({ ...prev, [key]: value }));
@@ -132,18 +134,18 @@ export default function CVBuilder() {
         return (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">Preview & Generate</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-100">{t.steps.preview}</h3>
               <Button onClick={handleGenerateSummary} variant="outline" size="sm">
-                Generate Professional Summary
+                {t.builder.generateSummary}
               </Button>
             </div>
 
             {generatedSummary && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="text-sm font-semibold text-blue-800 mb-2">
-                  Generated Professional Summary
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 dark:bg-blue-900/30 dark:border-blue-800">
+                <h4 className="text-sm font-semibold text-blue-800 mb-2 dark:text-blue-300">
+                  {t.cv.professionalSummary}
                 </h4>
-                <p className="text-sm text-blue-900">{generatedSummary}</p>
+                <p className="text-sm text-blue-900 dark:text-blue-100">{generatedSummary}</p>
               </div>
             )}
 
@@ -158,10 +160,11 @@ export default function CVBuilder() {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">CV Builder</h1>
-        <p className="text-gray-600">
-          Build your professional CV step by step. Your information will be used to generate
-          an ATS-friendly CV and other career documents.
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100 mb-2">
+          {t.builder.title}
+        </h1>
+        <p className="text-gray-600 dark:text-zinc-400">
+          {t.builder.subtitle}
         </p>
       </div>
 
@@ -173,7 +176,7 @@ export default function CVBuilder() {
             className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
               currentStep === index
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
             }`}
           >
             {index + 1}. {step}
@@ -181,7 +184,7 @@ export default function CVBuilder() {
         ))}
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-zinc-900 dark:border-zinc-800">
         {renderStep()}
       </div>
 
@@ -191,14 +194,14 @@ export default function CVBuilder() {
           variant="secondary"
           disabled={currentStep === 0}
         >
-          Back
+          {t.common.back}
         </Button>
         <Button
           onClick={handleNext}
           variant="primary"
           disabled={currentStep === STEPS.length - 1}
         >
-          {currentStep === STEPS.length - 2 ? 'Preview' : 'Next'}
+          {currentStep === STEPS.length - 2 ? t.common.preview : t.common.next}
         </Button>
       </div>
     </div>

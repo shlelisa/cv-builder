@@ -207,6 +207,92 @@ export class AIService {
     };
   }
 
+  checkATS(profile: UserProfile, jobDescription: JobDescription): {
+    keywordSuggestions: string[];
+    structureSuggestions: string[];
+    contentSuggestions: string[];
+    atsScore: number;
+  } {
+    const jobAnalysis = this.analyzeJobDescription(jobDescription);
+    const keywordSuggestions: string[] = [];
+    const structureSuggestions: string[] = [];
+    const contentSuggestions: string[] = [];
+
+    const allProfileText = [
+      profile.education.map(e => `${e.university} ${e.degree} ${e.department} ${(e.relevantCourses || []).join(' ')}`).join(' '),
+      profile.experience.map(e => `${e.position} ${e.company} ${e.responsibilities.join(' ')} ${e.achievements.join(' ')} ${e.technologiesUsed.join(' ')}`).join(' '),
+      profile.projects.map(p => `${p.name} ${p.description} ${p.technologies.join(' ')} ${p.features.join(' ')}`).join(' '),
+      profile.skills.technicalSkills.join(' '),
+      profile.skills.programmingLanguages.join(' '),
+      profile.skills.frameworks.join(' '),
+      profile.skills.databases.join(' '),
+      profile.skills.softSkills.join(' '),
+    ].join(' ').toLowerCase();
+
+    jobAnalysis.keywords.forEach(keyword => {
+      const kw = keyword.toLowerCase().trim();
+      if (kw && !allProfileText.includes(kw)) {
+        keywordSuggestions.push(`Consider mentioning "${keyword}" in your CV if it reflects your actual experience.`);
+      }
+    });
+
+    jobAnalysis.requiredTechnicalSkills.forEach(skill => {
+      const sl = skill.toLowerCase().trim();
+      if (sl && !allProfileText.includes(sl)) {
+        keywordSuggestions.push(`The skill "${skill}" is required but not found in your CV. If you have this skill, add it to your Technical Skills section.`);
+      }
+    });
+
+    if (profile.experience.length === 0 && profile.internships.length === 0) {
+      contentSuggestions.push('No work experience or internships listed. For ATS systems, even academic projects, volunteer work, or freelance work count as experience.');
+    }
+
+    if (profile.skills.technicalSkills.length < 3) {
+      contentSuggestions.push('Your Technical Skills section is sparse. Add more specific technical skills that match the job requirements to improve ATS ranking.');
+    }
+
+    profile.experience.forEach(exp => {
+      if (exp.responsibilities.length < 2) {
+        contentSuggestions.push(`Your role at ${exp.company} has few responsibilities listed. Add 3-5 measurable bullet points for better ATS results.`);
+      }
+    });
+
+    profile.projects.forEach(proj => {
+      if (proj.features.length < 2) {
+        contentSuggestions.push(`Project "${proj.name}" could have more detail. List 2-4 key features to demonstrate specific skills.`);
+      }
+    });
+
+    if (!profile.personalInfo.email) {
+      structureSuggestions.push('Missing email address — ATS systems often filter applications without contact information.');
+    }
+    if (!profile.personalInfo.phone) {
+      structureSuggestions.push('Missing phone number — some ATS systems require both email and phone.');
+    }
+    if (!profile.personalInfo.linkedin) {
+      structureSuggestions.push('Missing LinkedIn profile — many recruiters use LinkedIn to verify candidates. Adding it can improve your profile.');
+    }
+
+    const hasSummary = profile.education.length > 0 || profile.experience.length > 0;
+    if (!hasSummary && profile.education.length === 0 && profile.experience.length === 0 && profile.projects.length === 0) {
+      structureSuggestions.push('Your CV has very little content. Add education, projects, or experience to create a complete professional profile for ATS parsing.');
+    }
+
+    const atsScore = Math.min(100, Math.max(0,
+      100
+      - (jobAnalysis.keywords.length > 0 ? Math.round((keywordSuggestions.length / Math.max(jobAnalysis.keywords.length, 1)) * 40) : 0)
+      - (contentSuggestions.length * 10)
+      - (structureSuggestions.length * 10)
+    ));
+
+    return {
+      keywordSuggestions,
+      structureSuggestions,
+      contentSuggestions,
+      atsScore
+    };
+  }
+
   generateApplicationLetter(
     profile: UserProfile, 
     company: string, 

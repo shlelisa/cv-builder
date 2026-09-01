@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Input, Button, TextArea } from '@/components/ui';
+import { useApp } from '@/lib/AppContext';
 import {
   UserProfile,
   Certification,
@@ -17,16 +18,17 @@ interface AdditionalInfoFormProps {
 }
 
 const AdditionalInfoForm: React.FC<AdditionalInfoFormProps> = ({ profile, onChange }) => {
+  const { t } = useApp();
   const [activeTab, setActiveTab] = useState<
     'certifications' | 'training' | 'volunteering' | 'achievements' | 'references'
   >('certifications');
 
   const tabs = [
-    { id: 'certifications' as const, label: 'Certifications' },
-    { id: 'training' as const, label: 'Training' },
-    { id: 'volunteering' as const, label: 'Volunteering' },
-    { id: 'achievements' as const, label: 'Achievements' },
-    { id: 'references' as const, label: 'References' },
+    { id: 'certifications' as const, label: t.form.certifications },
+    { id: 'training' as const, label: t.form.training },
+    { id: 'volunteering' as const, label: t.form.volunteering },
+    { id: 'achievements' as const, label: t.form.achievements },
+    { id: 'references' as const, label: t.form.references },
   ];
 
   const handleAddCertification = () => {
@@ -64,12 +66,12 @@ const AdditionalInfoForm: React.FC<AdditionalInfoFormProps> = ({ profile, onChan
 
   const handleUpdateTraining = (id: string, updates: Partial<Training>) => {
     onChange({
-      training: profile.training.map((t) => (t.id === id ? { ...t, ...updates } : t)),
+      training: profile.training.map((tr) => (tr.id === id ? { ...tr, ...updates } : tr)),
     });
   };
 
   const handleRemoveTraining = (id: string) => {
-    onChange({ training: profile.training.filter((t) => t.id !== id) });
+    onChange({ training: profile.training.filter((tr) => tr.id !== id) });
   };
 
   const handleAddVolunteering = () => {
@@ -109,13 +111,13 @@ const AdditionalInfoForm: React.FC<AdditionalInfoFormProps> = ({ profile, onChan
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900">Additional Information</h3>
-        <p className="text-sm text-gray-500">
-          Add certifications, training, volunteering, and more to strengthen your CV.
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-100">{t.form.additionalTitle}</h3>
+        <p className="text-sm text-gray-500 dark:text-zinc-400">
+          {t.form.additionalSubtitle}
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-2 border-b border-gray-200 pb-2">
+      <div className="flex flex-wrap gap-2 border-b border-gray-200 dark:border-zinc-700 pb-2">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -123,7 +125,7 @@ const AdditionalInfoForm: React.FC<AdditionalInfoFormProps> = ({ profile, onChan
             className={`px-3 py-2 rounded-md text-sm font-medium ${
               activeTab === tab.id
                 ? 'bg-blue-600 text-white'
-                : 'text-gray-600 hover:bg-gray-100'
+                : 'text-gray-600 hover:bg-gray-100 dark:text-zinc-300 dark:hover:bg-zinc-800'
             }`}
           >
             {tab.label}
@@ -135,25 +137,25 @@ const AdditionalInfoForm: React.FC<AdditionalInfoFormProps> = ({ profile, onChan
         <div className="space-y-4">
           <div className="flex justify-end">
             <Button type="button" onClick={handleAddCertification} variant="outline" size="sm">
-              + Add Certification
+              + {t.common.add}
             </Button>
           </div>
           {profile.certifications.length === 0 && (
-            <p className="text-sm text-gray-400 text-center py-4">
+            <p className="text-sm text-gray-400 dark:text-zinc-500 text-center py-4">
               No certifications added yet.
             </p>
           )}
           {profile.certifications.map((cert) => (
-            <div key={cert.id} className="border rounded-lg p-4 space-y-3 bg-gray-50">
+            <div key={cert.id} className="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 space-y-3 bg-gray-50 dark:bg-zinc-800/50">
               <div className="flex justify-end">
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="text-red-600 hover:bg-red-50"
+                  className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                   onClick={() => handleRemoveCertification(cert.id)}
                 >
-                  Remove
+                  {t.common.remove}
                 </Button>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -195,23 +197,23 @@ const AdditionalInfoForm: React.FC<AdditionalInfoFormProps> = ({ profile, onChan
         <div className="space-y-4">
           <div className="flex justify-end">
             <Button type="button" onClick={handleAddTraining} variant="outline" size="sm">
-              + Add Training
+              + {t.common.add}
             </Button>
           </div>
           {profile.training.length === 0 && (
-            <p className="text-sm text-gray-400 text-center py-4">No training added yet.</p>
+            <p className="text-sm text-gray-400 dark:text-zinc-500 text-center py-4">No training added yet.</p>
           )}
           {profile.training.map((training) => (
-            <div key={training.id} className="border rounded-lg p-4 space-y-3 bg-gray-50">
+            <div key={training.id} className="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 space-y-3 bg-gray-50 dark:bg-zinc-800/50">
               <div className="flex justify-end">
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="text-red-600 hover:bg-red-50"
+                  className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                   onClick={() => handleRemoveTraining(training.id)}
                 >
-                  Remove
+                  {t.common.remove}
                 </Button>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -237,7 +239,7 @@ const AdditionalInfoForm: React.FC<AdditionalInfoFormProps> = ({ profile, onChan
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">
                   Skills Learned (comma separated)
                 </label>
                 <Input
@@ -259,14 +261,14 @@ const AdditionalInfoForm: React.FC<AdditionalInfoFormProps> = ({ profile, onChan
         <div className="space-y-4">
           <div className="flex justify-end">
             <Button type="button" onClick={handleAddVolunteering} variant="outline" size="sm">
-              + Add Volunteering
+              + {t.common.add}
             </Button>
           </div>
           {profile.volunteering.length === 0 && (
-            <p className="text-sm text-gray-400 text-center py-4">No volunteering added yet.</p>
+            <p className="text-sm text-gray-400 dark:text-zinc-500 text-center py-4">No volunteering added yet.</p>
           )}
           {profile.volunteering.map((vol, index) => (
-            <div key={`${vol.organization}-${index}`} className="border rounded-lg p-4 space-y-3 bg-gray-50">
+            <div key={`${vol.organization}-${index}`} className="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 space-y-3 bg-gray-50 dark:bg-zinc-800/50">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Input
                   label="Organization"
@@ -300,14 +302,14 @@ const AdditionalInfoForm: React.FC<AdditionalInfoFormProps> = ({ profile, onChan
         <div className="space-y-4">
           <div className="flex justify-end">
             <Button type="button" onClick={handleAddAchievement} variant="outline" size="sm">
-              + Add Achievement
+              + {t.common.add}
             </Button>
           </div>
           {profile.achievements.length === 0 && (
-            <p className="text-sm text-gray-400 text-center py-4">No achievements added yet.</p>
+            <p className="text-sm text-gray-400 dark:text-zinc-500 text-center py-4">No achievements added yet.</p>
           )}
           {profile.achievements.map((achievement) => (
-            <div key={achievement.id} className="border rounded-lg p-4 space-y-3 bg-gray-50">
+            <div key={achievement.id} className="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 space-y-3 bg-gray-50 dark:bg-zinc-800/50">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Input
                   label="Title"
@@ -322,11 +324,11 @@ const AdditionalInfoForm: React.FC<AdditionalInfoFormProps> = ({ profile, onChan
                   }
                 />
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">
                     Category
                   </label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
                     value={achievement.category}
                     onChange={(e) =>
                       onChange({
@@ -369,14 +371,14 @@ const AdditionalInfoForm: React.FC<AdditionalInfoFormProps> = ({ profile, onChan
         <div className="space-y-4">
           <div className="flex justify-end">
             <Button type="button" onClick={handleAddReference} variant="outline" size="sm">
-              + Add Reference
+              + {t.common.add}
             </Button>
           </div>
           {profile.references.length === 0 && (
-            <p className="text-sm text-gray-400 text-center py-4">No references added yet.</p>
+            <p className="text-sm text-gray-400 dark:text-zinc-500 text-center py-4">No references added yet.</p>
           )}
           {profile.references.map((reference) => (
-            <div key={reference.id} className="border rounded-lg p-4 space-y-3 bg-gray-50">
+            <div key={reference.id} className="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 space-y-3 bg-gray-50 dark:bg-zinc-800/50">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Input
                   label="Name"

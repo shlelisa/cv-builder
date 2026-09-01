@@ -1,6 +1,7 @@
 'use client';
 
 import { Input, Button } from '@/components/ui';
+import { useApp } from '@/lib/AppContext';
 import { Experience } from '@/types';
 
 interface ExperienceFormProps {
@@ -9,6 +10,8 @@ interface ExperienceFormProps {
 }
 
 const ExperienceForm: React.FC<ExperienceFormProps> = ({ value, onChange }) => {
+  const { t } = useApp();
+
   const handleAdd = () => {
     const newExperience: Experience = {
       id: `exp-${Date.now()}`,
@@ -36,24 +39,24 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ value, onChange }) => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Work Experience</h3>
-          <p className="text-sm text-gray-500">Add your professional experience</p>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-100">{t.form.experienceTitle}</h3>
+          <p className="text-sm text-gray-500 dark:text-zinc-400">{t.form.experienceSubtitle}</p>
         </div>
         <Button type="button" onClick={handleAdd} variant="outline" size="sm">
-          + Add Experience
+          + {t.common.add} {t.form.addExperience}
         </Button>
       </div>
 
       {value.length === 0 && (
-        <div className="text-center py-8 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
+        <div className="text-center py-8 text-gray-400 dark:text-zinc-500 border-2 border-dashed border-gray-200 dark:border-zinc-700 rounded-lg">
           No work experience added yet. Click &quot;Add Experience&quot; to begin.
         </div>
       )}
 
       {value.map((exp, index) => (
-        <div key={exp.id} className="border rounded-lg p-4 space-y-4 bg-gray-50">
+        <div key={exp.id} className="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 space-y-4 bg-gray-50 dark:bg-zinc-800/50">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-700">
+            <span className="text-sm font-medium text-gray-700 dark:text-zinc-300">
               Experience {index + 1}
             </span>
             {value.length > 1 && (
@@ -62,34 +65,34 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ value, onChange }) => {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleRemove(exp.id)}
-                className="text-red-600 hover:bg-red-50"
+                className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
               >
-                Remove
+                {t.common.remove}
               </Button>
             )}
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Input
-              label="Company/Organization *"
+              label={t.form.company}
               placeholder="e.g., ABC Technology"
               value={exp.company}
               onChange={(e) => handleUpdate(exp.id, { company: e.target.value })}
               required
             />
             <Input
-              label="Position *"
+              label={t.form.position}
               placeholder="e.g., Software Developer"
               value={exp.position}
               onChange={(e) => handleUpdate(exp.id, { position: e.target.value })}
               required
             />
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Employment Type
+              <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">
+                {t.form.employmentType}
               </label>
               <select
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
                 value={exp.employmentType}
                 onChange={(e) => handleUpdate(exp.id, { employmentType: e.target.value as Experience['employmentType'] })}
               >
@@ -102,7 +105,7 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ value, onChange }) => {
             <div className="flex items-end space-x-2 pb-1">
               <div className="flex-1">
                 <Input
-                  label="Start Date"
+                  label={t.form.startDate}
                   type="month"
                   value={exp.startDate}
                   onChange={(e) => handleUpdate(exp.id, { startDate: e.target.value })}
@@ -112,7 +115,7 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ value, onChange }) => {
               {!exp.isCurrent && (
                 <div className="flex-1">
                   <Input
-                    label="End Date"
+                    label={t.form.endDate}
                     type="month"
                     value={exp.endDate || ''}
                     onChange={(e) => handleUpdate(exp.id, { endDate: e.target.value })}
@@ -122,22 +125,22 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ value, onChange }) => {
             </div>
           </div>
 
-          <label className="flex items-center space-x-2 text-sm text-gray-700">
+          <label className="flex items-center space-x-2 text-sm text-gray-700 dark:text-zinc-300">
             <input
               type="checkbox"
               checked={exp.isCurrent}
               onChange={(e) => handleUpdate(exp.id, { isCurrent: e.target.checked })}
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="rounded border-gray-300 dark:border-zinc-700 text-blue-600 focus:ring-blue-500"
             />
-            <span>I currently work here</span>
+            <span>{t.form.currentlyWork}</span>
           </label>
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Responsibilities (one per line)
+            <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300">
+              {t.form.responsibilities}
             </label>
             <textarea
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
               rows={3}
               placeholder="e.g., Develop and maintain web applications&#10;Collaborate with cross-functional teams"
               value={exp.responsibilities.join('\n')}
@@ -148,11 +151,11 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ value, onChange }) => {
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Achievements (one per line)
+            <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300">
+              {t.form.experienceAchievements}
             </label>
             <textarea
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
               rows={2}
               placeholder="e.g., Improved application performance by 40%&#10;Implemented new features that increased user engagement"
               value={exp.achievements.join('\n')}
@@ -163,8 +166,8 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ value, onChange }) => {
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Technologies/Tools Used (comma separated)
+            <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300">
+              {t.form.techUsed}
             </label>
             <Input
               placeholder="e.g., React, Node.js, PostgreSQL, Git"

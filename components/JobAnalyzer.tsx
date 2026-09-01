@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button, TextArea, Input } from '@/components/ui';
 import { UserProfile, JobDescription, JobMatchResult, JobAnalysis } from '@/types';
 import { aiService } from '@/services/ai';
+import { useApp } from '@/lib/AppContext';
 
 const emptyProfile: UserProfile = {
   personalInfo: { fullName: '', email: '', phone: '', location: '' },
@@ -30,6 +31,7 @@ const emptyProfile: UserProfile = {
 };
 
 const JobAnalyzer: React.FC = () => {
+  const { t } = useApp();
   const [position, setPosition] = useState('');
   const [company, setCompany] = useState('');
   const [requirements, setRequirements] = useState('');
@@ -99,29 +101,29 @@ const JobAnalyzer: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Job Analyzer</h1>
-        <p className="text-gray-600">
-          Paste a job description to analyze requirements and calculate your match score.
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100 mb-2">{t.jobs.title}</h1>
+        <p className="text-gray-600 dark:text-zinc-400">
+          {t.jobs.subtitle}
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
-          <h3 className="text-lg font-semibold">Job Description</h3>
+        <div className="bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 p-6 space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-100">{t.jobs.jobDesc}</h3>
           <Input
-            label="Position"
+            label={t.jobs.position}
             placeholder="e.g., Junior Software Developer"
             value={position}
             onChange={(e) => setPosition(e.target.value)}
           />
           <Input
-            label="Company"
+            label={t.jobs.company}
             placeholder="e.g., ABC Technology PLC"
             value={company}
             onChange={(e) => setCompany(e.target.value)}
           />
           <TextArea
-            label="Requirements (one per line)"
+            label={t.jobs.requirements}
             rows={10}
             placeholder={
               "- Bachelor's degree in Software Engineering\n- JavaScript\n- React\n- Node.js\n- SQL\n- Git\n- Good communication skills"
@@ -131,11 +133,10 @@ const JobAnalyzer: React.FC = () => {
           />
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
-          <h3 className="text-lg font-semibold">Your Profile (Optional)</h3>
-          <p className="text-sm text-gray-500">
-            Paste your profile in any format. Our AI will automatically organize it.
-            Example: &quot;3.6 cgpa software engineering graduated 2024 React node mysql&quot;
+        <div className="bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 p-6 space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-100">{t.jobs.yourProfile}</h3>
+          <p className="text-sm text-gray-500 dark:text-zinc-400">
+            {t.jobs.profileHint}
           </p>
           <TextArea
             rows={10}
@@ -144,19 +145,19 @@ const JobAnalyzer: React.FC = () => {
             onChange={(e) => setProfileInput(e.target.value)}
           />
           <Button onClick={handleAnalyze} className="w-full" isLoading={false}>
-            Analyze Job & Calculate Match
+            {t.jobs.analyzeJob}
           </Button>
         </div>
       </div>
 
       {analysis && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold mb-4">Job Analysis</h3>
+          <div className="bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 p-6">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-zinc-100">{t.jobs.analysis}</h3>
             <div className="space-y-4 text-sm">
               {analysis.requiredEducation.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-gray-800 mb-1">Required Education:</h4>
+                  <h4 className="font-semibold text-gray-800 dark:text-zinc-200 mb-1">{t.jobs.requiredEducation}</h4>
                   <ul className="list-disc list-inside space-y-1">
                     {analysis.requiredEducation.map((item: string, i: number) => (
                       <li key={i}>{item}</li>
@@ -166,7 +167,7 @@ const JobAnalyzer: React.FC = () => {
               )}
               {analysis.requiredTechnicalSkills.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-gray-800 mb-1">Required Technical Skills:</h4>
+                  <h4 className="font-semibold text-gray-800 dark:text-zinc-200 mb-1">{t.jobs.requiredTechSkills}</h4>
                   <ul className="list-disc list-inside space-y-1">
                     {analysis.requiredTechnicalSkills.map((item: string, i: number) => (
                       <li key={i}>{item}</li>
@@ -176,7 +177,7 @@ const JobAnalyzer: React.FC = () => {
               )}
               {analysis.requiredExperience.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-gray-800 mb-1">Required Experience:</h4>
+                  <h4 className="font-semibold text-gray-800 dark:text-zinc-200 mb-1">{t.jobs.requiredExperience}</h4>
                   <ul className="list-disc list-inside space-y-1">
                     {analysis.requiredExperience.map((item: string, i: number) => (
                       <li key={i}>{item}</li>
@@ -186,16 +187,16 @@ const JobAnalyzer: React.FC = () => {
               )}
               {analysis.softSkills.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-gray-800 mb-1">Soft Skills:</h4>
+                  <h4 className="font-semibold text-gray-800 dark:text-zinc-200 mb-1">{t.jobs.softSkills}</h4>
                   <p>{analysis.softSkills.join(', ')}</p>
                 </div>
               )}
               {analysis.keywords.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-gray-800 mb-1">Keywords:</h4>
+                  <h4 className="font-semibold text-gray-800 dark:text-zinc-200 mb-1">{t.jobs.keywords}</h4>
                   <div className="flex flex-wrap gap-2">
                     {analysis.keywords.map((keyword: string, i: number) => (
-                      <span key={i} className="bg-gray-100 px-2 py-1 rounded text-xs">
+                      <span key={i} className="bg-gray-100 dark:bg-zinc-800 px-2 py-1 rounded text-xs text-gray-600 dark:text-zinc-300">
                         {keyword}
                       </span>
                     ))}
@@ -206,18 +207,18 @@ const JobAnalyzer: React.FC = () => {
           </div>
 
           {matchResult && (
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold mb-4">Match Results</h3>
+            <div className="bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 p-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-zinc-100">{t.jobs.matchResults}</h3>
               <div className="mb-6">
                 <div className="text-4xl font-bold text-center mb-2">
                   <span className={
-                    matchResult.matchScore >= 70 ? 'text-green-600' :
-                    matchResult.matchScore >= 40 ? 'text-yellow-600' : 'text-red-600'
+                    matchResult.matchScore >= 70 ? 'text-green-600 dark:text-green-400' :
+                    matchResult.matchScore >= 40 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'
                   }>
                     {matchResult.matchScore}%
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
+                <div className="w-full bg-gray-200 dark:bg-zinc-700 rounded-full h-3">
                   <div
                     className={`h-3 rounded-full transition-all ${
                       matchResult.matchScore >= 70 ? 'bg-green-600' :
@@ -226,19 +227,19 @@ const JobAnalyzer: React.FC = () => {
                     style={{ width: `${matchResult.matchScore}%` }}
                   />
                 </div>
-                <p className="text-sm text-gray-500 text-center mt-1">
+                <p className="text-sm text-gray-500 dark:text-zinc-400 text-center mt-1">
                   {matchResult.matchScore >= 70
-                    ? 'Strong match - You are a great fit'
+                    ? t.jobs.strongMatch
                     : matchResult.matchScore >= 40
-                    ? 'Moderate match - Some areas to improve'
-                    : 'Weak match - You may need more preparation'}
+                    ? t.jobs.moderateMatch
+                    : t.jobs.weakMatch}
                 </p>
               </div>
 
               <div className="space-y-4 text-sm">
                 {matchResult.matchedQualifications.length > 0 && (
                   <div>
-                    <h4 className="font-semibold text-green-700 mb-1">✓ Matched Qualifications:</h4>
+                    <h4 className="font-semibold text-green-700 dark:text-green-400 mb-1">✓ {t.jobs.matchedQualifications}</h4>
                     <ul className="list-disc list-inside space-y-1">
                       {matchResult.matchedQualifications.map((item: string, i: number) => (
                         <li key={i}>{item}</li>
@@ -248,10 +249,10 @@ const JobAnalyzer: React.FC = () => {
                 )}
                 {matchResult.matchedTechnicalSkills.length > 0 && (
                   <div>
-                    <h4 className="font-semibold text-green-700 mb-1">✓ Matched Technical Skills:</h4>
+                    <h4 className="font-semibold text-green-700 dark:text-green-400 mb-1">✓ {t.jobs.matchedTechSkills}</h4>
                     <div className="flex flex-wrap gap-2">
                       {matchResult.matchedTechnicalSkills.map((item: string, i: number) => (
-                        <span key={i} className="bg-green-50 text-green-700 px-2 py-1 rounded text-xs">
+                        <span key={i} className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2 py-1 rounded text-xs">
                           {item}
                         </span>
                       ))}
@@ -260,7 +261,7 @@ const JobAnalyzer: React.FC = () => {
                 )}
                 {matchResult.missingRequirements.length > 0 && (
                   <div>
-                    <h4 className="font-semibold text-red-700 mb-1">✗ Missing or Weak:</h4>
+                    <h4 className="font-semibold text-red-700 dark:text-red-400 mb-1">✗ {t.jobs.missingWeak}</h4>
                     <ul className="list-disc list-inside space-y-1">
                       {matchResult.missingRequirements.map((item: string, i: number) => (
                         <li key={i}>{item}</li>
@@ -270,7 +271,7 @@ const JobAnalyzer: React.FC = () => {
                 )}
                 {matchResult.recommendations.length > 0 && (
                   <div>
-                    <h4 className="font-semibold text-blue-700 mb-1">Recommendations:</h4>
+                    <h4 className="font-semibold text-blue-700 dark:text-blue-400 mb-1">{t.jobs.recommendations}</h4>
                     <ul className="list-disc list-inside space-y-1">
                       {matchResult.recommendations.map((item: string, i: number) => (
                         <li key={i}>{item}</li>
@@ -279,8 +280,8 @@ const JobAnalyzer: React.FC = () => {
                   </div>
                 )}
                 {matchResult.matchedTechnicalSkills.length === 0 && matchResult.missingRequirements.length === 0 && (
-                  <p className="text-gray-500">
-                    Add your profile details to see more detailed matching.
+                  <p className="text-gray-500 dark:text-zinc-400">
+                    {t.jobs.profileHint}
                   </p>
                 )}
               </div>

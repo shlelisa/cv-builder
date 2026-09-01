@@ -2,6 +2,7 @@
 
 import { UserProfile } from '@/types';
 import { useState } from 'react';
+import { useApp } from '@/lib/AppContext';
 
 interface CVPreviewProps {
   profile: UserProfile;
@@ -9,6 +10,7 @@ interface CVPreviewProps {
 }
 
 const CVPreview: React.FC<CVPreviewProps> = ({ profile, enhancedSummary }) => {
+  const { t } = useApp();
   const [zoom, setZoom] = useState(1);
   const { personalInfo, education, experience, internships, projects, skills } = profile;
 
@@ -53,28 +55,39 @@ const CVPreview: React.FC<CVPreviewProps> = ({ profile, enhancedSummary }) => {
       .join(', ');
   };
 
+  const handleDownloadPdf = () => {
+    window.print();
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between bg-gray-100 rounded-lg px-4 py-2">
-        <span className="text-sm font-medium text-gray-700">A4 Page Preview</span>
+      <div className="flex items-center justify-between bg-gray-100 dark:bg-zinc-800 rounded-lg px-4 py-2">
+        <span className="text-sm font-medium text-gray-700 dark:text-zinc-300">{t.cv.a4Preview}</span>
         <div className="flex items-center space-x-2">
           <button
+            onClick={handleDownloadPdf}
+            className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium"
+          >
+            {t.cv.downloadPdf}
+          </button>
+          <button
             onClick={() => setZoom((z) => Math.max(0.5, z - 0.1))}
-            className="px-2 py-1 bg-white border rounded hover:bg-gray-50 text-sm"
+            className="px-2 py-1 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded hover:bg-gray-50 dark:hover:bg-zinc-700 text-sm text-gray-900 dark:text-zinc-200"
           >
             -
           </button>
-          <span className="text-sm text-gray-600">{Math.round(zoom * 100)}%</span>
+          <span className="text-sm text-gray-600 dark:text-zinc-400">{Math.round(zoom * 100)}%</span>
           <button
             onClick={() => setZoom((z) => Math.min(2, z + 0.1))}
-            className="px-2 py-1 bg-white border rounded hover:bg-gray-50 text-sm"
+            className="px-2 py-1 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded hover:bg-gray-50 dark:hover:bg-zinc-700 text-sm text-gray-900 dark:text-zinc-200"
           >
             +
           </button>
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-8 mx-auto"
+      <div id="cv-print-root">
+        <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-8 mx-auto"
         style={{
           width: `${794 * zoom}px`,
           minHeight: `${1123 * zoom}px`,
@@ -110,7 +123,7 @@ const CVPreview: React.FC<CVPreviewProps> = ({ profile, enhancedSummary }) => {
             {generateSummary() && (
               <section className="mb-6">
                 <h2 className="text-lg font-semibold border-b-2 border-black pb-1 mb-3 uppercase">
-                  Professional Summary
+                  {t.cv.professionalSummary}
                 </h2>
                 <p className="text-sm leading-relaxed">{generateSummary()}</p>
               </section>
@@ -119,7 +132,7 @@ const CVPreview: React.FC<CVPreviewProps> = ({ profile, enhancedSummary }) => {
             {education.length > 0 && (
               <section className="mb-6">
                 <h2 className="text-lg font-semibold border-b-2 border-black pb-1 mb-3 uppercase">
-                  Education
+                  {t.cv.education}
                 </h2>
                 <div className="space-y-4">
                   {education.map((edu) => (
@@ -141,7 +154,7 @@ const CVPreview: React.FC<CVPreviewProps> = ({ profile, enhancedSummary }) => {
                       </div>
                       {edu.relevantCourses && edu.relevantCourses.length > 0 && (
                         <p className="text-sm text-gray-700 mt-1">
-                          <span className="font-medium">Relevant Courses:</span>{' '}
+                          <span className="font-medium">{t.cv.relevantCourses}</span>{' '}
                           {edu.relevantCourses.join(', ')}
                         </p>
                       )}
@@ -161,7 +174,7 @@ const CVPreview: React.FC<CVPreviewProps> = ({ profile, enhancedSummary }) => {
             {experience.length > 0 && (
               <section className="mb-6">
                 <h2 className="text-lg font-semibold border-b-2 border-black pb-1 mb-3 uppercase">
-                  Work Experience
+                  {t.cv.workExperience}
                 </h2>
                 <div className="space-y-4">
                   {experience.map((exp) => (
@@ -188,7 +201,7 @@ const CVPreview: React.FC<CVPreviewProps> = ({ profile, enhancedSummary }) => {
                       )}
                       {exp.achievements.length > 0 && (
                         <div className="mt-1">
-                          <span className="text-sm font-medium">Achievements: </span>
+                          <span className="text-sm font-medium">{t.cv.achievementsHeading}: </span>
                           <ul className="text-sm list-disc list-inside mt-1">
                             {exp.achievements.map((achievement, i) => (
                               <li key={i}>{achievement}</li>
@@ -205,7 +218,7 @@ const CVPreview: React.FC<CVPreviewProps> = ({ profile, enhancedSummary }) => {
             {internships.length > 0 && (
               <section className="mb-6">
                 <h2 className="text-lg font-semibold border-b-2 border-black pb-1 mb-3 uppercase">
-                  Internship
+                  {t.cv.internship}
                 </h2>
                 <div className="space-y-4">
                   {internships.map((intern) => (
@@ -233,7 +246,7 @@ const CVPreview: React.FC<CVPreviewProps> = ({ profile, enhancedSummary }) => {
             {projects.length > 0 && (
               <section className="mb-6">
                 <h2 className="text-lg font-semibold border-b-2 border-black pb-1 mb-3 uppercase">
-                  Projects
+                  {t.cv.projects}
                 </h2>
                 <div className="space-y-4">
                   {projects.map((project) => (
@@ -259,7 +272,7 @@ const CVPreview: React.FC<CVPreviewProps> = ({ profile, enhancedSummary }) => {
                       )}
                       {project.resultsImpact && (
                         <p className="text-sm text-gray-700 mt-1">
-                          <span className="font-medium">Impact:</span> {project.resultsImpact}
+                          <span className="font-medium">{t.cv.impact}</span> {project.resultsImpact}
                         </p>
                       )}
                     </div>
@@ -275,7 +288,7 @@ const CVPreview: React.FC<CVPreviewProps> = ({ profile, enhancedSummary }) => {
               skills.softSkills.length > 0) && (
               <section className="mb-6">
                 <h2 className="text-lg font-semibold border-b-2 border-black pb-1 mb-3 uppercase">
-                  Skills
+                  {t.cv.skills}
                 </h2>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   {skills.technicalSkills.length > 0 && (
@@ -312,7 +325,7 @@ const CVPreview: React.FC<CVPreviewProps> = ({ profile, enhancedSummary }) => {
             {renderLanguages() && (
               <section className="mb-6">
                 <h2 className="text-lg font-semibold border-b-2 border-black pb-1 mb-3 uppercase">
-                  Languages
+                  {t.cv.languages}
                 </h2>
                 <p className="text-sm">{renderLanguages()}</p>
               </section>
@@ -321,7 +334,7 @@ const CVPreview: React.FC<CVPreviewProps> = ({ profile, enhancedSummary }) => {
             {profile.certifications.length > 0 && (
               <section className="mb-6">
                 <h2 className="text-lg font-semibold border-b-2 border-black pb-1 mb-3 uppercase">
-                  Certifications
+                  {t.cv.certifications}
                 </h2>
                 <div className="space-y-2">
                   {profile.certifications.map((cert) => (
@@ -340,7 +353,7 @@ const CVPreview: React.FC<CVPreviewProps> = ({ profile, enhancedSummary }) => {
             {profile.training.length > 0 && (
               <section className="mb-6">
                 <h2 className="text-lg font-semibold border-b-2 border-black pb-1 mb-3 uppercase">
-                  Training
+                  {t.cv.training}
                 </h2>
                 <div className="space-y-2">
                   {profile.training.map((training) => (
@@ -359,7 +372,7 @@ const CVPreview: React.FC<CVPreviewProps> = ({ profile, enhancedSummary }) => {
             {profile.achievements.length > 0 && (
               <section className="mb-6">
                 <h2 className="text-lg font-semibold border-b-2 border-black pb-1 mb-3 uppercase">
-                  Achievements
+                  {t.cv.achievementsHeading}
                 </h2>
                 <ul className="text-sm list-disc list-inside space-y-1">
                   {profile.achievements.map((achievement) => (
@@ -375,7 +388,7 @@ const CVPreview: React.FC<CVPreviewProps> = ({ profile, enhancedSummary }) => {
             {profile.references.length > 0 && (
               <section>
                 <h2 className="text-lg font-semibold border-b-2 border-black pb-1 mb-3 uppercase">
-                  References
+                  {t.cv.references}
                 </h2>
                 <div className="space-y-2">
                   {profile.references.map((reference) => (

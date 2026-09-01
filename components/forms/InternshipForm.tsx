@@ -1,6 +1,7 @@
 'use client';
 
 import { Input, Button, TextArea } from '@/components/ui';
+import { useApp } from '@/lib/AppContext';
 import { Internship } from '@/types';
 
 interface InternshipFormProps {
@@ -9,6 +10,8 @@ interface InternshipFormProps {
 }
 
 const InternshipForm: React.FC<InternshipFormProps> = ({ value, onChange }) => {
+  const { t } = useApp();
+
   const handleAdd = () => {
     const newInternship: Internship = {
       id: `int-${Date.now()}`,
@@ -35,54 +38,54 @@ const InternshipForm: React.FC<InternshipFormProps> = ({ value, onChange }) => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Internship Experience</h3>
-          <p className="text-sm text-gray-500">Add your internship experience</p>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-100">{t.form.internshipTitle}</h3>
+          <p className="text-sm text-gray-500 dark:text-zinc-400">{t.form.internshipSubtitle}</p>
         </div>
         <Button type="button" onClick={handleAdd} variant="outline" size="sm">
-          + Add Internship
+          + {t.common.add} {t.form.addInternship}
         </Button>
       </div>
 
       {value.length === 0 && (
-        <div className="text-center py-8 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
+        <div className="text-center py-8 text-gray-400 dark:text-zinc-500 border-2 border-dashed border-gray-200 dark:border-zinc-700 rounded-lg">
           No internships added yet.
         </div>
       )}
 
       {value.map((intern, index) => (
-        <div key={intern.id} className="border rounded-lg p-4 space-y-4 bg-gray-50">
+        <div key={intern.id} className="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 space-y-4 bg-gray-50 dark:bg-zinc-800/50">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-700">Internship {index + 1}</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-zinc-300">Internship {index + 1}</span>
             {value.length > 1 && (
-              <Button type="button" variant="ghost" size="sm" className="text-red-600 hover:bg-red-50" onClick={() => handleRemove(intern.id)}>
-                Remove
+              <Button type="button" variant="ghost" size="sm" className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20" onClick={() => handleRemove(intern.id)}>
+                {t.common.remove}
               </Button>
             )}
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Input
-              label="Organization *"
+              label={t.form.organization}
               placeholder="e.g., XYZ Bank"
               value={intern.organization}
               onChange={(e) => handleUpdate(intern.id, { organization: e.target.value })}
               required
             />
             <Input
-              label="Position *"
+              label={t.form.position}
               placeholder="e.g., Software Development Intern"
               value={intern.position}
               onChange={(e) => handleUpdate(intern.id, { position: e.target.value })}
               required
             />
             <Input
-              label="Duration"
+              label={t.form.duration}
               placeholder="e.g., 3 months"
               value={intern.duration}
               onChange={(e) => handleUpdate(intern.id, { duration: e.target.value })}
             />
             <Input
-              label="Start Date"
+              label={t.form.startDate}
               type="month"
               value={intern.startDate}
               onChange={(e) => handleUpdate(intern.id, { startDate: e.target.value })}
@@ -90,7 +93,7 @@ const InternshipForm: React.FC<InternshipFormProps> = ({ value, onChange }) => {
           </div>
 
           <TextArea
-            label="Responsibilities (one per line)"
+            label={t.form.responsibilities}
             rows={2}
             placeholder="e.g., Assisted in developing web applications&#10;Participated in team meetings and code reviews"
             value={intern.responsibilities.join('\n')}
@@ -100,7 +103,7 @@ const InternshipForm: React.FC<InternshipFormProps> = ({ value, onChange }) => {
           />
 
           <TextArea
-            label="Achievements (one per line)"
+            label={t.form.experienceAchievements}
             rows={2}
             placeholder="e.g., Received recognition for outstanding performance"
             value={intern.achievements.join('\n')}
@@ -110,8 +113,8 @@ const InternshipForm: React.FC<InternshipFormProps> = ({ value, onChange }) => {
           />
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Skills Gained (comma separated)
+            <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">
+              {t.form.skillsGained}
             </label>
             <Input
               placeholder="e.g., Industry tools, Professional communication, Project management"
