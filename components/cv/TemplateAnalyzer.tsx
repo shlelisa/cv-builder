@@ -186,7 +186,7 @@ export default function TemplateAnalyzer() {
       const isPdf = file.type === 'application/pdf';
       const dataUrl = await readFileAsDataUrl(file);
       const rawImage = isPdf ? await convertPdfToImage(dataUrl) : dataUrl;
-      const imageToAnalyze = await resizeDataUrl(rawImage, 1600);
+      const imageToAnalyze = await resizeDataUrl(rawImage, 1024);
 
       setPreviewUrl(imageToAnalyze);
       const pal = await extractPalette(imageToAnalyze);
@@ -199,12 +199,17 @@ export default function TemplateAnalyzer() {
         try {
           const apiRes = await fetch('/api/analyze-template', {
             method: 'POST',
+            signal: AbortSignal.timeout(9000),
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ image: imageToAnalyze, palette: pal }),
           });
           if (apiRes.ok) {
             const payload = await apiRes.json();
-            if (payload && !payload.mock && payload.analysis) result = payload.analysis;
+            if (payload && !payload.mock && payload.analysis) {
+              result = payload.analysis;
+            } else if (payload?.mock && payload?.error) {
+              apiError = payload.error;
+            }
           } else {
             const errPayload = await apiRes.json().catch(() => null);
             apiError = errPayload?.error || `Server returned ${apiRes.status}`;

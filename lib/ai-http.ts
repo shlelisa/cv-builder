@@ -4,7 +4,7 @@ interface ImageInput {
   dataUrl: string;
 }
 
-const GEMINI_FALLBACK_MODELS = ['gemini-3.6-flash', 'gemini-flash-latest', 'gemini-3.5-flash'];
+const GEMINI_FALLBACK_MODELS = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -32,6 +32,7 @@ async function openaiJsonOnce(cfg: AiConfig, prompt: string, images: ImageInput[
 
   const res = await fetch(`${cfg.baseUrl}/chat/completions`, {
     method: 'POST',
+    signal: AbortSignal.timeout(8500),
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${cfg.key}`,
@@ -69,6 +70,7 @@ async function geminiJsonOnce(
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(cfg.key)}`;
   const res = await fetch(url, {
     method: 'POST',
+    signal: AbortSignal.timeout(8500),
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents: [{ role: 'user', parts }],
@@ -95,7 +97,7 @@ export async function openaiJson(
   images: ImageInput[] = [],
   temperature = 0.2,
 ): Promise<string> {
-  const attempts = 3;
+  const attempts = 2;
   let lastErr: unknown;
   for (let i = 0; i < attempts; i++) {
     try {
@@ -104,7 +106,7 @@ export async function openaiJson(
       lastErr = err;
       const status = err instanceof AiHttpError ? err.status : -1;
       if (!isRetryable(status) || i === attempts - 1) throw err;
-      await sleep(800 * (i + 1));
+      await sleep(500);
     }
   }
   throw lastErr;
@@ -116,23 +118,21 @@ export async function geminiJson(
   images: ImageInput[] = [],
   temperature = 0.2,
 ): Promise<string> {
-  const candidates = [cfg.model, ...GEMINI_FALLBACK_MODELS.filter((m) => m !== cfg.model)];
+  const candidates = Array.from(new Set([cfg.model, ...GEMINI_FALLBACK_MODELS])).filter(Boolean);
   const lastErrors: string[] = [];
 
   for (const model of candidates) {
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        return await geminiJsonOnce(cfg, model, prompt, images, temperature);
-      } catch (err) {
-        const status = err instanceof AiHttpError ? err.status : -1;
-        lastErrors.push(err instanceof Error ? err.message : String(err));
-        if (status === 404) break; // model unavailable/retired — try the next one
-        if (!isRetryable(status) || attempt === 2) break;
-        await sleep(900 * (attempt + 1));
-      }
+    try {
+      return await geminiJsonOnce(cfg, model, prompt, images, temperature);
+    } catch (err) {
+      const status = err instanceof AiHttpError ? err.status : -1;
+      lastErrors.push(err instanceof Error ? err.message : String(err));
+      if (status === 404) continue; // model unavailable — try next candidate
+      // For rate limits or timeouts, try next model candidate immediately
+      continue;
     }
   }
-  throw new Error(`Gemini models failed (tried ${candidates.length}): ${lastErrors[lastErrors.length - 1]}`);
+  throw new Error(`Gemini models failed: ${lastErrors.join('; ')}`);
 }
 
 export async function aiJson(cfg: AiConfig, prompt: string, images: ImageInput[] = [], temperature = 0.2): Promise<string> {

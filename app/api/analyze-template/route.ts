@@ -32,6 +32,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ mock: false, analysis });
   } catch (err) {
     console.error('[analyze-template]', err);
-    return NextResponse.json({ mock: true, error: 'ai call failed' }, { status: 502 });
+    return NextResponse.json({ mock: true, error: err instanceof Error ? err.message : 'ai call failed' }, { status: 200 });
   }
 }

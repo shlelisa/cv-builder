@@ -43,6 +43,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ mock: false, cv: result.cv, refined: result.refined });
   } catch (err) {
     console.error('[write-cv]', err);
-    return NextResponse.json({ mock: true, error: 'ai call failed' }, { status: 502 });
+    return NextResponse.json({ mock: true, error: err instanceof Error ? err.message : 'ai call failed' }, { status: 200 });
   }
 }
