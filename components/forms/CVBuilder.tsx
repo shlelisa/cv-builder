@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui';
 import { useApp } from '@/lib/AppContext';
 import TemplateCVRenderer from '@/components/cv/TemplateCVRenderer';
@@ -124,6 +124,19 @@ export default function CVBuilder() {
       setActiveSectionId(template.analysis.sections[0].id);
     }
   };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tplParam = params.get('template');
+      if (tplParam) {
+        const found = STATIC_TEMPLATES.find((t) => t.id === tplParam);
+        if (found) {
+          handleSelectTemplate(found);
+        }
+      }
+    }
+  }, []);
 
   const handlePhotoUpload = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
