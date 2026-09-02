@@ -13,10 +13,10 @@ export default function LetterGenerator() {
   const [tone, setTone] = useState<"professional" | "fresh-graduate" | "modern">("professional");
 
   // Candidate Details
-  const [applicantName, setApplicantName] = useState("Maqaa Kee/Your Name ");
-  const [email, setEmail] = useState("lelisa.shashura@bhu.edu.et");
-  const [phone, setPhone] = useState("+251 969 642 103");
-  const [location, setLocation] = useState("Bule Hora / Addis Ababa, Ethiopia");
+  const [applicantName, setApplicantName] = useState("Maqaa Kee / Your Name");
+  const [email, setEmail] = useState("yourname@example.com");
+  const [phone, setPhone] = useState("+251 91 234 5678");
+  const [location, setLocation] = useState("Addis Ababa, Ethiopia");
 
   // Job Details
   const [company, setCompany] = useState("Gadaa Software Company PLC");
@@ -66,9 +66,9 @@ export default function LetterGenerator() {
 
   const handleLoadSample = (type: "software" | "marketing") => {
     if (type === "software") {
-      setApplicantName("Maqaa Kee/Your Name ");
-      setEmail("lelisa.shashura@bhu.edu.et");
-      setPhone("+251 969 642 103");
+      setApplicantName("Maqaa Kee / Your Name");
+      setEmail("yourname@example.com");
+      setPhone("+251 91 234 5678");
       setLocation("Addis Ababa, Ethiopia");
       setCompany("Gadaa Software Company PLC");
       setPosition("Junior Software Engineer");

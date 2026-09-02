@@ -1311,10 +1311,10 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
       ],
     },
     defaultSingleton: {
-      fullName: 'Maqaa Kee/Your Name ',
+      fullName: 'Your Name / Maqaa Kee',
       field: 'Software Engineering',
-      phone: '+251969642103/ +251970463204',
-      email: 'lelisa.shashura@bhu.edu.et',
+      phone: '+251912345678',
+      email: 'yourname@example.com',
       summaryText:
         'I am a dedicated Software Engineering graduate from Bule Hora University with a CGPA of 3.88 and an exit exam score of 75%. I possess strong technical skills in Java, C++, C, Android, React, and web development technologies, along with experience in managing both SQL and NoSQL databases. I am currently enhancing my expertise in full-stack development using the MERN (MongoDB, Express, React, Node.js) stack. During my internship at Gadaa Software Company PLC, I gained practical experience in software development, database management, and data analysis.\n\nI am a quick learner with strong problem-solving, adaptability, and teamwork skills. I am eager to contribute to innovative projects where I can apply my knowledge and grow as a software engineer.',
       techSkillsText:
@@ -1353,8 +1353,8 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
       ],
       references: [
         {
-          refName: 'Abebe Bekele Mako',
-          refPhone: 'Phone: +251919317813',
+          refName: 'Abebe Bekele',
+          refPhone: 'Phone: +251911223344',
           refPosition: 'Position: Head, Department of Software Engineering.',
         },
       ],
