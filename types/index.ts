@@ -203,6 +203,53 @@ export interface TemplateSection {
   maxEntries?: number;
 }
 
+export interface TemplateGeometry {
+  orientation?: 'portrait' | 'landscape';
+  headerHeight?: number;
+  sidebarWidth?: number;
+  mainWidth?: number;
+  gap?: number;
+  verticalGap?: number;
+  contentBounds?: { top?: number; right?: number; bottom?: number; left?: number };
+}
+
+export interface TemplateTypographyToken {
+  family?: string;
+  weight?: number | string;
+  size?: number;
+  letterSpacing?: number;
+  textTransform?: 'none' | 'uppercase' | 'capitalize';
+  lineHeight?: number;
+}
+
+export interface TemplateTypography {
+  name?: TemplateTypographyToken;
+  jobTitle?: TemplateTypographyToken;
+  sectionHeading?: TemplateTypographyToken;
+  body?: TemplateTypographyToken;
+  sidebarHeading?: TemplateTypographyToken;
+  sidebarText?: TemplateTypographyToken;
+}
+
+export interface TemplateTheme {
+  headerBackground?: string;
+  sidebarBackground?: string;
+  mainBackground?: string;
+  headingColor?: string;
+  textColor?: string;
+  borderColor?: string;
+  iconColor?: string;
+  sidebarHeadingColor?: string;
+}
+
+export interface TemplateComponentStyle {
+  headingVariant?: 'underline' | 'dotted' | 'border' | 'filled' | 'icon' | 'plain';
+  bulletStyle?: 'dot' | 'square' | 'dash' | 'arrow' | 'line';
+  timeline?: boolean;
+  icons?: boolean;
+  headerBackground?: boolean;
+}
+
 export interface TemplateLayout {
   type: 'single-column' | 'two-column' | 'sidebar-left' | 'sidebar-right';
   orderedSections: string[];
@@ -213,6 +260,31 @@ export interface TemplateLayout {
     shape: 'circle' | 'square' | 'rounded';
     size: 'small' | 'medium' | 'large';
   };
+  page?: TemplatePageSpec;
+  columns?: TemplateColumnSpec[];
+  placements?: TemplateSectionPlacement[];
+  geometry?: TemplateGeometry;
+}
+
+export interface TemplatePageSpec {
+  widthMm?: number;
+  heightMm?: number;
+  margins?: { top: number; right: number; bottom: number; left: number };
+}
+
+export type TemplateColumnId = 'main' | 'sidebar';
+
+export interface TemplateColumnSpec {
+  id: TemplateColumnId;
+  width?: number;
+  background?: string;
+  padding?: number;
+}
+
+export interface TemplateSectionPlacement {
+  sectionId: string;
+  column: TemplateColumnId;
+  order: number;
 }
 
 export interface TemplateStyle {
@@ -224,6 +296,12 @@ export interface TemplateStyle {
   fontFamily: string;
   headerStyle: 'centered' | 'left-aligned' | 'right-aligned';
   sectionDivider: 'line' | 'space' | 'border';
+  nameSize?: number;
+  headingSize?: number;
+  bodySize?: number;
+  theme?: TemplateTheme;
+  typography?: TemplateTypography;
+  componentStyle?: TemplateComponentStyle;
 }
 
 export interface TemplateAnalysis {
@@ -234,4 +312,8 @@ export interface TemplateAnalysis {
   sections: TemplateSection[];
   fields: TemplateField[];
   confidence: number;
+  /** Default content extracted from the template image (fieldId -> value) for singleton (non-repeatable) fields. */
+  content?: Record<string, string>;
+  /** Default entries extracted from the template image (sectionId -> entries of { fieldId -> value }) for repeatable sections. */
+  contentEntries?: Record<string, Array<Record<string, string>>>;
 }

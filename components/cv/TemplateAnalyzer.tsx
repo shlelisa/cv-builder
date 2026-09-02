@@ -5,6 +5,9 @@ import { Button } from '@/components/ui';
 import { useApp } from '@/lib/AppContext';
 import { aiService } from '@/services/ai';
 import TemplateCVRenderer from '@/components/cv/TemplateCVRenderer';
+import TemplateLayoutEditor from '@/components/cv/TemplateLayoutEditor';
+import { scoreTemplateMatch } from '@/lib/fidelity';
+import { CustomLayout, defaultCustomLayout, validateLayout } from '@/lib/layout-engine';
 import { TemplateAnalysis, TemplateField, TemplateSection, TemplateStyle } from '@/types';
 import { resizeDataUrl } from '@/lib/image-utils';
 import { applySampledColors, extractPalette } from '@/lib/palette';
@@ -25,7 +28,8 @@ const LAYOUT_OPTIONS = ['single-column', 'two-column', 'sidebar-left', 'sidebar-
 const HEADER_OPTIONS = ['centered', 'left-aligned', 'right-aligned'];
 const DIVIDER_OPTIONS = ['line', 'space', 'border'];
 
-const COLOR_FIELDS: { key: keyof TemplateStyle; label: string }[] = [
+type ColorFieldKey = 'primaryColor' | 'secondaryColor' | 'accentColor' | 'backgroundColor' | 'textColor';
+const COLOR_FIELDS: { key: ColorFieldKey; label: string }[] = [
   { key: 'primaryColor', label: 'Primary' },
   { key: 'secondaryColor', label: 'Secondary' },
   { key: 'accentColor', label: 'Accent' },
@@ -52,6 +56,8 @@ export default function TemplateAnalyzer() {
   const [viewMode, setViewMode] = useState<'visual' | 'text'>('visual');
   const [styleOverrides, setStyleOverrides] = useState<Partial<TemplateStyle>>({});
   const [layoutType, setLayoutType] = useState<TemplateAnalysis['layout']['type'] | undefined>(undefined);
+  const [showLayoutEditor, setShowLayoutEditor] = useState(false);
+  const [customLayout, setCustomLayout] = useState<CustomLayout | null>(null);
 
   const [aiMode, setAiMode] = useState<'checking' | 'live' | 'demo'>('checking');
   const [aiDetail, setAiDetail] = useState('');
@@ -91,6 +97,16 @@ export default function TemplateAnalyzer() {
 
   const renderSingleton = useRewrites && refinedSingleton ? refinedSingleton : singletonValues;
   const renderEntries = useRewrites && refinedEntries ? refinedEntries : simpleEntries;
+
+  const layoutWarnings = useMemo(
+    () => (analysis ? validateLayout(analysis, customLayout ?? undefined) : []),
+    [analysis, customLayout],
+  );
+
+  const fidelity = useMemo(
+    () => (analysis ? scoreTemplateMatch(analysis, { styleOverrides, layoutType, customLayout }) : null),
+    [analysis, styleOverrides, layoutType, customLayout],
+  );
 
   const readFileAsDataUrl = useCallback(
     (file: File): Promise<string> =>
@@ -160,19 +176,23 @@ export default function TemplateAnalyzer() {
         if (!result) result = await aiService.analyzeTemplate(imageToAnalyze);
         const analyzed = applySampledColors(result, pal);
         setAnalysis(analyzed);
-        setSingletonValues({});
+        setSingletonValues(analyzed.content || {});
         const initialEntries: Record<string, EntryGroup[]> = {};
-        result.sections.forEach((section) => {
+        analyzed.sections.forEach((section) => {
           if (section.repeatable) {
-            initialEntries[section.id] = [
-              { id: `entry-${section.id}-0`, values: {} },
-            ];
+            const defaultItems = analyzed.contentEntries?.[section.id] || [];
+            initialEntries[section.id] =
+              defaultItems.length > 0
+                ? defaultItems.map((values, i) => ({ id: `entry-${section.id}-${i}`, values }))
+                : [{ id: `entry-${section.id}-0`, values: {} }];
           }
         });
         setEntries(initialEntries);
         setPhotoUrl('');
         setStyleOverrides({});
         setLayoutType(undefined);
+        setCustomLayout(null);
+        setShowLayoutEditor(false);
         setRefinedSingleton(null);
         setRefinedEntries(null);
         setStep('result');
@@ -358,7 +378,7 @@ export default function TemplateAnalyzer() {
         ) : (
           <>
             {fields.length > 0 && <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{fields.map((field) => renderField(field, singletonValues[field.id] || '', (v) => setSingletonValues((prev) => ({ ...prev, [field.id]: v }))))}</div>}
-            {section.id === 'personal' && analysis?.layout.photo?.included && renderPhotoInput()}
+            {section.id === 'personal' && renderPhotoInput()}
           </>
         )}
       </div>
@@ -768,6 +788,13 @@ export default function TemplateAnalyzer() {
             <Button variant={showEditor ? 'primary' : 'outline'} size="sm" onClick={() => setShowEditor((v) => !v)}>
               {t.templates.editDesign}
             </Button>
+            <Button
+              variant={showLayoutEditor ? 'primary' : 'outline'}
+              size="sm"
+              onClick={() => setShowLayoutEditor((v) => !v)}
+            >
+              {t.templates.arrangeLayout}
+            </Button>
             {(refinedSingleton || refinedEntries) && (
               <button
                 onClick={() => setUseRewrites((v) => !v)}
@@ -817,6 +844,86 @@ export default function TemplateAnalyzer() {
 
           {showEditor && renderEditorPanel()}
 
+          {showLayoutEditor && analysis && (
+            <div className="rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="font-semibold text-gray-900 dark:text-zinc-100">
+                  {t.templates.arrangeLayout}
+                </h4>
+              </div>
+              <TemplateLayoutEditor
+                analysis={analysis}
+                value={customLayout ?? defaultCustomLayout(analysis)}
+                onChange={setCustomLayout}
+                canRestore={customLayout !== null}
+                warnings={layoutWarnings}
+              />
+            </div>
+          )}
+
+          {fidelity && (
+            <div className="rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h4 className="font-semibold text-gray-900 dark:text-zinc-100">
+                  {t.templates.templateMatch}
+                </h4>
+                <span
+                  className={`text-2xl font-bold ${
+                    fidelity.overall >= 90
+                      ? 'text-green-600 dark:text-green-400'
+                      : fidelity.overall >= 70
+                        ? 'text-amber-600 dark:text-amber-400'
+                        : 'text-red-600 dark:text-red-400'
+                  }`}
+                >
+                  {fidelity.overall}%
+                </span>
+              </div>
+              <div className="mt-3 grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+                {Object.entries(fidelity.breakdown).map(([key, value]) => (
+                  <div key={key} className="flex items-center gap-2">
+                    <span className="w-24 shrink-0 text-xs text-gray-500 dark:text-zinc-400">
+                      {key === 'layout'
+                        ? t.templates.matchLayout
+                        : key === 'colors'
+                          ? t.templates.matchColors
+                          : key === 'typography'
+                            ? t.templates.matchTypography
+                            : key === 'spacing'
+                              ? t.templates.matchSpacing
+                              : key === 'sections'
+                                ? t.templates.matchSections
+                                : t.templates.matchAlignment}
+                    </span>
+                    <div className="flex-1 h-2 rounded-full bg-gray-200 dark:bg-zinc-700 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${value >= 90 ? 'bg-green-500' : value >= 70 ? 'bg-amber-500' : 'bg-red-500'}`}
+                        style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
+                      />
+                    </div>
+                    <span className="w-9 text-right text-xs font-semibold text-gray-600 dark:text-zinc-300">
+                      {value}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {fidelity.issues.length > 0 && (
+                <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-2.5 dark:border-amber-900 dark:bg-amber-950">
+                  <p className="mb-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
+                    {t.templates.fidelityNotes}
+                  </p>
+                  <ul className="space-y-0.5 text-xs text-amber-600 dark:text-amber-400">
+                    {fidelity.issues.map((issue) => (
+                      <li key={`${issue.category}-${issue.message}`}>
+                        {issue.message}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-zinc-700 self-start">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -835,6 +942,7 @@ export default function TemplateAnalyzer() {
                   photoUrl={photoUrl || undefined}
                   styleOverrides={styleOverrides}
                   layoutType={layoutType}
+                  customLayout={customLayout ?? undefined}
                   zoom={0.75}
                 />
               ) : (

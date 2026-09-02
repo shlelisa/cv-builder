@@ -1,13 +1,24 @@
-import { TemplateAnalysis, TemplateField, TemplateFieldType, TemplateSection } from '@/types';
+import {
+  TemplateAnalysis,
+  TemplateComponentStyle,
+  TemplateField,
+  TemplateFieldType,
+  TemplateSection,
+  TemplateTypographyToken,
+} from '@/types';
 
 const LAYOUT_TYPES = ['single-column', 'two-column', 'sidebar-left', 'sidebar-right'];
 const HEADER_STYLES = ['centered', 'left-aligned', 'right-aligned'];
 const DIVIDERS = ['line', 'space', 'border'];
+const HEADING_VARIANTS = ['underline', 'dotted', 'border', 'filled', 'icon', 'plain'];
+const BULLET_STYLES = ['dot', 'square', 'dash', 'arrow', 'line'];
+const TRANSFORMS = ['none', 'uppercase', 'capitalize'];
 const PHOTO_POSITIONS = ['top-center', 'top-left', 'top-right', 'sidebar'];
 const PHOTO_SHAPES = ['circle', 'square', 'rounded'];
 const PHOTO_SIZES = ['small', 'medium', 'large'];
 const FIELD_TYPES: string[] = ['text', 'email', 'phone', 'url', 'textarea', 'select', 'date'];
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
+const PERSONAL_IDS_SET = new Set(['personal', 'contact']);
 
 const str = (v: unknown, fallback = ''): string => (typeof v === 'string' && v.trim() ? v.trim() : fallback);
 const bool = (v: unknown, fallback = false): boolean => (typeof v === 'boolean' ? v : fallback);
@@ -80,6 +91,59 @@ export function parseAndSanitizeAnalysis(input: unknown): TemplateAnalysis {
   type LayoutType = TemplateAnalysis['layout']['type'];
   type PhotoConfig = NonNullable<TemplateAnalysis['layout']['photo']>;
 
+  const pt = (v: unknown): TemplateTypographyToken | undefined => {
+    if (!v || typeof v !== 'object') return undefined;
+    const t = v as Record<string, unknown>;
+    const fam = str(t.family);
+    const tf = TRANSFORMS.includes(t.textTransform as string) ? (t.textTransform as TemplateTypographyToken['textTransform']) : undefined;
+    return {
+      ...(fam ? { family: fam } : {}),
+      ...(t.weight !== undefined ? { weight: t.weight as number | string } : {}),
+      ...(typeof t.size === 'number' && t.size > 4 ? { size: t.size } : {}),
+      ...(typeof t.letterSpacing === 'number' ? { letterSpacing: t.letterSpacing } : {}),
+      ...(tf ? { textTransform: tf } : {}),
+      ...(typeof t.lineHeight === 'number' && t.lineHeight > 0.5 ? { lineHeight: t.lineHeight } : {}),
+    };
+  };
+
+  const rawTheme = (rawStyle.theme && typeof rawStyle.theme === 'object' ? rawStyle.theme : {}) as Record<string, unknown>;
+  const rawTypography = (rawStyle.typography && typeof rawStyle.typography === 'object' ? rawStyle.typography : {}) as Record<string, unknown>;
+  const rawComponent = (rawStyle.componentStyle && typeof rawStyle.componentStyle === 'object' ? rawStyle.componentStyle : {}) as Record<string, unknown>;
+
+  const rawPage = (rawLayout.page && typeof rawLayout.page === 'object' ? rawLayout.page : {}) as Record<string, unknown>;
+  const rawMargins = (rawPage.margins && typeof rawPage.margins === 'object' ? rawPage.margins : {}) as Record<string, unknown>;
+  const mm = (v: unknown, fallback: number): number => (typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : fallback);
+
+  const rawColumns = Array.isArray(rawLayout.columns) ? rawLayout.columns : [];
+
+  const rawGeometry = (rawLayout.geometry && typeof rawLayout.geometry === 'object' ? rawLayout.geometry : {}) as Record<string, unknown>;
+  const frac = (v: unknown): number | undefined =>
+    typeof v === 'number' && Number.isFinite(v) && v > 0 && v <= 1 ? v : undefined;
+  const px = (v: unknown): number | undefined =>
+    typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : undefined;
+
+  const defaultPlacements: TemplateAnalysis['layout']['placements'] = orderedSections
+    .map((id, index) => ({
+      sectionId: id,
+      column: sidebarSections.includes(id) ? ('sidebar' as const) : ('main' as const),
+      order: index,
+    }))
+    .filter((p) => !PERSONAL_IDS_SET.has(p.sectionId));
+  const providedPlacements = Array.isArray(rawLayout.placements)
+    ? rawLayout.placements
+        .map((p) => {
+          const pl = (p && typeof p === 'object' ? p : {}) as Record<string, unknown>;
+          const id = str(pl.sectionId);
+          if (!knownSectionIds.has(id)) return null;
+          return {
+            sectionId: id,
+            column: pl.column === 'sidebar' ? ('sidebar' as const) : ('main' as const),
+            order: typeof pl.order === 'number' ? pl.order : 0,
+          };
+        })
+        .filter((p): p is NonNullable<TemplateAnalysis['layout']['placements']>[number] => p !== null)
+    : null;
+
   const layout: TemplateAnalysis['layout'] = {
     type: LAYOUT_TYPES.includes(rawLayout.type as string) ? (rawLayout.type as LayoutType) : 'single-column',
     orderedSections,
@@ -92,6 +156,43 @@ export function parseAndSanitizeAnalysis(input: unknown): TemplateAnalysis {
           size: PHOTO_SIZES.includes(rawPhoto.size as string) ? (rawPhoto.size as PhotoConfig['size']) : 'medium',
         }
       : undefined,
+    page:
+      rawPage && (rawPage.widthMm !== undefined || rawPage.heightMm !== undefined || rawMargins.top !== undefined)
+        ? {
+            widthMm: mm(rawPage.widthMm, 210),
+            heightMm: mm(rawPage.heightMm, 297),
+            margins: {
+              top: mm(rawMargins.top, 12),
+              right: mm(rawMargins.right, 12),
+              bottom: mm(rawMargins.bottom, 12),
+              left: mm(rawMargins.left, 12),
+            },
+          }
+        : undefined,
+    columns:
+      rawColumns.length > 0
+        ? rawColumns
+            .map((c) => {
+              const col = (c && typeof c === 'object' ? c : {}) as Record<string, unknown>;
+              return {
+                id: col.id === 'sidebar' ? ('sidebar' as const) : ('main' as const),
+                width: typeof col.width === 'number' && col.width > 0 && col.width < 1 ? col.width : undefined,
+                background: str(col.background) || undefined,
+                padding: typeof col.padding === 'number' && col.padding >= 0 ? col.padding : undefined,
+              };
+            })
+        : undefined,
+    placements: providedPlacements || defaultPlacements,
+    geometry: rawGeometry && (rawGeometry.orientation !== undefined || rawGeometry.sidebarWidth !== undefined)
+      ? {
+          ...(rawGeometry.orientation === 'landscape' ? { orientation: 'landscape' as const } : {}),
+          ...(px(rawGeometry.headerHeight) ? { headerHeight: px(rawGeometry.headerHeight) } : {}),
+          ...(frac(rawGeometry.sidebarWidth) ? { sidebarWidth: frac(rawGeometry.sidebarWidth) } : {}),
+          ...(frac(rawGeometry.mainWidth) ? { mainWidth: frac(rawGeometry.mainWidth) } : {}),
+          ...(px(rawGeometry.gap) ? { gap: px(rawGeometry.gap) } : {}),
+          ...(px(rawGeometry.verticalGap) ? { verticalGap: px(rawGeometry.verticalGap) } : {}),
+        }
+      : undefined,
   };
   const style: TemplateAnalysis['style'] = {
     primaryColor: pickHex(rawStyle.primaryColor, '#1e293b'),
@@ -102,7 +203,109 @@ export function parseAndSanitizeAnalysis(input: unknown): TemplateAnalysis {
     fontFamily: str(rawStyle.fontFamily) || 'Inter, sans-serif',
     headerStyle: HEADER_STYLES.includes(rawStyle.headerStyle as string) ? (rawStyle.headerStyle as TemplateAnalysis['style']['headerStyle']) : 'left-aligned',
     sectionDivider: DIVIDERS.includes(rawStyle.sectionDivider as string) ? (rawStyle.sectionDivider as TemplateAnalysis['style']['sectionDivider']) : 'line',
+    nameSize: typeof rawStyle.nameSize === 'number' && rawStyle.nameSize > 8 ? rawStyle.nameSize : undefined,
+    headingSize: typeof rawStyle.headingSize === 'number' && rawStyle.headingSize > 7 ? rawStyle.headingSize : undefined,
+    bodySize: typeof rawStyle.bodySize === 'number' && rawStyle.bodySize > 6 ? rawStyle.bodySize : undefined,
+    theme: {
+      ...(pickHex(rawTheme.headerBackground, '') ? { headerBackground: pickHex(rawTheme.headerBackground, '') } : {}),
+      ...(pickHex(rawTheme.sidebarBackground, '') ? { sidebarBackground: pickHex(rawTheme.sidebarBackground, '') } : {}),
+      ...(pickHex(rawTheme.mainBackground, '') ? { mainBackground: pickHex(rawTheme.mainBackground, '') } : {}),
+      ...(pickHex(rawTheme.headingColor, '') ? { headingColor: pickHex(rawTheme.headingColor, '') } : {}),
+      ...(pickHex(rawTheme.textColor, '') ? { textColor: pickHex(rawTheme.textColor, '') } : {}),
+      ...(pickHex(rawTheme.borderColor, '') ? { borderColor: pickHex(rawTheme.borderColor, '') } : {}),
+      ...(pickHex(rawTheme.iconColor, '') ? { iconColor: pickHex(rawTheme.iconColor, '') } : {}),
+      ...(pickHex(rawTheme.sidebarHeadingColor, '') ? { sidebarHeadingColor: pickHex(rawTheme.sidebarHeadingColor, '') } : {}),
+    },
+    typography: Object.keys(rawTypography).length > 0
+      ? {
+          ...(pt(rawTypography.name) ? { name: pt(rawTypography.name) } : {}),
+          ...(pt(rawTypography.jobTitle) ? { jobTitle: pt(rawTypography.jobTitle) } : {}),
+          ...(pt(rawTypography.sectionHeading) ? { sectionHeading: pt(rawTypography.sectionHeading) } : {}),
+          ...(pt(rawTypography.body) ? { body: pt(rawTypography.body) } : {}),
+          ...(pt(rawTypography.sidebarHeading) ? { sidebarHeading: pt(rawTypography.sidebarHeading) } : {}),
+          ...(pt(rawTypography.sidebarText) ? { sidebarText: pt(rawTypography.sidebarText) } : {}),
+        }
+      : undefined,
+    componentStyle:
+      HEADING_VARIANTS.includes(rawComponent.headingVariant as string) ||
+      BULLET_STYLES.includes(rawComponent.bulletStyle as string) ||
+      rawComponent.timeline !== undefined ||
+      rawComponent.icons !== undefined ||
+      rawComponent.headerBackground !== undefined
+        ? {
+            ...(HEADING_VARIANTS.includes(rawComponent.headingVariant as string)
+              ? { headingVariant: rawComponent.headingVariant as TemplateComponentStyle['headingVariant'] }
+              : {}),
+            ...(BULLET_STYLES.includes(rawComponent.bulletStyle as string)
+              ? { bulletStyle: rawComponent.bulletStyle as TemplateComponentStyle['bulletStyle'] }
+              : {}),
+            ...(typeof rawComponent.timeline === 'boolean' ? { timeline: rawComponent.timeline } : {}),
+            ...(typeof rawComponent.icons === 'boolean' ? { icons: rawComponent.icons } : {}),
+            ...(typeof rawComponent.headerBackground === 'boolean' ? { headerBackground: rawComponent.headerBackground } : {}),
+          }
+        : undefined,
   };
+
+  const rawContent = (raw.content && typeof raw.content === 'object' ? raw.content : {}) as Record<string, unknown>;
+  const rawContentEntries =
+    (raw.contentEntries && typeof raw.contentEntries === 'object' ? raw.contentEntries : {}) as Record<string, unknown>;
+
+  const fieldIdsBySection = new Map<string, Set<string>>();
+  fields.forEach((f) => {
+    if (!fieldIdsBySection.has(f.section)) fieldIdsBySection.set(f.section, new Set());
+    fieldIdsBySection.get(f.section)!.add(f.id);
+  });
+
+  const pickEntryStrings = (obj: unknown, allowed: Set<string>): Record<string, string> => {
+    if (!obj || typeof obj !== 'object') return {};
+    const rec = obj as Record<string, unknown>;
+    const out: Record<string, string> = {};
+    allowed.forEach((id) => {
+      if (typeof rec[id] === 'string' && rec[id].trim()) out[id] = (rec[id] as string).trim();
+    });
+    return out;
+  };
+
+  const content: Record<string, string> = {};
+  const contentEntries: Record<string, Array<Record<string, string>>> = {};
+
+  const applySectionContent = (sectionId: string, value: unknown) => {
+    const section = sections.find((s) => s.id === sectionId);
+    const allowed = fieldIdsBySection.get(sectionId) || new Set<string>(fields.filter((f) => f.section === sectionId).map((f) => f.id));
+    if (allowed.size === 0) return;
+    const isRepeatable = section?.repeatable ?? false;
+    if (isRepeatable) {
+      const list = arr(value).length > 0 ? arr(value) : arr((value as Record<string, unknown>)?.entries);
+      const items = list
+        .map((item) => {
+          const rec = (item && typeof item === 'object' && !Array.isArray(item) ? item : {}) as Record<string, unknown>;
+          return pickEntryStrings(rec, allowed);
+        })
+        .filter((rec) => Object.keys(rec).length > 0);
+      if (items.length > 0) contentEntries[sectionId] = items;
+    } else {
+      const rec = (value && typeof value === 'object' && !Array.isArray(value) ? value : {}) as Record<string, unknown>;
+      const merged = { ...pickEntryStrings(rec.value ?? rec, allowed), ...pickEntryStrings(rec, allowed) };
+      Object.entries(merged).forEach(([id, text]) => {
+        content[id] = text;
+      });
+    }
+  };
+
+  Object.entries(rawContent).forEach(([key, value]) => {
+    const isSection = sections.some((s) => s.id === key) || fields.some((f) => f.section === key);
+    if (isSection) {
+      applySectionContent(key, value);
+      return;
+    }
+    const field = fields.find((f) => f.id === key);
+    if (field && typeof value === 'string' && value.trim()) content[field.id] = value.trim();
+  });
+
+  Object.entries(rawContentEntries).forEach(([key, value]) => {
+    if (key in contentEntries) return;
+    applySectionContent(key, value);
+  });
 
   return {
     templateName: str(raw.templateName) || 'Detected Template',
@@ -112,6 +315,8 @@ export function parseAndSanitizeAnalysis(input: unknown): TemplateAnalysis {
     sections,
     fields,
     confidence: Math.min(1, Math.max(0, typeof raw.confidence === 'number' ? raw.confidence : 0.7)),
+    ...(Object.keys(content).length > 0 ? { content } : {}),
+    ...(Object.keys(contentEntries).length > 0 ? { contentEntries } : {}),
   };
 }
 
@@ -122,6 +327,7 @@ export function buildAnalyzePrompt(palette: string[] = []): string {
       : '';
 
   return `You are an expert CV template analyzer. Study the uploaded CV template image very carefully.
+It is the MASTER DESIGN. Your job is to describe it EXACTLY so another program can reproduce it pixel-for-pixel with different content. Do NOT simplify, redesign, or invent a style.
 
 Extract EVERYTHING visible in the template and return STRICT JSON (no prose, no code fences) that matches this exact shape:
 
@@ -133,33 +339,71 @@ Extract EVERYTHING visible in the template and return STRICT JSON (no prose, no 
     "type": "single-column" | "two-column" | "sidebar-left" | "sidebar-right",
     "orderedSections": string[],  // every visible section in display order (read column by column for multi-column layouts)
     "sidebarSections": string[] | undefined,  // section ids placed in the colored sidebar (for sidebar layouts)
-    "photo": { "included": boolean, "position": "top-center" | "top-left" | "top-right" | "sidebar", "shape": "circle" | "square" | "rounded", "size": "small" | "medium" | "large" } | null
+    "photo": { "included": boolean, "position": "top-center" | "top-left" | "top-right" | "sidebar", "shape": "circle" | "square" | "rounded", "size": "small" | "medium" | "large" } | null,
+    "page": { "widthMm": number | null, "heightMm": number | null, "margins": { "top": number, "right": number, "bottom": number, "left": number } } | null,
+    "columns": [ { "id": "main" | "sidebar", "width": number 0..1 (fraction), "background": "#hex" | null } ] | null,
+    "placements": [ { "sectionId": string, "column": "main" | "sidebar", "order": number } ] | null,
+    "geometry": { "orientation": "portrait" | "landscape", "headerHeight": number | null, "sidebarWidth": number 0..1, "mainWidth": number 0..1, "gap": number | null, "verticalGap": number | null } | null
   },
   "style": {
     "primaryColor": "#hex",   // main heading/accent color
-    "secondaryColor": "#hex", // secondary headings / sidebar color
+    "secondaryColor": "#hex", // secondary color
     "backgroundColor": "#hex",
     "textColor": "#hex",
-    "accentColor": "#hex",    // most vivid color
+    "accentColor": "#hex",    // most vivid accent
     "fontFamily": "e.g. Georgia, serif",
     "headerStyle": "centered" | "left-aligned" | "right-aligned",
-    "sectionDivider": "line" | "space" | "border"
+    "sectionDivider": "line" | "space" | "border",
+    "nameSize": number,
+    "bodySize": number,
+    "headingSize": number,
+    "theme": {
+      "headerBackground": "#hex" | null,   // full header/name band background, if any
+      "sidebarBackground": "#hex" | null,  // sidebar/rail background, if any
+      "mainBackground": "#hex" | null,     // main content background
+      "headingColor": "#hex" | null,      // section heading color
+      "textColor": "#hex" | null,         // body text color
+      "borderColor": "#hex" | null,       // rules, borders, dividers
+      "iconColor": "#hex" | null          // icon/bullet accent color
+    },
+    "typography": {
+      "name": { "family"?: string, "weight"?: number, "size"?: number, "letterSpacing"?: number, "textTransform"?: "none"|"uppercase"|"capitalize", "lineHeight"?: number },
+      "jobTitle": { ... same shape ... },
+      "sectionHeading": { ... same shape ... },
+      "body": { ... same shape ... },
+      "sidebarHeading": { ... same shape ... },
+      "sidebarText": { ... same shape ... }
+    },
+    "componentStyle": {
+      "headingVariant": "underline" | "dotted" | "border" | "filled" | "icon" | "plain",  // how section headings are built
+      "bulletStyle": "dot" | "square" | "dash" | "arrow" | "line",
+      "timeline": boolean,        // true if experience/education use a left timeline rail with dots
+      "icons": boolean,           // true if sections have small icons beside/in headings
+      "headerBackground": boolean // true if the header/name area is a colored band
+    }
   },
   "sections": [
     { "id": string, "name": string, "description": string, "repeatable": boolean, "maxEntries": number | null }
   ],
   "fields": [
     { "id": string, "label": string, "type": "text"|"email"|"phone"|"url"|"textarea"|"select"|"date", "required": boolean, "placeholder": string | null, "section": string /* section id from above */, "options": string[] | null }
-  ]
+  ],
+  "content": {
+    "<sectionId>": { "<fieldId>": string } | [ { "<fieldId>": string } ]
+  }
 }
 
-Rules:
+Rules — the template is the exact source of truth:
 - DO NOT omit any section that exists in the template (header/contact, about/summary, skills, experience, education, projects, certifications, languages, interests, references, achievements, volunteering...). Every visible section must appear in orderedSections AND in sections.
 - For each section list EVERY field a user would need to fill (labels visible on the page). Fields like name, title, email, phone, address, website, linkedin must be in the contact/personal section.
 - Sections that clearly contain MULTIPLE repeated entries (e.g. several experience or education rows) must have repeatable=true.
-- Compute colors as the nearest #hex approximations of what is actually used (headings, sidebar/rail, icons, lines). If a section title color is dark navy, use that as primaryColor. Use exact hex values.
-- Estimate the layout type from column arrangement; if there is a distinct colored left (or right) rail, use sidebar-left (or sidebar-right) and list sidebarSections.
-- Keep field ids short and use a section prefix (e.g. expCompany, eduDegree, projName).
+- Colors: sample the ACTUAL pixels. Report exact #hex for each theme slot. Never substitute generic names (no "blue"/"gray") — give the precise hex value from the image. headerBackground covers a full name/header band if one exists; sidebarBackground covers the colored rail; headingColor is the section-heading text color; borderColor is lines/dividers; iconColor is icons or bullet marks.
+- Geometry: measure proportions from the image. sidebarWidth/mainWidth are fractions of total page width (0..1). headerHeight and gaps in px relative to a 794-px-wide page. If a header band exists, set headerHeight (approximate its height in px).
+- Typography: estimate per-role family, weight, size (px), letterSpacing, textTransform (are headings uppercase, capitalized, letter-spaced?), lineHeight from the image. Body text, sidebar text, and headings often differ — record each.
+- Component style: reproduce HOW the template draws things — underline (thick/thin line under heading), dotted rule, bordered box, filled color strip, icon beside the heading, or plain. Note timelines (experience/education drawn as a vertical line of dots) and icons.
+- Layout type: if a distinct colored left or right rail exists, use sidebar-left (or sidebar-right) and list its sections in sidebarSections AND in placements with column "sidebar". Read sections column by column: sidebar top-to-bottom first, then the main column (for sidebar layouts) — keep exact positions in placements (order starts at 0 per column).
+- Do not flatten the design: if two columns have different widths, keep those widths in geometry/columns.
+- CONTENT: transcribe the actual text visible in the template into "content", keyed by section id, using the SAME field ids from "fields". A non-repeatable section maps to an object { fieldId: value }; a repeatable section (experience, education, projects, ...) maps to an ARRAY of objects, one per visible entry. Copy EXACTLY what you see — real names, titles, companies, dates, emails, phones, addresses, and every bullet line. Multi-line textareas (summaries, descriptions, responsibilities) keep the bullet lines separated by "\\n". Include every visible phone/email/link exactly. If a section has content but no obvious field (e.g. a skill tag list or language list), use the section's main text field. This content is the DEFAULT data used to build the CV — do not paraphrase, translate, or invent;
 - confidence = how sure you are about the overall structure (0.6-0.98).${paletteLine}`;
 }
 
