@@ -117,85 +117,125 @@ export class AIService {
     const requiredExperience: string[] = [];
     const softSkills: string[] = [];
     const keywords: string[] = [];
-    
+
+    const COMMON_TECH_TERMS = [
+      'react', 'next.js', 'node', 'node.js', 'javascript', 'typescript', 'python', 'java', 'c++', 'c#',
+      'php', 'ruby', 'go', 'golang', 'rust', 'html', 'css', 'sql', 'mysql', 'postgresql', 'postgres',
+      'mongodb', 'nosql', 'sqlite', 'redis', 'aws', 'azure', 'gcp', 'cloud', 'docker', 'kubernetes',
+      'git', 'github', 'ci/cd', 'rest', 'restful', 'api', 'graphql', 'linux', 'figma', 'excel', 'powerpoint',
+      'agile', 'scrum', 'jira', 'machine learning', 'ai', 'devops', 'cybersecurity', 'accounting',
+      'financial analysis', 'sales', 'marketing', 'seo', 'customer service', 'data analysis', 'flutter'
+    ];
+
+    const COMMON_SOFT_TERMS = [
+      'communication', 'teamwork', 'collaboration', 'problem solving', 'leadership', 'adaptability',
+      'time management', 'critical thinking', 'attention to detail', 'interpersonal', 'presentation',
+      'work ethic', 'conflict resolution', 'negotiation', 'organizational'
+    ];
+
     requirements.forEach(req => {
-      const lowerReq = req.toLowerCase();
-      
-      if (lowerReq.includes('degree') || lowerReq.includes('bachelor') || lowerReq.includes('master')) {
-        requiredEducation.push(req);
-      } else if (lowerReq.includes('experience') || lowerReq.includes('years')) {
-        requiredExperience.push(req);
-      } else if (lowerReq.includes('skill') || lowerReq.includes('proficient') || lowerReq.includes('knowledge')) {
-        if (lowerReq.includes('preferred') || lowerReq.includes('plus') || lowerReq.includes('advantage')) {
-          preferredTechnicalSkills.push(req);
+      const cleanReq = req.replace(/^[-*•\d.)\s]+/, '').trim();
+      if (!cleanReq) return;
+      const lowerReq = cleanReq.toLowerCase();
+      const isPreferred = lowerReq.includes('preferred') || lowerReq.includes('plus') || lowerReq.includes('advantage') || lowerReq.includes('nice to have');
+
+      // 1. Education
+      if (lowerReq.includes('degree') || lowerReq.includes('bachelor') || lowerReq.includes('master') || lowerReq.includes('bsc') || lowerReq.includes('msc') || lowerReq.includes('diploma') || lowerReq.includes('university')) {
+        requiredEducation.push(cleanReq);
+      }
+
+      // 2. Experience
+      if (lowerReq.includes('experience') || lowerReq.includes('year') || lowerReq.includes('years') || lowerReq.includes('proven track record')) {
+        requiredExperience.push(cleanReq);
+      }
+
+      // 3. Technical & Domain Skills
+      const hasTechKeyword = COMMON_TECH_TERMS.some(term => lowerReq.includes(term)) || lowerReq.includes('proficient') || lowerReq.includes('knowledge of') || lowerReq.includes('familiarity with') || lowerReq.includes('experience in') || lowerReq.includes('tools');
+      if (hasTechKeyword) {
+        if (isPreferred) {
+          preferredTechnicalSkills.push(cleanReq);
         } else {
-          requiredTechnicalSkills.push(req);
+          requiredTechnicalSkills.push(cleanReq);
         }
-      } else if (lowerReq.includes('communication') || lowerReq.includes('teamwork') || lowerReq.includes('leadership')) {
-        softSkills.push(req);
-      } else {
-        keywords.push(req);
+      }
+
+      // 4. Soft Skills
+      const hasSoftKeyword = COMMON_SOFT_TERMS.some(term => lowerReq.includes(term));
+      if (hasSoftKeyword) {
+        softSkills.push(cleanReq);
+      }
+
+      // 5. General Keywords
+      if (!hasTechKeyword && !hasSoftKeyword && !requiredEducation.includes(cleanReq) && !requiredExperience.includes(cleanReq)) {
+        keywords.push(cleanReq);
       }
     });
-    
+
     return {
-      requiredEducation,
-      requiredTechnicalSkills,
-      preferredTechnicalSkills,
-      requiredExperience,
-      softSkills,
-      keywords
+      requiredEducation: [...new Set(requiredEducation)],
+      requiredTechnicalSkills: [...new Set(requiredTechnicalSkills)],
+      preferredTechnicalSkills: [...new Set(preferredTechnicalSkills)],
+      requiredExperience: [...new Set(requiredExperience)],
+      softSkills: [...new Set(softSkills)],
+      keywords: [...new Set(keywords)],
     };
   }
 
   matchJobRequirements(profile: UserProfile, jobDescription: JobDescription): JobMatchResult {
     const jobAnalysis = this.analyzeJobDescription(jobDescription);
-    const profileSkills = [
+    
+    // Combine all profile text for deep semantic matching
+    const profileText = [
+      profile.personalInfo.fullName,
+      profile.personalInfo.location,
+      ...profile.education.map(e => `${e.degree} ${e.department} ${e.university} ${(e.relevantCourses || []).join(' ')}`),
+      ...profile.experience.map(e => `${e.position} ${e.company} ${(e.responsibilities || []).join(' ')} ${(e.technologiesUsed || []).join(' ')}`),
+      ...profile.internships.map(i => `${i.position} ${i.organization} ${(i.responsibilities || []).join(' ')} ${(i.skillsGained || []).join(' ')}`),
+      ...profile.projects.map(p => `${p.name} ${p.description} ${(p.technologies || []).join(' ')}`),
       ...profile.skills.technicalSkills,
       ...profile.skills.programmingLanguages,
       ...profile.skills.frameworks,
-      ...profile.skills.databases
-    ];
-    
-    const matchedTechnicalSkills = jobAnalysis.requiredTechnicalSkills.filter(skill => 
-      profileSkills.some(profileSkill => 
-        profileSkill.toLowerCase().includes(skill.toLowerCase()) ||
-        skill.toLowerCase().includes(profileSkill.toLowerCase())
-      )
-    );
-    
-    const matchedEducation = jobAnalysis.requiredEducation.filter(edu => 
-      profile.education.some(profileEdu => 
-        profileEdu.degree.toLowerCase().includes(edu.toLowerCase()) ||
-        edu.toLowerCase().includes(profileEdu.degree.toLowerCase())
-      )
-    );
-    
-    const matchedExperience = jobAnalysis.requiredExperience.filter(exp => 
-      profile.experience.some(profileExp => 
-        profileExp.position.toLowerCase().includes(exp.toLowerCase()) ||
-        exp.toLowerCase().includes(profileExp.position.toLowerCase())
-      )
-    );
-    
-    const totalRequirements = jobAnalysis.requiredTechnicalSkills.length + 
-                            jobAnalysis.requiredEducation.length + 
-                            jobAnalysis.requiredExperience.length;
-    
-    const matchedTotal = matchedTechnicalSkills.length + 
-                        matchedEducation.length + 
-                        matchedExperience.length;
-    
-    const matchScore = totalRequirements > 0 ? Math.round((matchedTotal / totalRequirements) * 100) : 0;
-    
+      ...profile.skills.databases,
+      ...profile.skills.softSkills,
+      ...profile.skills.languages,
+    ].join(' ').toLowerCase();
+
+    const matchedTechnicalSkills = jobAnalysis.requiredTechnicalSkills.filter(skill => {
+      const lower = skill.toLowerCase();
+      // Test words longer than 2 characters
+      const words = lower.split(/[^a-z0-9+#.]+/).filter(w => w.length > 2);
+      return words.some(w => profileText.includes(w)) || profileText.includes(lower);
+    });
+
+    const matchedEducation = jobAnalysis.requiredEducation.filter(edu => {
+      const lower = edu.toLowerCase();
+      const words = lower.split(/[^a-z0-9]+/).filter(w => w.length > 3);
+      return words.some(w => profileText.includes(w)) || profile.education.length > 0;
+    });
+
+    const matchedExperience = jobAnalysis.requiredExperience.filter(exp => {
+      const lower = exp.toLowerCase();
+      return profile.experience.length > 0 || profile.internships.length > 0 || profileText.includes(lower);
+    });
+
+    const totalKeyReqs = jobAnalysis.requiredTechnicalSkills.length + jobAnalysis.requiredEducation.length + jobAnalysis.requiredExperience.length;
+    const matchedCount = matchedTechnicalSkills.length + matchedEducation.length + matchedExperience.length;
+
+    let matchScore = 50;
+    if (totalKeyReqs > 0) {
+      matchScore = Math.min(98, Math.max(15, Math.round((matchedCount / totalKeyReqs) * 100)));
+    } else if (profileText.trim().length > 50) {
+      matchScore = 75;
+    }
+
     const missingRequirements = [
-      ...jobAnalysis.requiredTechnicalSkills.filter(skill => !matchedTechnicalSkills.includes(skill)),
-      ...jobAnalysis.requiredEducation.filter(edu => !matchedEducation.includes(edu)),
-      ...jobAnalysis.requiredExperience.filter(exp => !matchedExperience.includes(exp))
+      ...jobAnalysis.requiredTechnicalSkills.filter(s => !matchedTechnicalSkills.includes(s)),
+      ...jobAnalysis.requiredEducation.filter(e => !matchedEducation.includes(e)),
+      ...jobAnalysis.requiredExperience.filter(ex => !matchedExperience.includes(ex)),
     ];
-    
+
     const recommendations = this.generateRecommendations(profile, missingRequirements);
-    
+
     return {
       matchScore,
       matchedQualifications: matchedEducation,
@@ -203,7 +243,7 @@ export class AIService {
       matchedExperience,
       matchedEducation,
       missingRequirements,
-      recommendations
+      recommendations,
     };
   }
 
@@ -297,88 +337,317 @@ export class AIService {
     profile: UserProfile, 
     company: string, 
     position: string, 
-    _jobRequirements: string[],
-    _language: LanguageCode = 'en'
+    jobRequirements: string[] = [],
+    language: LanguageCode = 'en',
+    tone: 'professional' | 'fresh-graduate' | 'modern' = 'professional'
   ): string {
-    const { personalInfo, education, skills, internships, projects } = profile;
-    
-    const latestEducation = education[0];
-    const mainSkills = skills.technicalSkills.slice(0, 4).join(', ');
-    
-    const letter = `
-${personalInfo.fullName}
-${personalInfo.email} | ${personalInfo.phone}
-${personalInfo.location}
-${personalInfo.linkedin ? `LinkedIn: ${personalInfo.linkedin}` : ''}
-${personalInfo.github ? `GitHub: ${personalInfo.github}` : ''}
-
-${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-
-Hiring Manager
-${company}
-
-Subject: Application for the Position of ${position}
-
-Dear Hiring Manager,
-
-I am writing to express my strong interest in the ${position} position at ${company}. As a recent ${latestEducation?.department || 'graduate'} graduate from ${latestEducation?.university || 'university'}, I am excited about the opportunity to contribute to your team.
-
-${latestEducation ? `My academic background includes a ${latestEducation.degree}${latestEducation.cgpa ? ` with a CGPA of ${latestEducation.cgpa}` : ''}, which has provided me with a solid foundation in ${latestEducation.department}.` : ''}
-
-${internships.length > 0 ? `During my internship at ${internships[0].organization}, I gained practical experience in ${internships[0].responsibilities.slice(0, 2).join(' and ')}.` : ''}
-
-${projects.length > 0 ? `I have successfully completed ${projects.length} project${projects.length > 1 ? 's' : ''}, including ${projects[0].name}, which demonstrates my ability to ${projects[0].description.substring(0, 100)}.` : ''}
-
-My technical skills include ${mainSkills}, which align well with the requirements of this position. I am particularly drawn to this opportunity because of ${company}'s reputation for ${this.getCompanyStrength()}.
-
-I am confident that my combination of academic knowledge, practical experience, and technical skills makes me a strong candidate for this position. I would welcome the opportunity to discuss how I can contribute to your team.
-
-Thank you for considering my application. I look forward to hearing from you.
-
-Sincerely,
-${personalInfo.fullName}
-    `.trim();
-    
-    return letter;
+    return this.generateHumanLetter({
+      letterType: 'application',
+      company,
+      position,
+      profile,
+      jobRequirements,
+      language,
+      tone,
+    });
   }
 
   generateCoverLetter(
     profile: UserProfile, 
     company: string, 
     position: string, 
-    _language: LanguageCode = 'en'
+    language: LanguageCode = 'en',
+    tone: 'professional' | 'fresh-graduate' | 'modern' = 'professional'
   ): string {
-    const { personalInfo, education, skills, experience, internships } = profile;
-    
-    const latestEducation = education[0];
-    const mainSkills = skills.technicalSkills.slice(0, 3).join(', ');
-    
-    const letter = `
-${personalInfo.fullName}
-${personalInfo.email} | ${personalInfo.phone}
-${personalInfo.location}
+    return this.generateHumanLetter({
+      letterType: 'cover',
+      company,
+      position,
+      profile,
+      language,
+      tone,
+    });
+  }
 
-${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+  generateHumanLetter(params: {
+    letterType: 'application' | 'cover';
+    company?: string;
+    position?: string;
+    applicantName?: string;
+    email?: string;
+    phone?: string;
+    location?: string;
+    recipient?: string;
+    degree?: string;
+    university?: string;
+    skills?: string[];
+    experienceSummary?: string;
+    keyProjects?: string;
+    profile?: UserProfile;
+    jobRequirements?: string[];
+    language?: LanguageCode;
+    tone?: 'professional' | 'fresh-graduate' | 'modern';
+  }): string {
+    const {
+      letterType,
+      language = 'en',
+      tone = 'professional',
+    } = params;
 
-Dear Hiring Manager,
+    const p = params.profile;
+    const name = (params.applicantName || p?.personalInfo.fullName || '').trim() || 'Applicant Name';
+    const email = (params.email || p?.personalInfo.email || '').trim();
+    const phone = (params.phone || p?.personalInfo.phone || '').trim();
+    const loc = (params.location || p?.personalInfo.location || '').trim();
 
-I am excited to apply for the ${position} position at ${company}. As a recent graduate with a passion for ${latestEducation?.department || 'this field'}, I am eager to bring my skills and enthusiasm to your team.
+    const company = (params.company || '').trim() || 'Hiring Organization';
+    const position = (params.position || '').trim() || 'Target Position';
+    const recipient = (params.recipient || '').trim() || 'Hiring Manager';
 
-${latestEducation ? `My education in ${latestEducation.department} from ${latestEducation.university} has equipped me with the knowledge and skills necessary to excel in this role.` : ''}
+    const latestEdu = p?.education?.[0];
+    const degree = (params.degree || latestEdu?.degree || latestEdu?.department || '').trim();
+    const university = (params.university || latestEdu?.university || '').trim();
 
-${experience.length > 0 ? `My professional experience as ${experience[0].position} has taught me valuable skills in ${experience[0].technologiesUsed.slice(0, 2).join(' and ')}.` : ''}
+    const skillsList = params.skills && params.skills.length > 0
+      ? params.skills
+      : p?.skills.technicalSkills && p.skills.technicalSkills.length > 0
+        ? p.skills.technicalSkills
+        : [];
+    const skillsText = skillsList.length > 0 ? skillsList.slice(0, 5).join(', ') : '';
 
-${internships.length > 0 ? `Through my internship at ${internships[0].organization}, I developed practical skills in ${internships[0].skillsGained.slice(0, 2).join(' and ')}.` : ''}
+    const expSummary = (params.experienceSummary || (p?.experience?.[0] ? `${p.experience[0].position} at ${p.experience[0].company}` : '')).trim();
+    const projects = (params.keyProjects || (p?.projects?.[0] ? p.projects[0].name : '')).trim();
 
-I am particularly drawn to this position because it aligns perfectly with my career goals and allows me to utilize my skills in ${mainSkills}. I am confident that my dedication and ability to learn quickly will make me a valuable asset to your team.
+    const today = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
 
-Thank you for considering my application. I would welcome the opportunity to discuss how I can contribute to ${company}'s success.
+    const contactLineParts = [email, phone, loc].filter(Boolean);
+    const contactHeader = contactLineParts.length > 0 ? contactLineParts.join(' | ') : '';
+
+    // Afaan Oromo Letter
+    if (language === 'om') {
+      return `
+${name}
+${contactHeader}
+
+Guyyaa: ${today}
+
+Gara: Hooggansa Hojii / Qaxaraa
+Dhaabbata: ${company}
+
+Dhimmi: Iyyannoo Hojii Bakka "${position}" Tiif Dhiyaate
+
+Kabajamoo Hooggantoota Qaxaraa,
+
+Ani maqaan koo ${name} jedhama. Dhaabbata keessan ${company} keessatti bakka hojii "${position}" jedhuuf fedhii olaanaadhaan iyyannoo koo dhiyeessera.${degree ? ` Ani barnoota koo damee ${degree}${university ? ` yuunivarsiitii ${university} irraa` : ''} xumureera.` : ''}
+
+${skillsText ? `Ogummaa koo ${skillsText} fayyadamuun bu'aa qabatamaa fi guddina dhaabbata keessaniitiif gumaachuuf qophiidha.` : 'Ogummaa fi dandeettii koo qabatamaan hojitti hiikuun galma dhaabbata keessaniitiif cimee hojjechuuf qophiidha.'} ${expSummary ? `Muuxannoo koo ${expSummary} keessatti hojiiwwan hedduu milkiin raawwadheera.` : ''}
+
+Dhaabbata keessan ${company} keessatti carraa hojii kana argachuun naaf kabaja guddaadha. Waa'ee dandeettii koo marii bal'aa taasisuuf fedhii olaanaa qaba.
+
+Galatoomaa,
+
+Kabajaan,
+${name}
+      `.trim();
+    }
+
+    // Amharic Letter
+    if (language === 'am') {
+      return `
+${name}
+${contactHeader}
+
+ቀን: ${today}
+
+ለ: የቅጥር እና የሰው ሀብት ክፍል
+ድርጅት: ${company}
+
+ጉዳዩ፡ ለ"${position}" የሥራ መደብ የቀረበ የሥራ ማመልከቻ ደብዳቤ
+
+የተከበራችሁ የድርጅቱ የሥራ መሪዎች፣
+
+እኔ ${name} በድርጅታችሁ ${company} ውስጥ ክፍት በሆነው የ"${position}" የሥራ መደብ ላይ ለመቀጠር ያለኝን ከፍተኛ ፍላጎት በአክብሮት እገልጻለሁ።${degree ? ` በትምህርት ደረጃዬ በ${degree}${university ? ` ከ${university}` : ''} የተመረቅኩ ሲሆን፣` : ''} በዘርፉ በቂ ዕውቀትና ክህሎት አዳብሬያለሁ።
+
+${skillsText ? `ባሉኝ የ${skillsText} ክህሎቶች በመታገዝ ለድርጅታችሁ ዕድገትና ስኬት የበኩሌን አስተዋጽዖ ለማበርከት ዝግጁ ነኝ።` : 'የቀሰምኳቸውን ዕውቀቶች በተግባር በማዋል ለድርጅታችሁ ግቦች መሳካት በሙሉ አቅሜ ለመሥራት ተነሳሽነት አለኝ።'} ${expSummary ? `በተለይም በ${expSummary} ውስጥ በነበረኝ የስራ ቆይታ ተግባራዊ ልምድ ቀስሜያለሁ።` : ''}
+
+ለተሰጠኝ ትኩረት እያመሰገንኩ፣ በጉዳዩ ላይ ፊት ለፊት ተገናኝተን ለመወያየት ዝግጁ መሆኔን በትህትና እገልጻለሁ።
+
+ከሰላምታ ጋር፣
+${name}
+      `.trim();
+    }
+
+    // Human English Letters
+    if (letterType === 'cover') {
+      if (tone === 'fresh-graduate') {
+        return `
+${name}
+${contactHeader}
+
+${today}
+
+${recipient}
+${company}
+
+Dear ${recipient},
+
+I was excited to come across the opening for the ${position} role at ${company}. As a proactive and dedicated graduate${degree ? ` with a degree in ${degree}` : ''}${university ? ` from ${university}` : ''}, I am eager to contribute my energy, foundational training, and technical curiosity to your team.
+
+Throughout my studies and hands-on coursework, I have developed a strong aptitude for practical problem-solving${skillsText ? `, with demonstrable skills in ${skillsText}` : ''}.${projects ? ` In particular, working on projects such as ${projects} taught me how to take ownership of requirements, write dependable code, and adapt quickly to unfamiliar technologies.` : ''} I approach challenges with a steep learning curve and a genuine desire to deliver high-quality outcomes.
+
+What distinguishes ${company} to me is your reputation for forward-thinking innovation and team excellence. I am looking for a collaborative environment where I can be challenged, contribute meaningfully, and grow alongside industry peers who value quality and accountability.
+
+Thank you for your time and review of my qualifications. I have attached my curriculum vitae for your consideration and would welcome the opportunity to speak with you further about how I can support ${company}'s goals.
+
+Warm regards,
+
+${name}
+        `.trim();
+      }
+
+      if (tone === 'modern') {
+        return `
+${name}
+${contactHeader}
+
+${today}
+
+${recipient}
+${company}
+
+Dear ${recipient},
+
+I am writing to submit my application for the ${position} position at ${company}. Having followed your organization's impressive work, I believe my background${degree ? ` in ${degree}` : ''}${skillsText ? ` and proficiency across ${skillsText}` : ''} make me an ideal fit for your current initiatives.
+
+Here is what I bring to the ${position} role:
+${skillsText ? `• Technical Strengths: Proficient in ${skillsText}, focusing on clean implementation and efficiency.` : '• Strong Fundamentals: Solid analytical approach and ability to rapidly master technical tools.'}
+${expSummary ? `• Practical Experience: Applied competencies in ${expSummary}, collaborating to solve mission-critical tasks.` : projects ? `• Project Execution: Successfully developed ${projects}, translating requirements into workable solutions.` : '• Execution Mindset: Proactive team collaborator committed to reliability and continuous delivery.'}
+• Adaptability & Drive: Quick to absorb complex workflows and dedicated to continuous improvement.
+
+${company}'s culture of high standards resonates deeply with my personal work ethic. I look forward to the chance to connect and discuss how my skills and mindset can add immediate value to your department.
 
 Sincerely,
-${personalInfo.fullName}
+
+${name}
+        `.trim();
+      }
+
+      // Default Professional Cover Letter
+      return `
+${name}
+${contactHeader}
+
+${today}
+
+${recipient}
+${company}
+
+Dear ${recipient},
+
+I am writing to express my enthusiastic interest in the ${position} role at ${company}. With a background${degree ? ` in ${degree}` : ''}${university ? ` from ${university}` : ''} and proven hands-on capability in ${skillsText || 'contemporary industry methodologies'}, I am confident in my ability to deliver meaningful results for your team.
+
+${expSummary ? `Through my experience with ${expSummary}, I have learned to deliver reliable solutions under tight deadlines while upholding high standards of quality.` : projects ? `In my practical project work—such as ${projects}—I have demonstrated an ability to analyze complex requirements and engineer dependable, user-focused outcomes.` : 'In my academic and project initiatives, I have consistently focused on translating conceptual knowledge into functional, high-value solutions.'} My core proficiencies include ${skillsText || 'analytical problem-solving, structured design, and collaborative execution'}, which align closely with the qualifications needed for this position.
+
+I am particularly drawn to ${company} because of your recognized commitment to industry leadership and progressive standards. I take pride in being a dependable, solution-oriented professional who communicates clearly and thrives within collaborative environments.
+
+Thank you for your time, consideration, and review of my application. I would welcome the privilege of an interview to discuss how my expertise and dedication will serve ${company}.
+
+Sincerely,
+
+${name}
+      `.trim();
+    }
+
+    // Default Application Letter
+    if (tone === 'fresh-graduate') {
+      return `
+${name}
+${contactHeader}
+
+${today}
+
+${recipient}
+${company}
+
+Subject: Application for ${position} Position
+
+Dear ${recipient},
+
+Please accept this letter and the attached curriculum vitae as my formal application for the ${position} position at ${company}. Having recently graduated${degree ? ` with a ${degree}` : ''}${university ? ` from ${university}` : ''}, I am eager to apply my strong academic preparation and problem-solving drive to your esteemed organization.
+
+During my academic tenure, I maintained a consistent focus on practical application and technical rigor.${skillsText ? ` My technical skill set encompasses ${skillsText}, which I have exercised through comprehensive coursework and dedicated lab projects.` : ''}${projects ? ` For instance, my work on ${projects} helped me cultivate a methodical approach to system design, debugging, and continuous improvement.` : ''} I pride myself on being an adaptable team member who absorbs new technologies rapidly and contributes positively to team morale.
+
+${company} stands out as an organization where excellence, innovation, and integrity are prioritized. I would be thrilled to bring my passion, disciplined work ethic, and eagerness to contribute to your ongoing success in this role.
+
+Thank you for considering my application. I look forward to the possibility of discussing my background in an interview at your earliest convenience.
+
+Respectfully yours,
+
+${name}
+      `.trim();
+    }
+
+    if (tone === 'modern') {
+      return `
+${name}
+${contactHeader}
+
+${today}
+
+${recipient}
+${company}
+
+Subject: Application for ${position}
+
+Dear ${recipient},
+
+I am writing to formally apply for the ${position} opportunity at ${company}. With demonstrable competencies in ${skillsText || 'my field'}${degree ? ` and an academic foundation in ${degree}` : ''}, I am eager to join your team and contribute immediately to your operational goals.
+
+A quick summary of what I offer:
+${skillsText ? `1. Core Competencies: Working knowledge of ${skillsText}, with an emphasis on accuracy and best practices.` : '1. Technical Proficiency: Strong aptitude for software fundamentals and modern workflows.'}
+${expSummary ? `2. Applied Impact: Experience in ${expSummary}, delivering dependable results with attention to detail.` : projects ? `2. Project Experience: Proven ability to execute through ${projects}.` : '2. Execution Mindset: Thorough and dependable approach to problem resolution.'}
+3. Work Ethic: Clear communication, professional curiosity, and a relentless focus on team objectives.
+
+I admire ${company}'s standard of quality and would welcome the opportunity to speak with you regarding how my capabilities align with your requirements for the ${position} role.
+
+Thank you for your time and consideration.
+
+Best regards,
+
+${name}
+      `.trim();
+    }
+
+    // Default Professional Application Letter
+    return `
+${name}
+${contactHeader}
+
+${today}
+
+${recipient}
+${company}
+
+Subject: Formal Application for the Position of ${position}
+
+Dear ${recipient},
+
+I am writing to submit my application for the ${position} vacancy currently available at ${company}. With a disciplined background${degree ? ` in ${degree}` : ''}${university ? ` from ${university}` : ''} and practical experience in ${skillsText || 'modern industry practices'}, I am excited by the opportunity to contribute effectively to your organization's mission.
+
+${expSummary ? `My background includes hands-on experience with ${expSummary}, where I consistently met performance benchmarks and developed strong collaborative workflows.` : projects ? `Throughout my practical work on initiatives such as ${projects}, I have demonstrated a steadfast ability to translate requirements into well-structured, functional deliverables.` : 'My foundational training has emphasized analytical problem-solving, structured execution, and effective collaboration.'}${skillsText ? ` I have honed strong competencies in ${skillsText}, enabling me to adapt quickly to your team’s existing frameworks and standards.` : ''}
+
+I am particularly attracted to ${company} due to your demonstrated excellence and reputation within the sector. I believe that my technical foundation, attention to detail, and positive professional attitude make me an asset who will integrate seamlessly into your workflow.
+
+Thank you for your time and consideration of my application. I welcome the opportunity to discuss my qualifications with you in an interview and look forward to hearing from you soon.
+
+Sincerely,
+
+${name}
     `.trim();
-    
-    return letter;
   }
 
   improveContent(content: string, contentType: 'experience' | 'project' | 'achievement'): string {
