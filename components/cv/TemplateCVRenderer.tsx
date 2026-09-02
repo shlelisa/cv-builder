@@ -22,6 +22,7 @@ export interface TemplateCVRendererProps {
   layoutType?: TemplateAnalysis['layout']['type'];
   customLayout?: CustomLayout;
   zoom?: number;
+  onPhotoClick?: () => void;
 }
 
 const PAGE_H_PORTRAIT = 1123;
@@ -69,8 +70,8 @@ function getContactIcon(field: TemplateField): string {
   if (text.includes('mail') || text.includes('email')) return 'mail';
   if (text.includes('address') || text.includes('location') || text.includes('city')) return 'pin';
   if (text.includes('linkedin')) return 'linkedin';
-  if (text.includes('github') || text.includes('code') || text.includes('tech')) return 'code';
-  if (text.includes('web') || text.includes('site') || text.includes('url')) return 'globe';
+  if (text.includes('github') || text.includes('code')) return 'code';
+  if (text.includes('web') || text.includes('site') || text.includes('portfolio') || text.includes('link')) return 'globe';
   return 'tag';
 }
 
@@ -101,6 +102,7 @@ export default function TemplateCVRenderer({
   layoutType,
   customLayout,
   zoom = 1,
+  onPhotoClick,
 }: TemplateCVRendererProps) {
   const style: TemplateStyle = {
     ...analysis.style,
@@ -136,14 +138,14 @@ export default function TemplateCVRenderer({
   const verticalGap = Math.round(geo0.verticalGap * S);
   const headerH = geo0.headerHeight ? Math.round(geo0.headerHeight * S) : null;
   const sidebarCol = layout.columns?.find((c) => c.id === 'sidebar');
-  const sidebarPadH = typeof sidebarCol?.padding === 'number' ? Math.round(sidebarCol.padding * S) : Math.max(20, Math.round(pagePad.right * 0.6));
+  const sidebarPadH = typeof sidebarCol?.padding === 'number' ? Math.round(sidebarCol.padding * S) : Math.max(18, Math.round(pagePad.right * 0.6));
 
   const isSidebar = resolvedLayout === 'sidebar-left' || resolvedLayout === 'sidebar-right';
   const sidebarRight = resolvedLayout === 'sidebar-right';
   const isTwoCol = resolvedLayout === 'two-column';
   const hasHeaderBand = Boolean(theme.headerBackground);
-  const showPhoto = Boolean(photoUrl);
-  const photoShape = layout.photo?.shape || 'square';
+  const showPhoto = layout.photo?.included ?? Boolean(photoUrl);
+  const photoShape = layout.photo?.shape || 'circle';
   const photoSize = layout.photo?.size || 'medium';
   const photoPos = isSidebar
     ? layout.photo?.position || 'sidebar'
@@ -173,29 +175,96 @@ export default function TemplateCVRenderer({
 
   const photoEl = (align?: 'center' | 'left' | 'right') => {
     if (!showPhoto) return null;
-    const size = PHOTO_SIZES[photoSize];
+    const size = PHOTO_SIZES[photoSize] || 100;
     const alignStyle =
       align === 'center'
         ? { margin: '0 auto' }
         : align === 'right'
           ? { marginLeft: 'auto' }
           : undefined;
+
+    const borderColor =
+      theme.sidebarBackground === '#ffffff'
+        ? theme.borderColor || '#cbd5e1'
+        : 'rgba(255, 255, 255, 0.45)';
+
+    if (photoUrl) {
+      return (
+        <div
+          onClick={onPhotoClick}
+          className={onPhotoClick ? 'cursor-pointer group relative' : undefined}
+          title={onPhotoClick ? 'Click to change photo' : undefined}
+          style={{ width: size, height: size, marginBottom: 12, ...alignStyle }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={photoUrl}
+            alt="Profile"
+            className="block w-full h-full"
+            style={{
+              width: size,
+              height: size,
+              objectFit: 'cover',
+              borderRadius: PHOTO_RADIUS[photoShape] ?? '50%',
+              border: photoShape === 'circle' ? '4px solid #ffffff' : `3px solid ${borderColor}`,
+              boxShadow: photoShape === 'circle' ? '0 4px 14px rgba(0,0,0,0.15)' : undefined,
+            }}
+          />
+          {onPhotoClick && (
+            <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold print:hidden">
+              📷 Change
+            </div>
+          )}
+        </div>
+      );
+    }
+
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={photoUrl}
-        alt="Profile"
-        className="block"
+      <div
+        onClick={onPhotoClick}
+        className={onPhotoClick ? 'cursor-pointer group transition-transform hover:scale-105' : undefined}
+        title={onPhotoClick ? 'Click to upload photo' : 'Photo'}
         style={{
           width: size,
           height: size,
-          objectFit: 'cover',
-          borderRadius: PHOTO_RADIUS[photoShape] ?? 0,
-          border: `3px solid ${theme.borderColor}`,
+          borderRadius: PHOTO_RADIUS[photoShape] ?? '50%',
+          border: photoShape === 'circle' ? '4px solid #ffffff' : `3px solid ${borderColor}`,
+          boxShadow: photoShape === 'circle' ? '0 4px 14px rgba(0,0,0,0.12)' : undefined,
+          backgroundColor: 'rgba(255, 255, 255, 0.4)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
           marginBottom: 12,
+          color: theme.sidebarHeadingColor || theme.iconColor || '#64748b',
+          position: 'relative',
           ...alignStyle,
         }}
-      />
+      >
+        <span style={{ opacity: 0.85 }}>
+          {renderIconPath('user', Math.round(size * 0.44), theme.sidebarHeadingColor || theme.iconColor || '#64748b')}
+        </span>
+        <span
+          style={{
+            position: 'absolute',
+            bottom: 4,
+            right: 4,
+            width: 22,
+            height: 22,
+            borderRadius: '50%',
+            backgroundColor: style.accentColor || '#2563eb',
+            color: '#ffffff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 10,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+          }}
+          className="print:hidden"
+        >
+          📷
+        </span>
+      </div>
     );
   };
 
@@ -221,43 +290,116 @@ export default function TemplateCVRenderer({
           if (isContactSec) {
             const icon = getContactIcon(field);
             return (
-              <div key={field.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, marginTop: 4, marginBottom: 5 }}>
-                <span style={{ marginTop: 2, color: theme.iconColor || theme.sidebarHeadingColor, flexShrink: 0 }}>
-                  {renderIconPath(icon, 12, theme.iconColor || theme.sidebarHeadingColor)}
+              <div
+                key={field.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  marginTop: 4,
+                  marginBottom: 5,
+                }}
+              >
+                <span
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: '50%',
+                    backgroundColor: rail ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.06)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: theme.iconColor || theme.sidebarHeadingColor,
+                    flexShrink: 0,
+                  }}
+                >
+                  {renderIconPath(icon, 11, theme.iconColor || theme.sidebarHeadingColor)}
                 </span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ fontSize: Math.max(9, size - 1), fontWeight: 700, color: fg, opacity: 0.85, display: 'block', textTransform: 'capitalize' }}>
-                    {field.label}:
-                  </span>
-                  <span style={{ fontSize: size, fontWeight: 400, color: fg, wordBreak: 'break-word', display: 'block' }}>
-                    {raw}
-                  </span>
-                </div>
+                <span
+                  style={{
+                    fontSize: size,
+                    fontWeight: 400,
+                    color: fg,
+                    wordBreak: 'break-word',
+                    flex: 1,
+                    minWidth: 0,
+                    lineHeight: 1.35,
+                  }}
+                >
+                  {raw}
+                </span>
               </div>
             );
           }
 
+          if (sectionId === 'personalInfo') {
+            return (
+              <p key={field.id} style={{ fontSize: size, fontWeight: 400, lineHeight: 1.5, marginTop: 1, color: fg }}>
+                <strong style={{ fontWeight: 700 }}>{field.label}: </strong>{raw}
+              </p>
+            );
+          }
+
           if (field.type === 'textarea') {
+            const isPlainColonList = sectionId === 'technicalSkills';
             return raw
               .split(/\s*\|\s*|\r?\n/)
               .map((l) => l.trim())
               .filter(Boolean)
-              .map((line, lineIndex) => (
-                <p
-                  key={`${field.id}-${lineIndex}`}
-                  style={{ fontSize: size, fontWeight: 400, lineHeight: lh, marginTop: 2, color: fg, paddingLeft: rail ? 0 : 14 }}
-                >
-                  {!rail && <span style={{ color: theme.iconColor, marginRight: 4 }}>{char}</span>}
-                  {rail && <span style={{ color: theme.iconColor || fg, marginRight: 5, fontSize: 8 }}>•</span>}
-                  {line}
-                </p>
-              ));
+              .map((line, lineIndex) => {
+                if (isPlainColonList) {
+                  const colonIdx = line.indexOf(':');
+                  if (colonIdx > 0) {
+                    const prefix = line.substring(0, colonIdx + 1);
+                    const rest = line.substring(colonIdx + 1);
+                    return (
+                      <p key={`${field.id}-${lineIndex}`} style={{ fontSize: size, lineHeight: lh, marginTop: 3, color: fg }}>
+                        <strong style={{ fontWeight: 700 }}>{prefix}</strong>{rest}
+                      </p>
+                    );
+                  }
+                  return (
+                    <p key={`${field.id}-${lineIndex}`} style={{ fontSize: size, lineHeight: lh, marginTop: 3, color: fg }}>
+                      {line}
+                    </p>
+                  );
+                }
+
+                return (
+                  <div
+                    key={`${field.id}-${lineIndex}`}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'baseline',
+                      gap: 7,
+                      marginTop: 2,
+                      marginBottom: 2,
+                      fontSize: size,
+                      color: fg,
+                      lineHeight: lh,
+                      paddingLeft: rail ? 2 : 12,
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: theme.iconColor || fg,
+                        fontSize: 9,
+                        lineHeight: 1,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {rail ? '•' : char}
+                    </span>
+                    <span style={{ fontWeight: 400 }}>{line}</span>
+                  </div>
+                );
+              });
           }
 
           if (rail && (sectionId.toLowerCase().includes('skill') || sectionId.toLowerCase().includes('language'))) {
             return (
-              <div key={field.id} style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 3 }}>
-                <span style={{ color: theme.iconColor || fg, fontSize: 8, lineHeight: 1 }}>•</span>
+              <div key={field.id} style={{ display: 'flex', alignItems: 'baseline', gap: 7, marginTop: 3, marginBottom: 3 }}>
+                <span style={{ color: theme.iconColor || fg, fontSize: 10, lineHeight: 1, flexShrink: 0 }}>•</span>
                 <span style={{ fontSize: size, fontWeight: 400, lineHeight: lh, color: fg }}>{raw}</span>
               </div>
             );
@@ -279,9 +421,10 @@ export default function TemplateCVRenderer({
     const group = entries[sectionId] || [];
     const titleFs = rail ? typo.sidebarText.size + 0.8 : typo.body.size + 1;
     const titleFg = rail ? theme.sidebarHeadingColor : theme.headingColor;
+    const fg = rail ? theme.sidebarHeadingColor : theme.textColor;
 
     return (
-      <div style={{ marginBottom: rail ? 14 : 16 }}>
+      <div style={{ marginBottom: rail ? 12 : 16 }}>
         {group.map((entry, index) => {
           const sectionFields = analysis.fields.filter((f) => f.section === sectionId);
           const firstField = sectionFields.find((f) => (entry[f.id] || '').trim());
@@ -298,6 +441,20 @@ export default function TemplateCVRenderer({
 
           const skipIds = new Set<string>();
           if (firstField) skipIds.add(firstField.id);
+
+          if (rail) {
+            return (
+              <div key={`${sectionId}-${index}`} style={{ marginBottom: 9, paddingBottom: 4 }}>
+                <p style={{ fontWeight: 700, fontSize: titleFs, color: titleFg, marginBottom: 2 }}>{title}</p>
+                {dateText && (
+                  <p style={{ fontSize: Math.max(9, titleFs - 1.5), color: fg, opacity: 0.8, marginBottom: 2 }}>
+                    {dateText}
+                  </p>
+                )}
+                <div>{renderEntryBody(sectionId, entry, rail, skipIds)}</div>
+              </div>
+            );
+          }
           if (dateField) skipIds.add(dateField.id);
 
           if (cs.timeline) {
@@ -309,12 +466,13 @@ export default function TemplateCVRenderer({
                       width: 8,
                       height: 8,
                       borderRadius: '50%',
-                      backgroundColor: theme.iconColor,
+                      backgroundColor: '#ffffff',
+                      border: `1.5px solid ${theme.headingColor || '#2c3848'}`,
                       marginTop: 4,
                       flexShrink: 0,
                     }}
                   />
-                  {index < group.length - 1 && <span style={{ width: 2, flex: 1, backgroundColor: theme.borderColor }} />}
+                  {index < group.length - 1 && <span style={{ width: 1.5, flex: 1, backgroundColor: '#cbd5e1' }} />}
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 4 }}>
@@ -407,32 +565,34 @@ export default function TemplateCVRenderer({
         </h2>
       );
     } else if (!rail) {
-      // Main Column: Beautiful Icon Badge + Section Heading + Border Divider
+      // Main Column: Icon Badge (if cs.icons) + Section Heading + Border Divider
       heading = (
         <div
           style={{
-            borderBottom: `2px solid ${theme.borderColor || theme.headingColor}`,
+            borderBottom: `1.5px solid ${theme.borderColor || theme.headingColor}`,
             display: 'flex',
             alignItems: 'center',
             gap: 8,
-            marginBottom: 10,
-            paddingBottom: 4,
+            marginBottom: 8,
+            paddingBottom: 2,
           }}
         >
-          <span
-            style={{
-              width: 22,
-              height: 22,
-              borderRadius: 4,
-              backgroundColor: theme.headingColor || style.primaryColor || '#1e293b',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            {renderIconPath(iconName, 13, '#ffffff')}
-          </span>
+          {cs.icons && (
+            <span
+              style={{
+                width: 22,
+                height: 22,
+                borderRadius: '50%',
+                backgroundColor: theme.headingColor || style.primaryColor || '#1e293b',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              {renderIconPath(iconName, 13, '#ffffff')}
+            </span>
+          )}
           <h2 style={headingBase}>{section.name}</h2>
         </div>
       );
@@ -602,7 +762,7 @@ export default function TemplateCVRenderer({
   const headerBand = hasHeaderBand && renderHeaderContent(false);
   const mainColHeaderBand = hasHeaderBand && renderHeaderContent(true);
 
-  const inlineHeader = !hasHeaderBand && (
+  const inlineHeader = !hasHeaderBand && !layout.hideInlineHeader && (
     <div style={{ textAlign: headerAlign, marginBottom: isTwoCol ? 18 : 20, borderBottom: isSidebar ? 'none' : `3px solid ${theme.borderColor}`, paddingBottom: 12 }}>
       {showPhoto && photoPos === 'top-center' && <div className="flex justify-center">{photoEl('center')}</div>}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: headerAlign === 'center' ? 'center' : headerAlign === 'right' ? 'flex-end' : 'flex-start', gap: 16 }}>

@@ -1,7 +1,7 @@
 'use client';
 
 import html2canvas from 'html2canvas';
-import { TemplateAnalysis } from '@/types';
+import { TemplateAnalysis, TemplateStyle } from '@/types';
 
 export function exportToPdf() {
   window.print();
@@ -39,7 +39,16 @@ export function exportToWord(
   singletonValues: Record<string, string>,
   entries: Record<string, Array<Record<string, string>>>,
   filename = 'my-cv.doc',
+  styleOverrides?: Partial<TemplateStyle>,
 ): void {
+  const primaryColor =
+    styleOverrides?.primaryColor ||
+    styleOverrides?.theme?.headingColor ||
+    analysis.style.theme?.headingColor ||
+    analysis.style.primaryColor ||
+    '#111111';
+  const fontFamily = styleOverrides?.fontFamily || analysis.style.fontFamily || 'Arial, sans-serif';
+
   const name =
     singletonValues.fullName ||
     singletonValues.name ||
@@ -53,9 +62,9 @@ export function exportToWord(
   const sections = analysis.sections || [];
 
   let bodyHtml = `
-    <div style="font-family: Arial, sans-serif; color: #333333; max-width: 750px; margin: 0 auto; line-height: 1.4;">
-      <div style="text-align: center; border-bottom: 2px solid #333333; padding-bottom: 12px; margin-bottom: 20px;">
-        <h1 style="font-size: 24pt; margin: 0 0 6px 0; text-transform: uppercase; color: #111111;">${escapeHtml(name)}</h1>
+    <div style="font-family: ${escapeHtml(fontFamily)}; color: #333333; max-width: 750px; margin: 0 auto; line-height: 1.4;">
+      <div style="text-align: center; border-bottom: 2px solid ${escapeHtml(primaryColor)}; padding-bottom: 12px; margin-bottom: 20px;">
+        <h1 style="font-size: 24pt; margin: 0 0 6px 0; text-transform: uppercase; color: ${escapeHtml(primaryColor)};">${escapeHtml(name)}</h1>
         ${jobTitle ? `<p style="font-size: 13pt; margin: 0 0 8px 0; font-weight: bold; color: #555555; text-transform: uppercase;">${escapeHtml(jobTitle)}</p>` : ''}
   `;
 

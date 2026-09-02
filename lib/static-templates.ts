@@ -5,7 +5,7 @@ export interface StaticTemplateDefinition {
   name: string;
   description: string;
   badge: string;
-  category: 'Executive' | 'Corporate' | 'Tech' | 'Creative' | 'Minimalist';
+  category: 'Executive' | 'Corporate' | 'Tech' | 'Creative' | 'Minimalist' | 'Academic';
   colorPreview: string[];
   analysis: TemplateAnalysis;
   defaultSingleton: Record<string, string>;
@@ -57,6 +57,7 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
           'techSkills',
           'languages',
           'profile',
+          'experience',
           'education',
           'projects',
           'achievements',
@@ -69,10 +70,11 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
           { sectionId: 'techSkills', column: 'sidebar', order: 2 },
           { sectionId: 'languages', column: 'sidebar', order: 3 },
           { sectionId: 'profile', column: 'main', order: 0 },
-          { sectionId: 'education', column: 'main', order: 1 },
-          { sectionId: 'projects', column: 'main', order: 2 },
-          { sectionId: 'achievements', column: 'main', order: 3 },
-          { sectionId: 'references', column: 'main', order: 4 },
+          { sectionId: 'experience', column: 'main', order: 1 },
+          { sectionId: 'education', column: 'main', order: 2 },
+          { sectionId: 'projects', column: 'main', order: 3 },
+          { sectionId: 'achievements', column: 'main', order: 4 },
+          { sectionId: 'references', column: 'main', order: 5 },
         ],
       },
       style: {
@@ -119,6 +121,7 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
         { id: 'techSkills', name: 'Tech Skills', description: 'Software and technical abilities', repeatable: false },
         { id: 'languages', name: 'Languages', description: 'Language proficiencies', repeatable: false },
         { id: 'profile', name: 'Profile', description: 'Professional background summary', repeatable: false },
+        { id: 'experience', name: 'Work Experience', description: 'Employment history and accomplishments', repeatable: true },
         { id: 'education', name: 'Education', description: 'Academic credentials', repeatable: true },
         { id: 'projects', name: 'Projects', description: 'Key initiatives and accomplishments', repeatable: true },
         { id: 'achievements', name: 'Achievements & Hackathons', description: 'Honors and programs', repeatable: true },
@@ -134,6 +137,10 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
         { id: 'techSkillsList', label: 'Tech Skills (one per line)', type: 'textarea', required: false, section: 'techSkills' },
         { id: 'languagesList', label: 'Languages (one per line)', type: 'textarea', required: false, section: 'languages' },
         { id: 'summary', label: 'Professional Summary', type: 'textarea', required: false, section: 'profile' },
+        { id: 'role', label: 'Position / Role', type: 'text', required: true, section: 'experience' },
+        { id: 'company', label: 'Company / Organization', type: 'text', required: true, section: 'experience' },
+        { id: 'expPeriod', label: 'Period (e.g. 2029 - PRESENT)', type: 'text', required: false, section: 'experience' },
+        { id: 'responsibilities', label: 'Responsibilities & Key Achievements', type: 'textarea', required: false, section: 'experience' },
         { id: 'degree', label: 'Degree / Program', type: 'text', required: true, section: 'education' },
         { id: 'institution', label: 'University / School', type: 'text', required: true, section: 'education' },
         { id: 'eduYear', label: 'Graduation Year / Period', type: 'text', required: false, section: 'education' },
@@ -159,6 +166,15 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
         'Motivated and detail-oriented Computer Science student with a strong foundation in software engineering, algorithms, and full-stack web development. Experienced in building responsive web platforms and real-time networked applications with modern tech stacks.',
     },
     defaultEntries: {
+      experience: [
+        {
+          role: 'Junior Software Engineer',
+          company: 'Borcelle Studio | San Francisco, CA',
+          expPeriod: '2029 - PRESENT',
+          responsibilities:
+            'Developed responsive web applications using React, Next.js, and TypeScript.\nCollaborated with product designers to implement pixel-perfect user interfaces.\nIntegrated RESTful APIs and improved client-side rendering performance.',
+        },
+      ],
       education: [
         {
           degree: 'Bachelor of Computer Science',
@@ -695,13 +711,13 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
       },
       sections: [
         { id: 'personal', name: 'Personal Details', description: 'Name and role', repeatable: false },
-        { id: 'contact', name: 'Contact', description: 'Phone, email, address, website', repeatable: false },
-        { id: 'skills', name: 'Skills', description: 'Competencies', repeatable: false },
-        { id: 'languages', name: 'Languages', description: 'Fluency', repeatable: false },
-        { id: 'references', name: 'Reference', description: 'Professional contacts', repeatable: true },
-        { id: 'profile', name: 'Profile', description: 'Executive summary', repeatable: false },
-        { id: 'experience', name: 'Work Experience', description: 'Career timeline', repeatable: true },
-        { id: 'education', name: 'Education', description: 'Degrees and colleges', repeatable: true },
+        { id: 'contact', name: 'CONTACT', description: 'Phone, email, address, website', repeatable: false },
+        { id: 'skills', name: 'SKILLS', description: 'Professional competencies', repeatable: false },
+        { id: 'languages', name: 'LANGUAGES', description: 'Language fluency', repeatable: false },
+        { id: 'references', name: 'REFERENCE', description: 'Professional referees', repeatable: true },
+        { id: 'profile', name: 'PROFILE', description: 'Executive career summary', repeatable: false },
+        { id: 'experience', name: 'WORK EXPERIENCE', description: 'Career timeline milestones', repeatable: true },
+        { id: 'education', name: 'EDUCATION', description: 'Degrees and colleges', repeatable: true },
       ],
       fields: [
         { id: 'fullName', label: 'Full Name', type: 'text', required: true, section: 'personal' },
@@ -712,15 +728,17 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
         { id: 'website', label: 'Website', type: 'text', required: false, section: 'contact' },
         { id: 'skillsList', label: 'Skills (one per line)', type: 'textarea', required: false, section: 'skills' },
         { id: 'languagesList', label: 'Languages (one per line)', type: 'textarea', required: false, section: 'languages' },
-        { id: 'refName', label: 'Reference Name', type: 'text', required: true, section: 'references' },
-        { id: 'refDetails', label: 'Company & Phone', type: 'text', required: false, section: 'references' },
+        { id: 'refName', label: 'Referee Name', type: 'text', required: true, section: 'references' },
+        { id: 'refTitle', label: 'Position / Company', type: 'text', required: false, section: 'references' },
+        { id: 'refPhone', label: 'Phone', type: 'text', required: false, section: 'references' },
+        { id: 'refEmail', label: 'Email', type: 'text', required: false, section: 'references' },
         { id: 'summary', label: 'Profile Summary', type: 'textarea', required: false, section: 'profile' },
-        { id: 'role', label: 'Job Role', type: 'text', required: true, section: 'experience' },
         { id: 'company', label: 'Company Name', type: 'text', required: true, section: 'experience' },
+        { id: 'role', label: 'Job Role / Title', type: 'text', required: true, section: 'experience' },
         { id: 'expPeriod', label: 'Period (e.g. 2030 - PRESENT)', type: 'text', required: false, section: 'experience' },
         { id: 'bullets', label: 'Key Responsibilities', type: 'textarea', required: false, section: 'experience' },
         { id: 'degree', label: 'Degree Name', type: 'text', required: true, section: 'education' },
-        { id: 'school', label: 'School / Department', type: 'text', required: true, section: 'education' },
+        { id: 'school', label: 'School / University & GPA', type: 'textarea', required: true, section: 'education' },
         { id: 'gradYear', label: 'Period / Year', type: 'text', required: false, section: 'education' },
       ],
     },
@@ -740,27 +758,29 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
       references: [
         {
           refName: 'Estelle Darcy',
-          refDetails: 'Wardiere Inc. / CTO | Phone: 123-456-7890 | Email: hello@reallygreatsite.com',
+          refTitle: 'Wardiere Inc. / CTO',
+          refPhone: 'Phone: 123-456-7890',
+          refEmail: 'Email : hello@reallygreatsite.com',
         },
       ],
       experience: [
         {
-          role: 'Marketing Manager & Specialist',
           company: 'Borcelle Studio',
+          role: 'Marketing Manager & Specialist',
           expPeriod: '2030 - PRESENT',
           bullets:
             'Develop and execute comprehensive marketing strategies and campaigns that align with the company’s goals and objectives.\nLead, mentor, and manage a high-performing marketing team, fostering a collaborative and results-driven work environment.\nMonitor brand consistency across marketing channels and materials.',
         },
         {
-          role: 'Marketing Manager & Specialist',
           company: 'Fauget Studio',
+          role: 'Marketing Manager & Specialist',
           expPeriod: '2025 - 2029',
           bullets:
             'Create and manage the marketing budget, ensuring efficient allocation of resources and optimizing ROI.\nOversee market research to identify emerging trends, customer needs, and competitor strategies.',
         },
         {
-          role: 'Marketing Manager & Specialist',
           company: 'Studio Shodwe',
+          role: 'Marketing Manager & Specialist',
           expPeriod: '2024 - 2025',
           bullets:
             'Develop and maintain strong relationships with partners, agencies, and vendors to support marketing initiatives.\nMonitor and maintain brand consistency across all marketing channels and materials.',
@@ -769,12 +789,12 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
       education: [
         {
           degree: 'Master of Business Management',
-          school: 'School of Business | Wardiere University',
+          school: 'School of business | Wardiere University\nGPA: 3.8 / 4.0',
           gradYear: '2029 - 2031',
         },
         {
           degree: 'Bachelor of Business Management',
-          school: 'School of Business | Wardiere University',
+          school: 'School of business | Wardiere University\nGPA: 3.8 / 4.0',
           gradYear: '2025 - 2029',
         },
       ],
@@ -1153,6 +1173,189 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
         {
           refName: 'Bailey Dupont',
           refInfo: 'Wardiere Inc. / CEO | Phone: 123-456-7890 | Email: hello@reallygreatsite.com',
+        },
+      ],
+    },
+  },
+  // 7. ACADEMIC GRADUATE (Two-Column Lelisa Shashura format)
+  {
+    id: 'academic-graduate',
+    name: 'Academic Graduate (Two-Column)',
+    description: 'Traditional academic two-column CV for graduates and engineers with bold underlined headings, technical proficiencies, and projects.',
+    badge: 'Academic',
+    category: 'Academic',
+    colorPreview: ['#0f172a', '#ffffff', '#1e3a8a', '#334155'],
+    analysis: {
+      templateName: 'Academic Graduate',
+      description: 'Formal two-column academic CV with underlined headings and technical skills',
+      confidence: 0.98,
+      layout: {
+        type: 'two-column',
+        hideInlineHeader: true,
+        columns: [
+          { id: 'main-left', width: 0.54 },
+          { id: 'main-right', width: 0.46 },
+        ],
+        photo: {
+          included: false,
+          position: 'top-left',
+          shape: 'square',
+          size: 'small',
+        },
+        page: {
+          widthMm: 210,
+          heightMm: 297,
+          margins: { top: 7, right: 8, bottom: 7, left: 8 },
+        },
+        geometry: {
+          orientation: 'portrait',
+          mainWidth: 0.54,
+          gap: 16,
+          verticalGap: 10,
+        },
+        orderedSections: [
+          'personalInfo',
+          'summary',
+          'projects',
+          'technicalSkills',
+          'personnelSkills',
+          'languages',
+          'hobbies',
+          'education',
+          'experience',
+          'references',
+        ],
+        placements: [
+          { sectionId: 'personalInfo', column: 'main-left', order: 0 },
+          { sectionId: 'summary', column: 'main-left', order: 1 },
+          { sectionId: 'projects', column: 'main-left', order: 2 },
+          { sectionId: 'technicalSkills', column: 'main-right', order: 0 },
+          { sectionId: 'personnelSkills', column: 'main-right', order: 1 },
+          { sectionId: 'languages', column: 'main-right', order: 2 },
+          { sectionId: 'hobbies', column: 'main-right', order: 3 },
+          { sectionId: 'education', column: 'main-right', order: 4 },
+          { sectionId: 'experience', column: 'main-right', order: 5 },
+          { sectionId: 'references', column: 'main-right', order: 6 },
+        ],
+      },
+      style: {
+        primaryColor: '#0f172a',
+        secondaryColor: '#ffffff',
+        accentColor: '#1e3a8a',
+        backgroundColor: '#ffffff',
+        textColor: '#111827',
+        fontFamily: 'Georgia, serif',
+        headerStyle: 'left-aligned',
+        sectionDivider: 'line',
+        nameSize: 18,
+        headingSize: 12,
+        bodySize: 9,
+        theme: {
+          mainBackground: '#ffffff',
+          sidebarBackground: '#ffffff',
+          headingColor: '#0f172a',
+          textColor: '#111827',
+          borderColor: '#0f172a',
+          iconColor: '#0f172a',
+        },
+        typography: {
+          name: { family: 'Georgia, serif', weight: 800, size: 16, letterSpacing: 0.5, textTransform: 'uppercase' },
+          jobTitle: { family: 'Georgia, serif', weight: 600, size: 11, letterSpacing: 0.5, textTransform: 'none' },
+          sectionHeading: { family: 'Georgia, serif', weight: 800, size: 12, letterSpacing: 0.5, textTransform: 'uppercase' },
+          sidebarHeading: { family: 'Georgia, serif', weight: 800, size: 12, letterSpacing: 0.5, textTransform: 'uppercase' },
+          body: { family: 'Georgia, serif', weight: 400, size: 9, lineHeight: 1.35 },
+          sidebarText: { family: 'Georgia, serif', weight: 400, size: 9, lineHeight: 1.35 },
+        },
+        componentStyle: {
+          headingVariant: 'underline',
+          bulletStyle: 'dot',
+          timeline: false,
+          icons: false,
+          headerBackground: false,
+        },
+      },
+      sections: [
+        { id: 'personalInfo', name: 'CURRICULUM VITAE (CV)', description: 'Personal header details', repeatable: false },
+        { id: 'summary', name: 'SUMMARY', description: 'Career profile and objective', repeatable: false },
+        { id: 'projects', name: 'PROJECTS', description: 'Academic and final year software projects', repeatable: true },
+        { id: 'technicalSkills', name: 'TECHNICAL SKILLS', description: 'Programming, web, databases, tools', repeatable: false },
+        { id: 'personnelSkills', name: 'PERSONNEL SKILLS', description: 'Soft skills and teamwork attributes', repeatable: false },
+        { id: 'languages', name: 'LANGUAGES', description: 'Spoken languages', repeatable: false },
+        { id: 'hobbies', name: 'HOBBIES', description: 'Interests and activities', repeatable: false },
+        { id: 'education', name: 'Educational Background', description: 'Academic degree and CGPA', repeatable: true },
+        { id: 'experience', name: 'EXPERIENCE', description: 'Practical work history', repeatable: true },
+        { id: 'references', name: 'REFERENCE', description: 'Academic and professional referees', repeatable: true },
+      ],
+      fields: [
+        { id: 'fullName', label: 'Name', type: 'text', required: true, section: 'personalInfo' },
+        { id: 'field', label: 'Field', type: 'text', required: true, section: 'personalInfo' },
+        { id: 'phone', label: 'Phone No', type: 'phone', required: true, section: 'personalInfo' },
+        { id: 'email', label: 'Email', type: 'email', required: true, section: 'personalInfo' },
+        { id: 'summaryText', label: 'Summary Statement', type: 'textarea', required: true, section: 'summary' },
+        { id: 'projectName', label: 'Project Name & Category', type: 'text', required: true, section: 'projects' },
+        { id: 'projectDesc', label: 'Outcomes & Tools (one per line)', type: 'textarea', required: true, section: 'projects' },
+        { id: 'techSkillsText', label: 'Technical Categories (one per line)', type: 'textarea', required: true, section: 'technicalSkills' },
+        { id: 'softSkillsText', label: 'Personal Skills (one per line)', type: 'textarea', required: true, section: 'personnelSkills' },
+        { id: 'langText', label: 'Languages (one per line)', type: 'textarea', required: true, section: 'languages' },
+        { id: 'hobbyText', label: 'Hobbies (one per line)', type: 'textarea', required: false, section: 'hobbies' },
+        { id: 'degree', label: 'Degree Name', type: 'text', required: true, section: 'education' },
+        { id: 'institution', label: 'University / Institution', type: 'text', required: true, section: 'education' },
+        { id: 'cgpa', label: 'CGPA / Grade', type: 'text', required: false, section: 'education' },
+        { id: 'exitExam', label: 'Exit Exam / Honors', type: 'text', required: false, section: 'education' },
+        { id: 'company', label: 'Organization / Company', type: 'text', required: true, section: 'experience' },
+        { id: 'role', label: 'Position', type: 'text', required: true, section: 'experience' },
+        { id: 'duration', label: 'Duration / Period', type: 'text', required: false, section: 'experience' },
+        { id: 'refName', label: 'Name', type: 'text', required: true, section: 'references' },
+        { id: 'refPhone', label: 'Phone', type: 'text', required: false, section: 'references' },
+        { id: 'refPosition', label: 'Position / Department', type: 'text', required: false, section: 'references' },
+      ],
+    },
+    defaultSingleton: {
+      fullName: 'Lelisa Shashura Diriba',
+      field: 'Software Engineering',
+      phone: '+251969642103/ +251970463204',
+      email: 'lelisa.shashura@bhu.edu.et',
+      summaryText:
+        'I am a dedicated Software Engineering graduate from Bule Hora University with a CGPA of 3.88 and an exit exam score of 75%. I possess strong technical skills in Java, C++, C, Android, React, and web development technologies, along with experience in managing both SQL and NoSQL databases. I am currently enhancing my expertise in full-stack development using the MERN (MongoDB, Express, React, Node.js) stack. During my internship at Gadaa Software Company PLC, I gained practical experience in software development, database management, and data analysis.\n\nI am a quick learner with strong problem-solving, adaptability, and teamwork skills. I am eager to contribute to innovative projects where I can apply my knowledge and grow as a software engineer.',
+      techSkillsText:
+        'Programming Languages: Java, C++, C, JavaScript, PHP.\nWeb Technologies: HTML, CSS, React.js, Node.js, Express.js.\nDatabases: MySQL, MongoDB\nFrameworks & Tools: Android Studio, Git, VS Code.',
+      softSkillsText: 'Adaptability\nCommunication\nTeamwork and Collaboration',
+      langText: 'Afaan Oromo Native\nAmharic Fluent\nEnglish Fluent',
+      hobbyText: 'Reading\nCoding\nWatching Movies',
+    },
+    defaultEntries: {
+      projects: [
+        {
+          projectName: '1. Employee Hiring System for Bule Hora University (Final Year Project)',
+          projectDesc:
+            'Developed a web-based system to automate the employee hiring process.\nDesigned features to continuously monitor applicants, evaluate candidates based on university criteria, and back up selected candidate data.\nTools used: PHP, MySQL, HTML, CSS, JavaScript.',
+        },
+        {
+          projectName: '2. House Rental System for Bule Hora City (Internship Project)',
+          projectDesc:
+            'Built a web-based platform that facilitates property listing and rental services for users in Bule Hora City.',
+        },
+      ],
+      education: [
+        {
+          degree: 'BSc in Software Engineering',
+          institution: 'Bule Hora University',
+          cgpa: 'CGPA: 3.88 / 4.00',
+          exitExam: 'Exit Exam Result: 75%',
+        },
+      ],
+      experience: [
+        {
+          company: 'OCC(Oromia construction corporation)',
+          role: 'Position: IT expert',
+          duration: 'Duration: 1 year and 2+ Months',
+        },
+      ],
+      references: [
+        {
+          refName: 'Abebe Bekele Mako',
+          refPhone: 'Phone: +251919317813',
+          refPosition: 'Position: Head, Department of Software Engineering.',
         },
       ],
     },

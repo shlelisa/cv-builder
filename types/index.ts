@@ -273,6 +273,7 @@ export interface TemplateLayout {
   columns?: TemplateColumnSpec[];
   placements?: TemplateSectionPlacement[];
   geometry?: TemplateGeometry;
+  hideInlineHeader?: boolean;
 }
 
 export interface TemplatePageSpec {
