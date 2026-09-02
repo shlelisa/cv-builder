@@ -23,7 +23,18 @@ export interface LayoutWarning {
   message: string;
 }
 
-const PERSONAL_IDS = new Set(['personal', 'contact']);
+const HEADER_ONLY_IDS = new Set(['personal']);
+
+const SIDEBAR_CANDIDATE_IDS = new Set([
+  'contact',
+  'skills',
+  'softSkills',
+  'techSkills',
+  'technicalSkills',
+  'languages',
+  'hobbies',
+  'interests',
+]);
 
 const colLabel = (column: TemplateColumnId): string =>
   column === 'sidebar' ? 'Sidebar' : column === 'main-left' ? 'Left' : column === 'main-right' ? 'Right' : 'Main';
@@ -31,7 +42,7 @@ const colLabel = (column: TemplateColumnId): string =>
 function placementsToSections(analysis: TemplateAnalysis): CustomLayoutSection[] {
   const placements = analysis.layout.placements || [];
   return placements
-    .filter((p) => !PERSONAL_IDS.has(p.sectionId))
+    .filter((p) => !HEADER_ONLY_IDS.has(p.sectionId))
     .map((p) => ({ sectionId: p.sectionId, column: p.column, order: p.order }));
 }
 
@@ -45,7 +56,7 @@ export function defaultCustomLayout(analysis: TemplateAnalysis): CustomLayout {
   const sections: CustomLayoutSection[] = [];
 
   if (isTwoCol) {
-    const order = analysis.layout.orderedSections.filter((id) => !PERSONAL_IDS.has(id));
+    const order = analysis.layout.orderedSections.filter((id) => !HEADER_ONLY_IDS.has(id));
     const mainFrac = analysis.layout.geometry?.mainWidth || 0.5;
     const leftCount = Math.min(order.length - 1, Math.max(1, Math.round(mainFrac * order.length)));
     order.forEach((id, index) => {
@@ -55,11 +66,18 @@ export function defaultCustomLayout(analysis: TemplateAnalysis): CustomLayout {
   }
 
   const templateDefaults = new Set(analysis.layout.sidebarSections || []);
+  const hasExplicitSidebarDefaults = templateDefaults.size > 0;
+
   analysis.layout.orderedSections.forEach((id, index) => {
-    if (PERSONAL_IDS.has(id)) return;
+    if (HEADER_ONLY_IDS.has(id)) return;
+    const inSidebar = isSidebar && (
+      hasExplicitSidebarDefaults
+        ? templateDefaults.has(id)
+        : SIDEBAR_CANDIDATE_IDS.has(id)
+    );
     sections.push({
       sectionId: id,
-      column: isSidebar && templateDefaults.has(id) ? 'sidebar' : 'main',
+      column: inSidebar ? 'sidebar' : 'main',
       order: index,
     });
   });
@@ -96,7 +114,7 @@ export function resolveLayout(analysis: TemplateAnalysis, custom?: CustomLayout)
   const hidden = new Set(layout.hidden);
 
   layout.sections.forEach((p) => {
-    if (PERSONAL_IDS.has(p.sectionId)) return;
+    if (HEADER_ONLY_IDS.has(p.sectionId)) return;
     if (hidden.has(p.sectionId)) return;
     if (!knownIds.has(p.sectionId)) return;
     if (isTwoCol) {
@@ -127,7 +145,7 @@ export function validateLayout(analysis: TemplateAnalysis, custom?: CustomLayout
         message: `Moved to the ${colLabel(s.column)} column (template has it in the ${original} column).`,
       });
     }
-    if (!PERSONAL_IDS.has(s.sectionId) && custom.hidden.includes(s.sectionId)) {
+    if (!HEADER_ONLY_IDS.has(s.sectionId) && custom.hidden.includes(s.sectionId)) {
       warnings.push({
         sectionId: s.sectionId,
         message: 'Section is hidden — it will not appear in the CV.',
@@ -136,7 +154,7 @@ export function validateLayout(analysis: TemplateAnalysis, custom?: CustomLayout
   });
 
   analysis.layout.orderedSections.forEach((id) => {
-    if (PERSONAL_IDS.has(id)) return;
+    if (HEADER_ONLY_IDS.has(id)) return;
     if (!custom.sections.some((s) => s.sectionId === id) && !custom.hidden.includes(id)) {
       warnings.push({
         sectionId: id,

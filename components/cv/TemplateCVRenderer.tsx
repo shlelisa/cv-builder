@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { TemplateAnalysis, TemplateStyle } from '@/types';
+import { TemplateAnalysis, TemplateField, TemplateStyle } from '@/types';
 import { CustomLayout, resolveLayout } from '@/lib/layout-engine';
 import {
   PAGE_W,
@@ -43,6 +43,11 @@ const ICON_PATHS: Record<string, string> = {
   user: 'M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2 M12 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8',
   phone:
     'M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z',
+  mail: 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z M22 6l-10 7L2 6',
+  pin: 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6',
+  linkedin:
+    'M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z M2 9h4v12H2z M4 6a2 2 0 1 0 0-4 2 2 0 0 0 0 4',
+  code: 'M16 18l6-6-6-6 M8 6l-6 6 6 6',
   briefcase:
     'M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16 M2 20h20 M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v14H2z',
   education: 'M22 10 12 5 2 10l10 5 10-5z M6 12v5c3 3 9 3 12 0v-5',
@@ -57,6 +62,17 @@ const ICON_PATHS: Record<string, string> = {
   heart: 'M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z',
   tag: 'M20.59 13.41 11 3.82A2 2 0 0 0 9.59 3H4a1 1 0 0 0-1 1v5.59A2 2 0 0 0 3.82 11l9.59 9.59a2 2 0 0 0 2.83 0l4.35-4.35a2 2 0 0 0 0-2.83z M7 7h.01',
 };
+
+function getContactIcon(field: TemplateField): string {
+  const text = `${field.id} ${field.label}`.toLowerCase();
+  if (text.includes('phone') || text.includes('tel') || text.includes('mobile')) return 'phone';
+  if (text.includes('mail') || text.includes('email')) return 'mail';
+  if (text.includes('address') || text.includes('location') || text.includes('city')) return 'pin';
+  if (text.includes('linkedin')) return 'linkedin';
+  if (text.includes('github') || text.includes('code') || text.includes('tech')) return 'code';
+  if (text.includes('web') || text.includes('site') || text.includes('url')) return 'globe';
+  return 'tag';
+}
 
 function renderIconPath(name: string, size: number, color: string) {
   return (
@@ -183,17 +199,44 @@ export default function TemplateCVRenderer({
     );
   };
 
-  const renderEntryBody = (sectionId: string, entry: Record<string, string>, rail: boolean) => {
-    const fields = analysis.fields.filter((f) => f.section === sectionId);
+  const renderEntryBody = (
+    sectionId: string,
+    entry: Record<string, string>,
+    rail: boolean,
+    skipFieldIds: Set<string> = new Set(),
+  ) => {
+    const fields = analysis.fields.filter((f) => f.section === sectionId && !skipFieldIds.has(f.id));
     const fg = rail ? theme.sidebarHeadingColor : theme.textColor;
     const size = rail ? typo.sidebarText.size : typo.body.size;
     const lh = rail ? typo.sidebarText.lineHeight : typo.body.lineHeight;
     const char = BULLET_CHAR[cs.bulletStyle] || '•';
+    const isContactSec = sectionId.toLowerCase().includes('contact');
+
     return (
       <>
         {fields.map((field) => {
           const raw = entry[field.id] || '';
           if (!raw.trim()) return null;
+
+          if (isContactSec) {
+            const icon = getContactIcon(field);
+            return (
+              <div key={field.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, marginTop: 4, marginBottom: 5 }}>
+                <span style={{ marginTop: 2, color: theme.iconColor || theme.sidebarHeadingColor, flexShrink: 0 }}>
+                  {renderIconPath(icon, 12, theme.iconColor || theme.sidebarHeadingColor)}
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ fontSize: Math.max(9, size - 1), fontWeight: 700, color: fg, opacity: 0.85, display: 'block', textTransform: 'capitalize' }}>
+                    {field.label}:
+                  </span>
+                  <span style={{ fontSize: size, fontWeight: 400, color: fg, wordBreak: 'break-word', display: 'block' }}>
+                    {raw}
+                  </span>
+                </div>
+              </div>
+            );
+          }
+
           if (field.type === 'textarea') {
             return raw
               .split(/\s*\|\s*|\r?\n/)
@@ -205,10 +248,21 @@ export default function TemplateCVRenderer({
                   style={{ fontSize: size, fontWeight: 400, lineHeight: lh, marginTop: 2, color: fg, paddingLeft: rail ? 0 : 14 }}
                 >
                   {!rail && <span style={{ color: theme.iconColor, marginRight: 4 }}>{char}</span>}
+                  {rail && <span style={{ color: theme.iconColor || fg, marginRight: 5, fontSize: 8 }}>•</span>}
                   {line}
                 </p>
               ));
           }
+
+          if (rail && (sectionId.toLowerCase().includes('skill') || sectionId.toLowerCase().includes('language'))) {
+            return (
+              <div key={field.id} style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 3 }}>
+                <span style={{ color: theme.iconColor || fg, fontSize: 8, lineHeight: 1 }}>•</span>
+                <span style={{ fontSize: size, fontWeight: 400, lineHeight: lh, color: fg }}>{raw}</span>
+              </div>
+            );
+          }
+
           return (
             <p key={field.id} style={{ fontSize: size, fontWeight: 400, lineHeight: lh, marginTop: 2, color: fg }}>
               {raw}
@@ -226,14 +280,27 @@ export default function TemplateCVRenderer({
     const titleFs = rail ? typo.sidebarText.size + 0.8 : typo.body.size + 1;
     const titleFg = rail ? theme.sidebarHeadingColor : theme.headingColor;
 
-    if (cs.timeline) {
-      return (
-        <div style={{ marginBottom: rail ? 14 : 16 }}>
-          {group.map((entry, index) => {
-            const firstField = analysis.fields
-              .filter((f) => f.section === sectionId)
-              .find((f) => (entry[f.id] || '').trim());
-            const title = firstField ? entry[firstField.id].trim() : `Entry ${index + 1}`;
+    return (
+      <div style={{ marginBottom: rail ? 14 : 16 }}>
+        {group.map((entry, index) => {
+          const sectionFields = analysis.fields.filter((f) => f.section === sectionId);
+          const firstField = sectionFields.find((f) => (entry[f.id] || '').trim());
+          const title = firstField ? entry[firstField.id].trim() : `Entry ${index + 1}`;
+
+          // Find date field to display right-aligned beside title
+          const dateField = sectionFields.find(
+            (f) =>
+              f.id !== firstField?.id &&
+              /date|year|duration|period|time/i.test(`${f.id} ${f.label}`) &&
+              (entry[f.id] || '').trim(),
+          );
+          const dateText = dateField ? (entry[dateField.id] || '').trim() : '';
+
+          const skipIds = new Set<string>();
+          if (firstField) skipIds.add(firstField.id);
+          if (dateField) skipIds.add(dateField.id);
+
+          if (cs.timeline) {
             return (
               <div key={`${sectionId}-${index}`} style={{ display: 'flex', marginBottom: 10 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: 8, width: 14 }}>
@@ -250,27 +317,31 @@ export default function TemplateCVRenderer({
                   {index < group.length - 1 && <span style={{ width: 2, flex: 1, backgroundColor: theme.borderColor }} />}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <p style={{ fontWeight: 700, fontSize: titleFs, color: titleFg }}>{title}</p>
-                  <div>{renderEntryBody(sectionId, entry, rail)}</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 4 }}>
+                    <p style={{ fontWeight: 700, fontSize: titleFs, color: titleFg }}>{title}</p>
+                    {dateText && (
+                      <span style={{ fontSize: Math.max(10, titleFs - 1.5), color: theme.textColor, opacity: 0.8, fontWeight: 500 }}>
+                        {dateText}
+                      </span>
+                    )}
+                  </div>
+                  <div>{renderEntryBody(sectionId, entry, rail, skipIds)}</div>
                 </div>
               </div>
             );
-          })}
-        </div>
-      );
-    }
+          }
 
-    return (
-      <div style={{ marginBottom: rail ? 14 : 16 }}>
-        {group.map((entry, index) => {
-          const firstField = analysis.fields
-            .filter((f) => f.section === sectionId)
-            .find((f) => (entry[f.id] || '').trim());
-          const title = firstField ? entry[firstField.id].trim() : `Entry ${index + 1}`;
           return (
             <div key={`${sectionId}-${index}`} style={{ marginBottom: 10 }}>
-              <p style={{ fontWeight: 700, fontSize: titleFs, color: titleFg }}>{title}</p>
-              {renderEntryBody(sectionId, entry, rail)}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 4 }}>
+                <p style={{ fontWeight: 700, fontSize: titleFs, color: titleFg }}>{title}</p>
+                {dateText && (
+                  <span style={{ fontSize: Math.max(10, titleFs - 1.5), color: theme.textColor, opacity: 0.8, fontWeight: 500 }}>
+                    {dateText}
+                  </span>
+                )}
+              </div>
+              <div>{renderEntryBody(sectionId, entry, rail, skipIds)}</div>
             </div>
           );
         })}
@@ -289,7 +360,6 @@ export default function TemplateCVRenderer({
     const fallbackHeadingSize = rail ? typo.sidebarHeading.size : typo.sectionHeading.size;
     const headlineColor = rail ? theme.sidebarHeadingColor : theme.headingColor;
     const myVariant = cs.headingVariant;
-    const showIcon = cs.icons || myVariant === 'icon';
     const iconName = SECTION_ICON[sectionId] || 'tag';
 
     const headingBase: React.CSSProperties = {
@@ -336,25 +406,53 @@ export default function TemplateCVRenderer({
           {section.name}
         </h2>
       );
-    } else {
-      const borderBottom =
-        myVariant === 'dotted' ? `2px dotted ${theme.borderColor}` : `2px solid ${rail ? theme.iconColor : theme.borderColor}`;
+    } else if (!rail) {
+      // Main Column: Beautiful Icon Badge + Section Heading + Border Divider
       heading = (
         <div
           style={{
-            borderBottom,
+            borderBottom: `2px solid ${theme.borderColor || theme.headingColor}`,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
             gap: 8,
-            marginBottom: rail ? 6 : 8,
-            paddingBottom: 3,
+            marginBottom: 10,
+            paddingBottom: 4,
           }}
         >
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            {showIcon && renderIconPath(iconName, 12, theme.iconColor)}
-            <h2 style={headingBase}>{section.name}</h2>
+          <span
+            style={{
+              width: 22,
+              height: 22,
+              borderRadius: 4,
+              backgroundColor: theme.headingColor || style.primaryColor || '#1e293b',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            {renderIconPath(iconName, 13, '#ffffff')}
           </span>
+          <h2 style={headingBase}>{section.name}</h2>
+        </div>
+      );
+    } else {
+      // Sidebar Rail: Icon + Section Heading + Underline
+      heading = (
+        <div
+          style={{
+            borderBottom: `1.5px solid ${theme.iconColor || theme.sidebarHeadingColor}`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            marginBottom: 8,
+            paddingBottom: 4,
+          }}
+        >
+          <span style={{ color: theme.iconColor || theme.sidebarHeadingColor, flexShrink: 0 }}>
+            {renderIconPath(iconName, 13, theme.iconColor || theme.sidebarHeadingColor)}
+          </span>
+          <h2 style={headingBase}>{section.name}</h2>
         </div>
       );
     }
@@ -378,10 +476,18 @@ export default function TemplateCVRenderer({
         ? ('right' as const)
         : ('left' as const);
 
-  const name = (singletonValues.fullName || '').trim() || 'Your Name';
-  const contactLines = [singletonValues.email, singletonValues.phone, singletonValues.location]
-    .map((v) => (v || '').trim())
-    .filter(Boolean);
+  const name = (() => {
+    const personalFields = analysis.fields.filter((f) => f.section === 'personal' || f.section === 'contact');
+    const nameField = personalFields.find((f) =>
+      /^(full[_-]?name|name|firstName|first[_-]?name)$/i.test(f.id) ||
+      /\b(full\s*name|name|first\s*name)\b/i.test((f.label || '')),
+    );
+    if (nameField) {
+      const v = (singletonValues[nameField.id] || '').trim();
+      if (v) return v;
+    }
+    return (singletonValues.fullName || singletonValues.name || singletonValues.full_name || '').trim() || 'Your Name';
+  })();
 
   const jobTitle = (() => {
     const personalFields = analysis.fields.filter((f) => f.section === 'personal' || f.section === 'contact');
@@ -395,10 +501,46 @@ export default function TemplateCVRenderer({
     return (singletonValues.jobTitle || singletonValues.title || '').trim();
   })();
 
+  const nameFieldIds = new Set<string>();
+  const titleFieldIds = new Set<string>();
+  {
+    const personalFields = analysis.fields.filter((f) => f.section === 'personal' || f.section === 'contact');
+    personalFields.forEach((f) => {
+      const lbl = (f.label || '').toLowerCase();
+      const fid = (f.id || '').toLowerCase();
+      if (/\b(full\s*name|name|first\s*name)\b/.test(lbl) || /^(full[_-]?name|name|firstName|first[_-]?name)$/i.test(fid)) {
+        nameFieldIds.add(f.id);
+      }
+      if (/title|job|position|role|designation|profession/.test(lbl)) {
+        titleFieldIds.add(f.id);
+      }
+    });
+  }
+  // Collect ALL contact-like fields from personal/contact sections, excluding name/title/photo/summary
+  const contactLines = (() => {
+    const personalFields = analysis.fields.filter((f) => f.section === 'personal' || f.section === 'contact');
+    const skipIds = new Set([...nameFieldIds, ...titleFieldIds]);
+    const lines: string[] = [];
+    personalFields.forEach((f) => {
+      if (skipIds.has(f.id)) return;
+      const lbl = (f.label || '').toLowerCase();
+      // Skip photo, summary/about fields — they aren't contact info
+      if (/photo|image|avatar|picture|summary|about|objective|profile\s*summary/.test(lbl)) return;
+      if (f.type === 'textarea') return;
+      const v = (singletonValues[f.id] || '').trim();
+      if (v) lines.push(v);
+    });
+    const hasContactSection = analysis.sections.some(
+      (s) => (s.id.toLowerCase().includes('contact') || s.name.toLowerCase().includes('contact')) && sectionHasData(s.id),
+    );
+    if (hasContactSection) return [];
+    return lines;
+  })();
+
   const bandTextColor = autoContrastColor(theme.headerBackground || '#1e293b');
   const photoInRow = showPhoto && (photoPos === 'top-left' || photoPos === 'top-right');
 
-  const headerBand = hasHeaderBand && (
+  const renderHeaderContent = (forMainCol = false) => (
     <div
       style={{
         width: '100%',
@@ -422,7 +564,7 @@ export default function TemplateCVRenderer({
           flexWrap: 'wrap',
         }}
       >
-        {(photoInRow) && photoEl(photoPos === 'top-right' ? 'right' : undefined)}
+        {(!forMainCol || photoPos !== 'sidebar') && photoInRow && photoEl(photoPos === 'top-right' ? 'right' : undefined)}
         <div>
           <h1
             style={{
@@ -453,9 +595,12 @@ export default function TemplateCVRenderer({
           )}
         </div>
       </div>
-      {showPhoto && photoPos === 'top-center' && <div className="flex justify-center mt-2">{photoEl('center')}</div>}
+      {(!forMainCol || photoPos !== 'sidebar') && showPhoto && photoPos === 'top-center' && <div className="flex justify-center mt-2">{photoEl('center')}</div>}
     </div>
   );
+
+  const headerBand = hasHeaderBand && renderHeaderContent(false);
+  const mainColHeaderBand = hasHeaderBand && renderHeaderContent(true);
 
   const inlineHeader = !hasHeaderBand && (
     <div style={{ textAlign: headerAlign, marginBottom: isTwoCol ? 18 : 20, borderBottom: isSidebar ? 'none' : `3px solid ${theme.borderColor}`, paddingBottom: 12 }}>
@@ -493,7 +638,7 @@ export default function TemplateCVRenderer({
     <div
       className="w-full h-full"
       style={{
-        paddingTop: pagePad.top,
+        paddingTop: isSidebar && hasHeaderBand ? 20 : pagePad.top,
         paddingRight: pagePad.right,
         paddingBottom: pagePad.bottom,
         paddingLeft: pagePad.left,
@@ -541,46 +686,65 @@ export default function TemplateCVRenderer({
   );
 
   const mainColumn = (
-    <div className="h-full overflow-hidden" style={{ backgroundColor: theme.mainBackground, fontFamily, color: theme.textColor }}>
-      {mainContent}
+    <div className="h-full overflow-hidden flex flex-col" style={{ backgroundColor: theme.mainBackground, fontFamily, color: theme.textColor }}>
+      {isSidebar && hasHeaderBand && mainColHeaderBand}
+      <div className="flex-1">{mainContent}</div>
     </div>
   );
 
   return (
-    <div id="cv-print-root">
-      <div className="overflow-x-auto pb-2">
+    <div className="overflow-x-auto pb-4 flex flex-col items-center">
+      {/* A4 Paper Indicator Badge - Outside of print root */}
+      <div
+        className="print-hide flex items-center justify-between text-xs text-gray-500 dark:text-zinc-400 mb-2 px-1 select-none"
+        style={{ width: pageW * zoom }}
+      >
+        <span className="inline-flex items-center gap-1.5 font-medium bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded text-[11px]">
+          <span>📄</span>
+          <span>A4 Document · 210 × 297 mm</span>
+        </span>
+        <span className="text-[11px] opacity-75 font-mono">100% Single-Page A4</span>
+      </div>
+
+      <div id="cv-print-root">
         <div
-          className="cv-scale mx-auto rounded-lg"
+          className="cv-scale transition-all"
           style={{
             width: pageW * zoom,
             height: pageH * zoom,
-            overflow: 'hidden',
             backgroundColor: theme.mainBackground,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)',
+            borderRadius: 2,
+            position: 'relative',
+            overflow: 'hidden',
           }}
         >
           <div
             className="cv-page flex flex-col"
             style={{
               width: pageW,
+              height: pageH,
               minHeight: pageH,
+              maxHeight: pageH,
               transform: `scale(${zoom})`,
               transformOrigin: 'top left',
               backgroundColor: theme.mainBackground,
               color: theme.textColor,
               fontFamily,
+              boxSizing: 'border-box',
+              overflow: 'hidden',
             }}
           >
-            {hasHeaderBand && headerBand}
-            <div className="flex flex-1">
+            {!isSidebar && hasHeaderBand && headerBand}
+            <div className="flex flex-1" style={{ overflow: 'hidden' }}>
               {isSidebar ? (
                 <>
                   {!sidebarRight && rail}
-                  <div style={{ flex: 1, minWidth: 0 }}>{mainColumn}</div>
+                  <div style={{ flex: 1, minWidth: 0, height: '100%', overflow: 'hidden' }}>{mainColumn}</div>
                   {sidebarRight && rail}
                 </>
               ) : (
-                <div className="flex-1">{mainColumn}</div>
+                <div className="flex-1" style={{ overflow: 'hidden' }}>{mainColumn}</div>
               )}
             </div>
           </div>

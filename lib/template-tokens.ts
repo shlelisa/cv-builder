@@ -109,51 +109,51 @@ export function resolveTypography(style: TemplateStyle): ResolvedTypography {
   return {
     name: spec(typo.name, {
       family: familyOf(style),
-      size: style.nameSize || 28,
+      size: style.nameSize || 23,
       weight: 700,
-      letterSpacing: 2,
+      letterSpacing: 1.5,
       textTransform: 'uppercase',
-      lineHeight: 1.1,
+      lineHeight: 1.15,
     }),
     jobTitle: spec(typo.jobTitle, {
       family: familyOf(style),
-      size: style.nameSize ? style.nameSize - 8 : 15,
+      size: style.nameSize ? Math.max(11, style.nameSize - 10) : 13,
       weight: 600,
-      letterSpacing: 1.5,
+      letterSpacing: 1.2,
       textTransform: 'uppercase',
       lineHeight: 1.2,
     }),
     sectionHeading: spec(typo.sectionHeading, {
       family: familyOf(style),
-      size: style.headingSize || 13,
-      weight: 700,
-      letterSpacing: 2,
-      textTransform: 'uppercase',
-      lineHeight: 1.2,
-    }),
-    sidebarHeading: spec(typo.sidebarHeading, {
-      family: familyOf(style),
-      size: (style.headingSize || 13) - 2,
+      size: style.headingSize || 12.5,
       weight: 700,
       letterSpacing: 1.5,
       textTransform: 'uppercase',
       lineHeight: 1.2,
     }),
+    sidebarHeading: spec(typo.sidebarHeading, {
+      family: familyOf(style),
+      size: (style.headingSize || 12.5) - 1.5,
+      weight: 700,
+      letterSpacing: 1.2,
+      textTransform: 'uppercase',
+      lineHeight: 1.2,
+    }),
     body: spec(typo.body, {
       family: familyOf(style),
-      size: style.bodySize || 11,
+      size: style.bodySize || 10,
       weight: 400,
       letterSpacing: 0,
       textTransform: 'none',
-      lineHeight: 1.5,
+      lineHeight: 1.42,
     }),
     sidebarText: spec(typo.sidebarText, {
       family: familyOf(style),
-      size: (style.bodySize || 11) - 0.5,
+      size: (style.bodySize || 10) - 0.5,
       weight: 400,
       letterSpacing: 0,
       textTransform: 'none',
-      lineHeight: 1.45,
+      lineHeight: 1.38,
     }),
   };
 }
@@ -164,7 +164,7 @@ export function resolveComponentStyle(style: TemplateStyle): ResolvedComponentSt
     headingVariant: cs.headingVariant || 'underline',
     bulletStyle: cs.bulletStyle || 'dot',
     timeline: cs.timeline ?? false,
-    icons: cs.icons ?? false,
+    icons: cs.icons ?? true,
     headerBand: (cs.headerBackground ?? false) || Boolean(style.theme?.headerBackground),
   };
 }
@@ -187,7 +187,7 @@ export function resolveGeometry(
   else if (isSidebar) sidebarFrac = 0.28;
   else sidebarFrac = 0;
 
-  const gap = geo.gap || (isSidebar || isTwoCol ? 0 : 24);
+  const gap = geo.gap || (isSidebar || isTwoCol ? 0 : 20);
   const mainFrac = isTwoCol && geo.mainWidth ? geo.mainWidth : 1 - sidebarFrac - gap / PAGE_W;
   const marginsMm = layout.page?.margins;
   const pagePad = marginsMm
@@ -197,7 +197,7 @@ export function resolveGeometry(
         bottom: Math.round(marginsMm.bottom * MM_TO_PX),
         left: Math.round(marginsMm.left * MM_TO_PX),
       }
-    : { top: 40, right: 40, bottom: 40, left: 40 };
+    : { top: 22, right: 26, bottom: 22, left: 26 };
 
   return {
     orientation: geo.orientation || 'portrait',
@@ -205,9 +205,9 @@ export function resolveGeometry(
     mainWidth: Math.max(0, Math.round(mainFrac * PAGE_W)),
     gap: Math.max(0, Math.round(gap)),
     headerHeight: geo.headerHeight && geo.headerHeight > 10 ? geo.headerHeight : null,
-    verticalGap: geo.verticalGap || (isSidebar ? 16 : 18),
+    verticalGap: geo.verticalGap || (isSidebar ? 12 : 14),
     pagePad: { ...pagePad },
-    columnTopPad: geo.contentBounds?.top ? Math.round(geo.contentBounds.top) : Math.min(40, pagePad.top * 0.7),
+    columnTopPad: geo.contentBounds?.top ? Math.round(geo.contentBounds.top) : Math.min(24, pagePad.top * 0.7),
   };
 }
 

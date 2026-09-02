@@ -18,7 +18,17 @@ const PHOTO_SHAPES = ['circle', 'square', 'rounded'];
 const PHOTO_SIZES = ['small', 'medium', 'large'];
 const FIELD_TYPES: string[] = ['text', 'email', 'phone', 'url', 'textarea', 'select', 'date'];
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
-const PERSONAL_IDS_SET = new Set(['personal', 'contact']);
+const PERSONAL_IDS_SET = new Set(['personal']);
+const DEFAULT_SIDEBAR_SECTION_PATTERNS = [
+  'contact',
+  'skill',
+  'soft',
+  'tech',
+  'language',
+  'interest',
+  'hobby',
+  'hobbies',
+];
 
 const str = (v: unknown, fallback = ''): string => (typeof v === 'string' && v.trim() ? v.trim() : fallback);
 const bool = (v: unknown, fallback = false): boolean => (typeof v === 'boolean' ? v : fallback);
@@ -56,13 +66,19 @@ export function parseAndSanitizeAnalysis(input: unknown): TemplateAnalysis {
     if (!orderedSections.includes(s.id)) orderedSections.push(s.id);
   });
 
-  const sidebarSections = ids((raw.layout as Record<string, unknown>)?.sidebarSections).filter((id) => orderedSections.includes(id));
-
   const rawLayout = (raw.layout && typeof raw.layout === 'object' ? raw.layout : {}) as Record<string, unknown>;
   const rawPhoto = (rawLayout.photo && typeof rawLayout.photo === 'object' ? rawLayout.photo : {}) as Record<string, unknown>;
   const layoutType: LayoutType = LAYOUT_TYPES.includes(rawLayout.type as string)
     ? (rawLayout.type as LayoutType)
     : 'single-column';
+
+  let sidebarSections = ids(rawLayout?.sidebarSections).filter((id) => orderedSections.includes(id));
+  if ((layoutType === 'sidebar-left' || layoutType === 'sidebar-right') && sidebarSections.length === 0) {
+    sidebarSections = orderedSections.filter((id) => {
+      const lower = id.toLowerCase();
+      return DEFAULT_SIDEBAR_SECTION_PATTERNS.some((p) => lower.includes(p));
+    });
+  }
 
   const fields: TemplateField[] = arr(raw.fields)
     .map((f) => {
@@ -467,7 +483,9 @@ Rules — the template is the exact source of truth:
 - Typography: estimate per-role family, weight, size (px), letterSpacing, textTransform (are headings uppercase, capitalized, letter-spaced?), lineHeight from the image. Body text, sidebar text, and headings often differ — record each.
 - Component style: reproduce HOW the template draws things — underline (thick/thin line under heading), dotted rule, bordered box, filled color strip, icon beside the heading, or plain. Note timelines (experience/education drawn as a vertical line of dots) and icons.
 - PHOTO: if the template contains a person's portrait photo, set included=true and report its exact bounding box in "crop" as fractions of the FULL template image (0..1): { left, top, width, height } covering ONLY the photo (do not include surrounding text or margins). For a circular photo, give the crop that contains the whole circle. If there is no photo, return included=false and crop=null.
-- Layout type: if a distinct colored left or right rail exists, use sidebar-left (or sidebar-right) and list its sections in sidebarSections AND in placements with column "sidebar". Read sections column by column: sidebar top-to-bottom first, then the main column (for sidebar layouts) — keep exact positions in placements (order starts at 0 per column).
+- Layout type: if a distinct left or right sidebar/rail exists, use sidebar-left (or sidebar-right). CRITICAL: list EVERY section physically located in the sidebar column in "sidebarSections" (e.g. contact, softSkills, techSkills, languages, hobbies, interests) AND in placements with column "sidebar". Never put sidebar sections in the main column.
+- For the main column: list sections physically in the main body in placements with column "main" (e.g. profile/summary, education, experience, projects, achievements, references).
+- If the name/job title is inside a colored rectangle/band next to the sidebar photo, set theme.headerBackground to that rectangle's hex color.
 - For TWO-COLUMN layouts (two equal-column or asymmetric-column plain design, no colored rail): list orderedSections as the LEFT column sections top-to-bottom, then the RIGHT column sections top-to-bottom. In placements use column "main-left" for every section physically on the left and "main-right" for every section physically on the right (order restarts at 0 in each column). Set geometry.mainWidth to the left-column width as a fraction 0..1 (e.g. 0.38) so the left column uses exactly the template's proportion. Do NOT guess a left/right split — use what you SEE.
 - For single-column layouts every section is "main".
 - Do not flatten the design: if two columns have different widths, keep those widths in geometry/columns.

@@ -28,7 +28,7 @@ const Navbar: React.FC = () => {
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="text-xl font-bold text-blue-600 dark:text-blue-400">
-            CV Builder
+            Lelisa CV Builder
           </Link>
 
           <div className="flex items-center gap-2 md:gap-3">
@@ -37,11 +37,10 @@ const Navbar: React.FC = () => {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    pathname === link.href
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${pathname === link.href
                       ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
                       : 'text-gray-600 hover:bg-gray-100 dark:text-zinc-300 dark:hover:bg-zinc-800'
-                  }`}
+                    }`}
                 >
                   {link.label}
                 </Link>
@@ -86,11 +85,10 @@ const Navbar: React.FC = () => {
             <Link
               key={link.href}
               href={link.href}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
-                pathname === link.href
+              className={`px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${pathname === link.href
                   ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
                   : 'text-gray-600 dark:text-zinc-300'
-              }`}
+                }`}
             >
               {link.label}
             </Link>

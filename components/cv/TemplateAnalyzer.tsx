@@ -51,6 +51,7 @@ export default function TemplateAnalyzer() {
   const [generatedCv, setGeneratedCv] = useState('');
   const [error, setError] = useState('');
   const [dragOver, setDragOver] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
   const [showEditor, setShowEditor] = useState(false);
   const [viewMode, setViewMode] = useState<'visual' | 'text'>('visual');
@@ -58,6 +59,7 @@ export default function TemplateAnalyzer() {
   const [layoutType, setLayoutType] = useState<TemplateAnalysis['layout']['type'] | undefined>(undefined);
   const [showLayoutEditor, setShowLayoutEditor] = useState(false);
   const [customLayout, setCustomLayout] = useState<CustomLayout | null>(null);
+  const [cvZoom, setCvZoom] = useState<number>(0.75);
 
   const [aiMode, setAiMode] = useState<'checking' | 'live' | 'demo'>('checking');
   const [aiDetail, setAiDetail] = useState('');
@@ -193,18 +195,30 @@ export default function TemplateAnalyzer() {
 
       try {
         let result: TemplateAnalysis | null = null;
+        let apiError = '';
         try {
           const apiRes = await fetch('/api/analyze-template', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ image: imageToAnalyze, palette: pal }),
           });
-          const payload = await apiRes.json();
-          if (payload && !payload.mock && payload.analysis) result = payload.analysis;
-        } catch {
-          // real AI unavailable — fall back to local analysis below
+          if (apiRes.ok) {
+            const payload = await apiRes.json();
+            if (payload && !payload.mock && payload.analysis) result = payload.analysis;
+          } else {
+            const errPayload = await apiRes.json().catch(() => null);
+            apiError = errPayload?.error || `Server returned ${apiRes.status}`;
+          }
+        } catch (e) {
+          apiError = e instanceof Error ? e.message : 'Network error';
         }
-        if (!result) result = await aiService.analyzeTemplate(imageToAnalyze);
+        if (!result) {
+          // If AI is unavailable, fall through to local mock — but show a warning
+          if (apiError) {
+            console.warn('[analyze-template] AI unavailable:', apiError);
+          }
+          result = await aiService.analyzeTemplate(imageToAnalyze);
+        }
         const analyzed = applySampledColors(result, pal);
         setAnalysis(analyzed);
         setSingletonValues(analyzed.content || {});
@@ -235,6 +249,9 @@ export default function TemplateAnalyzer() {
         setShowLayoutEditor(false);
         setRefinedSingleton(null);
         setRefinedEntries(null);
+        if (apiError) {
+          setError(`AI analysis unavailable (${apiError}). Showing estimated template — please verify sections and fields.`);
+        }
         setStep('result');
       } catch {
         setError('Analysis failed. Please try again with a clearer image.');
@@ -297,7 +314,9 @@ export default function TemplateAnalyzer() {
   };
 
   const handleGenerate = async () => {
-    if (!analysis) return;
+    if (!analysis || generating) return;
+    setGenerating(true);
+    setError('');
     const simpleEntries: Record<string, Array<Record<string, string>>> = {};
     Object.entries(entries).forEach(([sectionId, group]) => {
       simpleEntries[sectionId] = group.map((g) => g.values);
@@ -317,11 +336,13 @@ export default function TemplateAnalyzer() {
           language: 'en',
         }),
       });
-      const payload = await apiRes.json();
-      if (payload && !payload.mock) {
-        cv = typeof payload.cv === 'string' ? payload.cv : '';
-        refS = payload.refined?.singleton ?? null;
-        refE = payload.refined?.entries ?? null;
+      if (apiRes.ok) {
+        const payload = await apiRes.json();
+        if (payload && !payload.mock) {
+          cv = typeof payload.cv === 'string' ? payload.cv : '';
+          refS = payload.refined?.singleton ?? null;
+          refE = payload.refined?.entries ?? null;
+        }
       }
     } catch {
       // real AI unavailable — fall back to local CV text below
@@ -334,6 +355,7 @@ export default function TemplateAnalyzer() {
     setRefinedSingleton(refS);
     setRefinedEntries(refE);
     setUseRewrites(Boolean(refS) || Boolean(refE));
+    setGenerating(false);
     setStep('generated');
   };
 
@@ -601,6 +623,28 @@ export default function TemplateAnalyzer() {
             </div>
           </div>
 
+          <div className="sm:col-span-2 lg:col-span-3 border-t border-gray-100 dark:border-zinc-800 pt-3">
+            <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">
+              Profile Photo
+            </label>
+            <div className="flex items-center gap-3">
+              {photoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={photoUrl} alt="Preview" className="w-10 h-10 rounded-full object-cover border" />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-sm">📷</div>
+              )}
+              <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()}>
+                {photoUrl ? 'Change Photo' : 'Upload Photo'}
+              </Button>
+              {photoUrl && (
+                <Button type="button" variant="ghost" size="sm" className="text-red-500 hover:text-red-600 text-xs" onClick={() => setPhotoUrl('')}>
+                  Remove
+                </Button>
+              )}
+            </div>
+          </div>
+
           <div className="sm:col-span-2 lg:col-span-3">
             <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">
               Colors
@@ -657,6 +701,13 @@ export default function TemplateAnalyzer() {
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-8">
+      <input
+        ref={photoInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handlePhotoChange}
+      />
       <div className="flex flex-wrap items-center gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100 mb-2">{t.templates.title}</h1>
@@ -767,6 +818,35 @@ export default function TemplateAnalyzer() {
                 </div>
               )}
 
+              {(analysis.layout.photo?.included || photoUrl) && (
+                <div className="bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/60 rounded-lg p-3.5 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    {photoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={photoUrl} alt="Photo" className="w-12 h-12 rounded-full object-cover border-2 border-blue-500 shadow-sm" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 flex items-center justify-center text-xl">📷</div>
+                    )}
+                    <div>
+                      <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200 block">Profile Photo</span>
+                      <span className="text-xs text-gray-500 dark:text-zinc-400">
+                        {photoUrl ? 'Template photo extracted. You can replace it with your own photo.' : 'This template layout includes a photo.'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()}>
+                      {photoUrl ? 'Change' : 'Upload'}
+                    </Button>
+                    {photoUrl && (
+                      <Button type="button" variant="ghost" size="sm" className="text-red-500 text-xs" onClick={() => setPhotoUrl('')}>
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {renderAnalyzedSections()}
 
               <div className="flex gap-3">
@@ -801,6 +881,43 @@ export default function TemplateAnalyzer() {
             </div>
 
             <div className="space-y-6">
+              {(analysis.layout.photo?.included || photoUrl) && (
+                <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    {photoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={photoUrl}
+                        alt="Profile Preview"
+                        className="w-16 h-16 rounded-full object-cover border-2 border-blue-500 shadow-md"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/30 border-2 border-dashed border-blue-300 dark:border-blue-700 flex items-center justify-center text-2xl text-blue-500">
+                        📷
+                      </div>
+                    )}
+                    <div>
+                      <h4 className="font-semibold text-gray-900 dark:text-zinc-100">Profile Photo</h4>
+                      <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                        {photoUrl
+                          ? 'This photo will appear on your CV. You can replace or remove it anytime.'
+                          : 'Upload your portrait photo for this CV.'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+                    <Button type="button" variant="primary" size="sm" onClick={() => photoInputRef.current?.click()}>
+                      {photoUrl ? 'Change Photo' : 'Upload Photo'}
+                    </Button>
+                    {photoUrl && (
+                      <Button type="button" variant="outline" size="sm" className="text-red-600 dark:text-red-400 hover:bg-red-50" onClick={() => setPhotoUrl('')}>
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {analysis.layout.orderedSections.map((sectionId) => {
                 const section = analysis.sections.find((s) => s.id === sectionId);
                 if (!section) return null;
@@ -811,8 +928,15 @@ export default function TemplateAnalyzer() {
                 );
               })}
 
-              <Button onClick={handleGenerate} variant="primary" className="w-full" size="lg">
-                {t.templates.generateCv}
+              <Button onClick={handleGenerate} variant="primary" className="w-full" size="lg" disabled={generating}>
+                {generating ? (
+                  <span className="inline-flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    {t.templates.analyzing}
+                  </span>
+                ) : (
+                  t.templates.generateCv
+                )}
               </Button>
             </div>
           </div>
@@ -854,9 +978,25 @@ export default function TemplateAnalyzer() {
                 {t.templates.useAiRewrite}
               </button>
             )}
+            <Button variant="outline" size="sm" onClick={() => photoInputRef.current?.click()}>
+              📷 {photoUrl ? 'Change Photo' : 'Add Photo'}
+            </Button>
             <Button variant="outline" size="sm" onClick={handleDownloadPdf}>
               {t.templates.downloadCv}
             </Button>
+            <div className="flex items-center gap-1.5 rounded-lg border border-gray-300 dark:border-zinc-700 px-2.5 py-1 text-xs">
+              <span className="text-gray-500 dark:text-zinc-400 font-medium">Paper Zoom:</span>
+              <select
+                value={cvZoom}
+                onChange={(e) => setCvZoom(Number(e.target.value))}
+                className="bg-transparent text-gray-800 dark:text-zinc-200 font-semibold cursor-pointer focus:outline-none"
+              >
+                <option value={0.65}>Fit (65%)</option>
+                <option value={0.75}>Standard A4 (75%)</option>
+                <option value={0.85}>Large (85%)</option>
+                <option value={1.0}>Actual A4 (100%)</option>
+              </select>
+            </div>
             <div className="ml-auto flex items-center gap-1 rounded-lg border border-gray-300 dark:border-zinc-700 p-1">
               <button
                 onClick={() => setViewMode('visual')}
@@ -983,7 +1123,7 @@ export default function TemplateAnalyzer() {
                   styleOverrides={styleOverrides}
                   layoutType={layoutType}
                   customLayout={customLayout ?? undefined}
-                  zoom={0.75}
+                  zoom={cvZoom}
                 />
               ) : (
                 <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg p-6 shadow-sm">
