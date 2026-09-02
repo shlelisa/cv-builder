@@ -76,6 +76,7 @@ export default function CVBuilder() {
   const [zoom, setZoom] = useState<number>(0.8);
   const [viewMode, setViewMode] = useState<'split' | 'fullA4'>('split');
   const [editorTab, setEditorTab] = useState<'content' | 'design'>('content');
+  const [mobilePane, setMobilePane] = useState<'editor' | 'preview'>('editor');
   const [styleOverrides, setStyleOverrides] = useState<Partial<TemplateStyle>>({});
   const [fontScale, setFontScale] = useState<'compact' | 'standard' | 'spacious'>('standard');
   const [isExporting, setIsExporting] = useState<boolean>(false);
@@ -411,14 +412,14 @@ export default function CVBuilder() {
             Select any of our modern, recruiter-tested A4 templates. You can customize all text, colors, photo, and layout options with live preview, then download in Word, PDF, or Image.
           </p>
 
-          {/* Category Filter Tabs */}
-          <div className="flex flex-wrap items-center justify-center gap-2 pt-4">
+          {/* Category Filter Tabs - Horizontally scrollable on mobile */}
+          <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap p-1 max-w-full justify-start sm:justify-center scrollbar-none">
             {(['All', 'Executive', 'Corporate', 'Tech', 'Academic', 'Minimalist'] as CategoryFilter[]).map((cat) => (
               <button
                 key={cat}
                 type="button"
                 onClick={() => setCategoryFilter(cat)}
-                className={`px-4 py-1.5 text-xs sm:text-sm font-medium rounded-full transition-colors ${
+                className={`px-4 py-1.5 text-xs sm:text-sm font-semibold rounded-full shrink-0 transition-colors ${
                   categoryFilter === cat
                     ? 'bg-blue-600 text-white shadow-sm'
                     : 'bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-700'
@@ -677,6 +678,34 @@ export default function CVBuilder() {
         </div>
       )}
 
+      {/* Mobile Tab Switcher (Visible only on mobile/tablet < lg) */}
+      {viewMode === 'split' && (
+        <div className="lg:hidden flex p-1 bg-gray-200/80 dark:bg-zinc-800/90 rounded-xl shadow-inner">
+          <button
+            type="button"
+            onClick={() => setMobilePane('editor')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-bold rounded-lg transition-all ${
+              mobilePane === 'editor'
+                ? 'bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-sm'
+                : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900'
+            }`}
+          >
+            <span>📝 Form & Style Editor</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobilePane('preview')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-bold rounded-lg transition-all ${
+              mobilePane === 'preview'
+                ? 'bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-sm'
+                : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900'
+            }`}
+          >
+            <span>👁️ Live A4 Preview</span>
+          </button>
+        </div>
+      )}
+
       {/* Main View: Full A4 View or Split-View */}
       {viewMode === 'fullA4' ? (
         <div className="bg-gray-100 dark:bg-zinc-800/50 p-6 rounded-xl border border-gray-200 dark:border-zinc-800 flex justify-center overflow-auto min-h-[85vh]">
@@ -693,7 +722,7 @@ export default function CVBuilder() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Left Column: Editor & Design Studio (5 of 12 cols) */}
-          <div className="lg:col-span-5 space-y-5">
+          <div className={`lg:col-span-5 space-y-5 ${mobilePane === 'editor' ? 'block' : 'hidden lg:block'}`}>
             {/* Mode Switcher: Content Editor vs Colors & Fonts */}
             <div className="flex p-1 bg-gray-200/70 dark:bg-zinc-800/90 rounded-xl shadow-inner">
               <button
@@ -726,17 +755,17 @@ export default function CVBuilder() {
             {/* TAB 1: CONTENT FORM */}
             {editorTab === 'content' && (
               <div className="space-y-4">
-                {/* Section Navigation Pills */}
-                <div className="flex flex-wrap gap-1.5 p-1 bg-gray-100 dark:bg-zinc-800/80 rounded-lg">
+                {/* Section Navigation Pills - Horizontal Scrollable */}
+                <div className="flex items-center gap-1.5 p-1.5 bg-gray-100 dark:bg-zinc-800/80 rounded-xl overflow-x-auto whitespace-nowrap scrollbar-none select-none touch-pan-x">
                   {selectedTemplate.analysis.sections.map((sec) => (
                     <button
                       key={sec.id}
                       type="button"
                       onClick={() => setActiveSectionId(sec.id)}
-                      className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                      className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition-all ${
                         activeSectionId === sec.id
-                          ? 'bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-sm'
-                          : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100'
+                          ? 'bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-200/60 dark:border-zinc-700'
+                          : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 hover:bg-gray-200/60 dark:hover:bg-zinc-700/50'
                       }`}
                     >
                       {sec.name}
@@ -1141,8 +1170,8 @@ export default function CVBuilder() {
           </div>
 
           {/* Right Column: Live A4 Preview (7 of 12 cols, sticky) */}
-          <div className="lg:col-span-7 sticky top-20">
-            <div className="bg-gray-100 dark:bg-zinc-800/50 p-4 rounded-xl border border-gray-200 dark:border-zinc-800 flex justify-center overflow-auto max-h-[calc(100vh-6rem)]">
+          <div className={`lg:col-span-7 sticky top-20 ${mobilePane === 'preview' ? 'block' : 'hidden lg:block'}`}>
+            <div className="bg-gray-100 dark:bg-zinc-800/50 p-2 sm:p-4 rounded-xl border border-gray-200 dark:border-zinc-800 flex justify-center overflow-x-auto overflow-y-auto max-h-[calc(100vh-6rem)]">
               <TemplateCVRenderer
                 analysis={selectedTemplate.analysis}
                 singletonValues={singletonValues}

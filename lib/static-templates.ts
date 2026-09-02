@@ -1316,7 +1316,7 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
       phone: '+251912345678',
       email: 'yourname@example.com',
       summaryText:
-        'I am a dedicated Software Engineering graduate from Bule Hora University with a CGPA of 4 and an exit exam score of 99%. I possess strong technical skills in Java, C++, C, Android, React, and web development technologies, along with experience in managing both SQL and NoSQL databases. I am currently enhancing my expertise in full-stack development using the MERN (MongoDB, Express, React, Node.js) stack. During my internship at ABC Company, I gained practical experience in software development, database management, and data analysis.\n\nI am a quick learner with strong problem-solving, adaptability, and teamwork skills. I am eager to contribute to innovative projects where I can apply my knowledge and grow as a software engineer.',
+        'I am a dedicated Software Engineering graduate from ABC University with a CGPA of 4 and an exit exam score of 99%. I possess strong technical skills in Java, C++, C, Android, React, and web development technologies, along with experience in managing both SQL and NoSQL databases. I am currently enhancing my expertise in full-stack development using the MERN (MongoDB, Express, React, Node.js) stack. During my internship at ABC Company, I gained practical experience in software development, database management, and data analysis.\n\nI am a quick learner with strong problem-solving, adaptability, and teamwork skills. I am eager to contribute to innovative projects where I can apply my knowledge and grow as a software engineer.',
       techSkillsText:
         'Programming Languages: Java, C++, C, JavaScript, PHP.\nWeb Technologies: HTML, CSS, React.js, Node.js, Express.js.\nDatabases: MySQL, MongoDB\nFrameworks & Tools: Android Studio, Git, VS Code.',
       softSkillsText: 'Adaptability\nCommunication\nTeamwork and Collaboration',
@@ -1326,7 +1326,7 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
     defaultEntries: {
       projects: [
         {
-          projectName: '1. Employee Hiring System for Bule Hora University (Final Year Project)',
+          projectName: '1. Employee Hiring System for ABC University (Final Year Project)',
           projectDesc:
             'Developed a web-based system to automate the employee hiring process.\nDesigned features to continuously monitor applicants, evaluate candidates based on university criteria, and back up selected candidate data.\nTools used: PHP, MySQL, HTML, CSS, JavaScript.',
         },
@@ -1339,7 +1339,7 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
       education: [
         {
           degree: 'BSc in Software Engineering',
-          institution: 'Bule Hora University',
+          institution: 'ABC University',
           cgpa: 'CGPA: 4 / 4.00',
           exitExam: 'Exit Exam Result: 99%',
         },

@@ -25,7 +25,7 @@ export default function LetterGenerator() {
 
   // Background
   const [degree, setDegree] = useState("BSc in Software Engineering");
-  const [university, setUniversity] = useState("Bule Hora University");
+  const [university, setUniversity] = useState("ABC University");
   const [skills, setSkills] = useState("Java, C++, React.js, Node.js, SQL, MongoDB, Git, Problem Solving");
   const [experienceSummary, setExperienceSummary] = useState("Software Development Intern at ABC Company");
   const [keyProjects, setKeyProjects] = useState("Employee Hiring System (Final Year Project) & House Rental Platform");
@@ -74,7 +74,7 @@ export default function LetterGenerator() {
       setPosition("Junior Software Engineer");
       setRecipient("Engineering Hiring Team");
       setDegree("BSc in Software Engineering");
-      setUniversity("Bule Hora University");
+      setUniversity("ABC University");
       setSkills("Java, C++, React.js, Node.js, SQL, MongoDB, Git, REST APIs, Teamwork");
       setExperienceSummary("IT and Software Engineering Internship at ABC Company");
       setKeyProjects("Automated University Hiring System (PHP/MySQL) & House Rental Portal (MERN stack)");
@@ -431,7 +431,7 @@ export default function LetterGenerator() {
                   type="text"
                   value={university}
                   onChange={(e) => setUniversity(e.target.value)}
-                  placeholder="e.g. Bule Hora University"
+                  placeholder="e.g. ABC University"
                   className="w-full px-3 py-2 text-xs sm:text-sm border border-gray-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 outline-none"
                 />
               </div>
@@ -471,7 +471,7 @@ export default function LetterGenerator() {
                 type="text"
                 value={keyProjects}
                 onChange={(e) => setKeyProjects(e.target.value)}
-                placeholder="e.g. Employee Hiring System for Bule Hora University"
+                placeholder="e.g. Employee Hiring System for ABC University"
                 className="w-full px-3 py-2 text-xs sm:text-sm border border-gray-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
