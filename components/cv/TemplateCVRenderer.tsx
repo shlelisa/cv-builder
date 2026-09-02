@@ -119,6 +119,8 @@ export default function TemplateCVRenderer({
   const colGap = Math.round(geo0.gap * S);
   const verticalGap = Math.round(geo0.verticalGap * S);
   const headerH = geo0.headerHeight ? Math.round(geo0.headerHeight * S) : null;
+  const sidebarCol = layout.columns?.find((c) => c.id === 'sidebar');
+  const sidebarPadH = typeof sidebarCol?.padding === 'number' ? Math.round(sidebarCol.padding * S) : Math.max(20, Math.round(pagePad.right * 0.6));
 
   const isSidebar = resolvedLayout === 'sidebar-left' || resolvedLayout === 'sidebar-right';
   const sidebarRight = resolvedLayout === 'sidebar-right';
@@ -137,6 +139,8 @@ export default function TemplateCVRenderer({
   const mainSections = placement.main;
   const sidebarList = placement.sidebar;
   const visibleSidebarIds = sidebarList.filter((sId) => sectionHasData(sId));
+  const leftSections = placement.left;
+  const rightSections = placement.right;
 
   const fontFamily = typo.body.family;
   const tt = (v: string) => v as React.CSSProperties['textTransform'];
@@ -192,7 +196,7 @@ export default function TemplateCVRenderer({
           if (!raw.trim()) return null;
           if (field.type === 'textarea') {
             return raw
-              .split('\n')
+              .split(/\s*\|\s*|\r?\n/)
               .map((l) => l.trim())
               .filter(Boolean)
               .map((line, lineIndex) => (
@@ -375,9 +379,9 @@ export default function TemplateCVRenderer({
         : ('left' as const);
 
   const name = (singletonValues.fullName || '').trim() || 'Your Name';
-  const contact = [singletonValues.email, singletonValues.phone, singletonValues.location]
-    .filter((v) => v && v.trim())
-    .join('  |  ');
+  const contactLines = [singletonValues.email, singletonValues.phone, singletonValues.location]
+    .map((v) => (v || '').trim())
+    .filter(Boolean);
 
   const jobTitle = (() => {
     const personalFields = analysis.fields.filter((f) => f.section === 'personal' || f.section === 'contact');
@@ -438,9 +442,13 @@ export default function TemplateCVRenderer({
               {jobTitle}
             </p>
           )}
-          {contact && (
-            <p style={{ fontFamily: typo.body.family, fontSize: typo.body.size, lineHeight: 1.5, color: bandTextColor, opacity: 0.85, marginTop: 8 }}>
-              {contact}
+          {contactLines.length > 0 && (
+            <p style={{ fontFamily: typo.body.family, fontSize: typo.body.size, lineHeight: 1.6, color: bandTextColor, opacity: 0.85, marginTop: 8 }}>
+              {contactLines.map((line, i) => (
+                <span key={i} style={{ display: 'block' }}>
+                  {line}
+                </span>
+              ))}
             </p>
           )}
         </div>
@@ -463,19 +471,29 @@ export default function TemplateCVRenderer({
               {jobTitle}
             </p>
           )}
-          {contact && <p style={{ fontSize: typo.body.size, color: theme.textColor, marginTop: 6 }}>{contact}</p>}
+          {contactLines.length > 0 && (
+            <p style={{ fontSize: typo.body.size, lineHeight: 1.6, color: theme.textColor, marginTop: 6 }}>
+              {contactLines.map((line, i) => (
+                <span key={i} style={{ display: 'block' }}>
+                  {line}
+                </span>
+              ))}
+            </p>
+          )}
         </div>
       </div>
     </div>
   );
 
-  const twoLeftW = isTwoCol ? Math.max(200, Math.round((pageW - pagePad.left - pagePad.right - colGap) / 2)) : 0;
+  const twoLeftW = isTwoCol
+    ? Math.max(200, Math.round((geo0.mainWidth > 0 && geo0.mainWidth < PAGE_W ? geo0.mainWidth / PAGE_W : 0.5) * (pageW - pagePad.left - pagePad.right - colGap)))
+    : 0;
 
   const mainContent = (
     <div
       className="w-full h-full"
       style={{
-        paddingTop: hasHeaderBand ? pagePad.top : pagePad.top,
+        paddingTop: pagePad.top,
         paddingRight: pagePad.right,
         paddingBottom: pagePad.bottom,
         paddingLeft: pagePad.left,
@@ -487,14 +505,10 @@ export default function TemplateCVRenderer({
       {isTwoCol && (
         <div className="flex" style={{ gap: colGap }}>
           <div style={{ width: twoLeftW, flexShrink: 0 }}>
-            {mainSections.slice(0, Math.ceil(mainSections.length / 2)).map((sId, i, arr) =>
-              renderSection(sId, false, i, arr.length),
-            )}
+            {leftSections.map((sId, i, arr) => renderSection(sId, false, i, arr.length))}
           </div>
           <div style={{ flex: 1 }}>
-            {mainSections
-              .slice(Math.ceil(mainSections.length / 2))
-              .map((sId, i, arr) => renderSection(sId, false, i, arr.length))}
+            {rightSections.map((sId, i, arr) => renderSection(sId, false, i, arr.length))}
           </div>
         </div>
       )}
@@ -508,10 +522,11 @@ export default function TemplateCVRenderer({
         width: railWidth,
         backgroundColor: theme.sidebarBackground,
         color: theme.sidebarHeadingColor,
-        paddingTop: hasHeaderBand ? pagePad.top : pagePad.top,
-        paddingRight: Math.max(20, Math.round(pagePad.right * 0.6)),
+        paddingTop: Math.round(geo0.columnTopPad * S),
+        paddingRight: sidebarPadH,
         paddingBottom: pagePad.bottom,
-        paddingLeft: Math.max(20, Math.round(pagePad.left * 0.6)),
+        paddingLeft: sidebarPadH,
+        minHeight: pageH,
         boxSizing: 'border-box',
         fontFamily,
       }}

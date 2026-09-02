@@ -60,6 +60,9 @@ export function parseAndSanitizeAnalysis(input: unknown): TemplateAnalysis {
 
   const rawLayout = (raw.layout && typeof raw.layout === 'object' ? raw.layout : {}) as Record<string, unknown>;
   const rawPhoto = (rawLayout.photo && typeof rawLayout.photo === 'object' ? rawLayout.photo : {}) as Record<string, unknown>;
+  const layoutType: LayoutType = LAYOUT_TYPES.includes(rawLayout.type as string)
+    ? (rawLayout.type as LayoutType)
+    : 'single-column';
 
   const fields: TemplateField[] = arr(raw.fields)
     .map((f) => {
@@ -81,6 +84,7 @@ export function parseAndSanitizeAnalysis(input: unknown): TemplateAnalysis {
     .filter((f) => f.id);
 
   const knownSectionIds = new Set(sections.map((s) => s.id));
+  const originalFieldSections = new Map(fields.map((f) => [f.id, f.section]));
   fields.forEach((f) => {
     if (!knownSectionIds.has(f.section)) f.section = sections[0]?.id || 'personal';
   });
@@ -122,10 +126,30 @@ export function parseAndSanitizeAnalysis(input: unknown): TemplateAnalysis {
   const px = (v: unknown): number | undefined =>
     typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : undefined;
 
+  const normalizeColumn = (
+    col: unknown,
+    type: LayoutType,
+  ): NonNullable<TemplateAnalysis['layout']['placements']>[number]['column'] => {
+    const s = str(col);
+    const isTwo = type === 'two-column';
+    switch (s) {
+      case 'sidebar':
+        return isTwo ? 'main-right' : 'sidebar';
+      case 'main-left':
+      case 'left':
+        return isTwo ? 'main-left' : 'main';
+      case 'main-right':
+      case 'right':
+        return isTwo ? 'main-right' : 'main';
+      default:
+        return isTwo ? 'main-left' : 'main';
+    }
+  };
+
   const defaultPlacements: TemplateAnalysis['layout']['placements'] = orderedSections
     .map((id, index) => ({
       sectionId: id,
-      column: sidebarSections.includes(id) ? ('sidebar' as const) : ('main' as const),
+      column: sidebarSections.includes(id) ? ('sidebar' as const) : normalizeColumn('main', layoutType),
       order: index,
     }))
     .filter((p) => !PERSONAL_IDS_SET.has(p.sectionId));
@@ -137,25 +161,59 @@ export function parseAndSanitizeAnalysis(input: unknown): TemplateAnalysis {
           if (!knownSectionIds.has(id)) return null;
           return {
             sectionId: id,
-            column: pl.column === 'sidebar' ? ('sidebar' as const) : ('main' as const),
+            column: normalizeColumn(pl.column, layoutType),
             order: typeof pl.order === 'number' ? pl.order : 0,
           };
         })
         .filter((p): p is NonNullable<TemplateAnalysis['layout']['placements']>[number] => p !== null)
     : null;
 
+  const clampFrac = (v: unknown): number | undefined =>
+    typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 1 ? v : undefined;
+
+  const rawCrop = () => {
+    const source: unknown = rawPhoto.crop ?? rawPhoto.box ?? rawPhoto.bounds;
+    let box: Record<string, unknown>;
+    if (Array.isArray(source) && source.length === 4) {
+      box = { left: source[0], top: source[1], width: source[2], height: source[3] };
+    } else if (source && typeof source === 'object') {
+      box = source as Record<string, unknown>;
+    } else {
+      return undefined;
+    }
+    const w = clampFrac(box.width) ?? clampFrac(box.w) ?? clampFrac(box.size);
+    const h = clampFrac(box.height) ?? clampFrac(box.h);
+    const left = clampFrac(box.left) ?? clampFrac(box.x);
+    const top = clampFrac(box.top) ?? clampFrac(box.y);
+    if (w === undefined || h === undefined || left === undefined || top === undefined) return undefined;
+    if (w < 0.02 || h < 0.02 || left + w > 1.001 || top + h > 1.001) return undefined;
+    const l = Math.max(0, Math.min(0.98, left));
+    const T = Math.max(0, Math.min(0.98, top));
+    return { left: l, top: T, width: w, height: h };
+  };
+  const crop = rawCrop();
+
   const layout: TemplateAnalysis['layout'] = {
-    type: LAYOUT_TYPES.includes(rawLayout.type as string) ? (rawLayout.type as LayoutType) : 'single-column',
+    type: layoutType,
     orderedSections,
     sidebarSections: sidebarSections.length > 0 ? sidebarSections : undefined,
     photo: bool(rawPhoto.included, false)
       ? {
-          included: true,
+          included: bool(rawPhoto.included, false),
           position: PHOTO_POSITIONS.includes(rawPhoto.position as string) ? (rawPhoto.position as PhotoConfig['position']) : 'sidebar',
           shape: PHOTO_SHAPES.includes(rawPhoto.shape as string) ? (rawPhoto.shape as PhotoConfig['shape']) : 'circle',
           size: PHOTO_SIZES.includes(rawPhoto.size as string) ? (rawPhoto.size as PhotoConfig['size']) : 'medium',
+          ...(crop ? { crop } : {}),
         }
-      : undefined,
+      : crop
+        ? {
+            included: true,
+            position: PHOTO_POSITIONS.includes(rawPhoto.position as string) ? (rawPhoto.position as PhotoConfig['position']) : 'sidebar',
+            shape: PHOTO_SHAPES.includes(rawPhoto.shape as string) ? (rawPhoto.shape as PhotoConfig['shape']) : 'circle',
+            size: PHOTO_SIZES.includes(rawPhoto.size as string) ? (rawPhoto.size as PhotoConfig['size']) : 'medium',
+            crop,
+          }
+        : undefined,
     page:
       rawPage && (rawPage.widthMm !== undefined || rawPage.heightMm !== undefined || rawMargins.top !== undefined)
         ? {
@@ -271,7 +329,11 @@ export function parseAndSanitizeAnalysis(input: unknown): TemplateAnalysis {
 
   const applySectionContent = (sectionId: string, value: unknown) => {
     const section = sections.find((s) => s.id === sectionId);
-    const allowed = fieldIdsBySection.get(sectionId) || new Set<string>(fields.filter((f) => f.section === sectionId).map((f) => f.id));
+    const allowed =
+      fieldIdsBySection.get(sectionId) ||
+      new Set<string>(
+        fields.filter((f) => f.section === sectionId || originalFieldSections.get(f.id) === sectionId).map((f) => f.id),
+      );
     if (allowed.size === 0) return;
     const isRepeatable = section?.repeatable ?? false;
     if (isRepeatable) {
@@ -293,7 +355,10 @@ export function parseAndSanitizeAnalysis(input: unknown): TemplateAnalysis {
   };
 
   Object.entries(rawContent).forEach(([key, value]) => {
-    const isSection = sections.some((s) => s.id === key) || fields.some((f) => f.section === key);
+    const isSection =
+      sections.some((s) => s.id === key) ||
+      fields.some((f) => f.section === key) ||
+      fields.some((f) => originalFieldSections.get(f.id) === key);
     if (isSection) {
       applySectionContent(key, value);
       return;
@@ -339,10 +404,10 @@ Extract EVERYTHING visible in the template and return STRICT JSON (no prose, no 
     "type": "single-column" | "two-column" | "sidebar-left" | "sidebar-right",
     "orderedSections": string[],  // every visible section in display order (read column by column for multi-column layouts)
     "sidebarSections": string[] | undefined,  // section ids placed in the colored sidebar (for sidebar layouts)
-    "photo": { "included": boolean, "position": "top-center" | "top-left" | "top-right" | "sidebar", "shape": "circle" | "square" | "rounded", "size": "small" | "medium" | "large" } | null,
+    "photo": { "included": boolean, "position": "top-center" | "top-left" | "top-right" | "sidebar", "shape": "circle" | "square" | "rounded", "size": "small" | "medium" | "large", "crop": { "left": number, "top": number, "width": number, "height": number } | null },
     "page": { "widthMm": number | null, "heightMm": number | null, "margins": { "top": number, "right": number, "bottom": number, "left": number } } | null,
     "columns": [ { "id": "main" | "sidebar", "width": number 0..1 (fraction), "background": "#hex" | null } ] | null,
-    "placements": [ { "sectionId": string, "column": "main" | "sidebar", "order": number } ] | null,
+    "placements": [ { "sectionId": string, "column": "main" | "sidebar" | "main-left" | "main-right", "order": number } ] | null,
     "geometry": { "orientation": "portrait" | "landscape", "headerHeight": number | null, "sidebarWidth": number 0..1, "mainWidth": number 0..1, "gap": number | null, "verticalGap": number | null } | null
   },
   "style": {
@@ -401,7 +466,10 @@ Rules — the template is the exact source of truth:
 - Geometry: measure proportions from the image. sidebarWidth/mainWidth are fractions of total page width (0..1). headerHeight and gaps in px relative to a 794-px-wide page. If a header band exists, set headerHeight (approximate its height in px).
 - Typography: estimate per-role family, weight, size (px), letterSpacing, textTransform (are headings uppercase, capitalized, letter-spaced?), lineHeight from the image. Body text, sidebar text, and headings often differ — record each.
 - Component style: reproduce HOW the template draws things — underline (thick/thin line under heading), dotted rule, bordered box, filled color strip, icon beside the heading, or plain. Note timelines (experience/education drawn as a vertical line of dots) and icons.
+- PHOTO: if the template contains a person's portrait photo, set included=true and report its exact bounding box in "crop" as fractions of the FULL template image (0..1): { left, top, width, height } covering ONLY the photo (do not include surrounding text or margins). For a circular photo, give the crop that contains the whole circle. If there is no photo, return included=false and crop=null.
 - Layout type: if a distinct colored left or right rail exists, use sidebar-left (or sidebar-right) and list its sections in sidebarSections AND in placements with column "sidebar". Read sections column by column: sidebar top-to-bottom first, then the main column (for sidebar layouts) — keep exact positions in placements (order starts at 0 per column).
+- For TWO-COLUMN layouts (two equal-column or asymmetric-column plain design, no colored rail): list orderedSections as the LEFT column sections top-to-bottom, then the RIGHT column sections top-to-bottom. In placements use column "main-left" for every section physically on the left and "main-right" for every section physically on the right (order restarts at 0 in each column). Set geometry.mainWidth to the left-column width as a fraction 0..1 (e.g. 0.38) so the left column uses exactly the template's proportion. Do NOT guess a left/right split — use what you SEE.
+- For single-column layouts every section is "main".
 - Do not flatten the design: if two columns have different widths, keep those widths in geometry/columns.
 - CONTENT: transcribe the actual text visible in the template into "content", keyed by section id, using the SAME field ids from "fields". A non-repeatable section maps to an object { fieldId: value }; a repeatable section (experience, education, projects, ...) maps to an ARRAY of objects, one per visible entry. Copy EXACTLY what you see — real names, titles, companies, dates, emails, phones, addresses, and every bullet line. Multi-line textareas (summaries, descriptions, responsibilities) keep the bullet lines separated by "\\n". Include every visible phone/email/link exactly. If a section has content but no obvious field (e.g. a skill tag list or language list), use the section's main text field. This content is the DEFAULT data used to build the CV — do not paraphrase, translate, or invent;
 - confidence = how sure you are about the overall structure (0.6-0.98).${paletteLine}`;

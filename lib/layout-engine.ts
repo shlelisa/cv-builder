@@ -14,6 +14,8 @@ export interface CustomLayout {
 export interface ResolvedPlacement {
   main: string[];
   sidebar: string[];
+  left: string[];
+  right: string[];
 }
 
 export interface LayoutWarning {
@@ -23,14 +25,41 @@ export interface LayoutWarning {
 
 const PERSONAL_IDS = new Set(['personal', 'contact']);
 
+const colLabel = (column: TemplateColumnId): string =>
+  column === 'sidebar' ? 'Sidebar' : column === 'main-left' ? 'Left' : column === 'main-right' ? 'Right' : 'Main';
+
+function placementsToSections(analysis: TemplateAnalysis): CustomLayoutSection[] {
+  const placements = analysis.layout.placements || [];
+  return placements
+    .filter((p) => !PERSONAL_IDS.has(p.sectionId))
+    .map((p) => ({ sectionId: p.sectionId, column: p.column, order: p.order }));
+}
+
 export function defaultCustomLayout(analysis: TemplateAnalysis): CustomLayout {
+  const placements = placementsToSections(analysis);
+  if (placements.length > 0) return { sections: placements, hidden: [] };
+
+  const type = analysis.layout.type;
+  const isSidebar = type === 'sidebar-left' || type === 'sidebar-right';
+  const isTwoCol = type === 'two-column';
   const sections: CustomLayoutSection[] = [];
+
+  if (isTwoCol) {
+    const order = analysis.layout.orderedSections.filter((id) => !PERSONAL_IDS.has(id));
+    const mainFrac = analysis.layout.geometry?.mainWidth || 0.5;
+    const leftCount = Math.min(order.length - 1, Math.max(1, Math.round(mainFrac * order.length)));
+    order.forEach((id, index) => {
+      sections.push({ sectionId: id, column: index < leftCount ? 'main-left' : 'main-right', order: index % Math.max(1, leftCount) });
+    });
+    return { sections, hidden: [] };
+  }
+
   const templateDefaults = new Set(analysis.layout.sidebarSections || []);
   analysis.layout.orderedSections.forEach((id, index) => {
     if (PERSONAL_IDS.has(id)) return;
     sections.push({
       sectionId: id,
-      column: templateDefaults.has(id) ? 'sidebar' : 'main',
+      column: isSidebar && templateDefaults.has(id) ? 'sidebar' : 'main',
       order: index,
     });
   });
@@ -55,10 +84,14 @@ export function reindex(layout: CustomLayout): CustomLayout {
 
 export function resolveLayout(analysis: TemplateAnalysis, custom?: CustomLayout): ResolvedPlacement {
   const layout = custom ? reindex(cloneCustomLayout(custom)) : defaultCustomLayout(analysis);
-  const allowSidebar = analysis.layout.type === 'sidebar-left' || analysis.layout.type === 'sidebar-right';
+  const type = analysis.layout.type;
+  const allowSidebar = type === 'sidebar-left' || type === 'sidebar-right';
+  const isTwoCol = type === 'two-column';
 
   const main: string[] = [];
   const sidebar: string[] = [];
+  const left: string[] = [];
+  const right: string[] = [];
   const knownIds = new Set(analysis.sections.map((s) => s.id));
   const hidden = new Set(layout.hidden);
 
@@ -66,6 +99,10 @@ export function resolveLayout(analysis: TemplateAnalysis, custom?: CustomLayout)
     if (PERSONAL_IDS.has(p.sectionId)) return;
     if (hidden.has(p.sectionId)) return;
     if (!knownIds.has(p.sectionId)) return;
+    if (isTwoCol) {
+      (p.column === 'main-left' ? left : right).push(p.sectionId);
+      return;
+    }
     if (p.column === 'sidebar' && !allowSidebar) {
       main.push(p.sectionId);
       return;
@@ -73,21 +110,21 @@ export function resolveLayout(analysis: TemplateAnalysis, custom?: CustomLayout)
     (p.column === 'sidebar' ? sidebar : main).push(p.sectionId);
   });
 
-  return { main, sidebar };
+  return { main, sidebar, left, right };
 }
 
 export function validateLayout(analysis: TemplateAnalysis, custom?: CustomLayout): LayoutWarning[] {
   const warnings: LayoutWarning[] = [];
   const baseline = defaultCustomLayout(analysis);
-  const baselineMap = new Map(baseline.sections.map((s) => [s.sectionId, s.column]));
+  const baselineMap = new Map(baseline.sections.map((s) => [s.sectionId, colLabel(s.column)]));
   if (!custom) return warnings;
 
   custom.sections.forEach((s) => {
     const original = baselineMap.get(s.sectionId);
-    if (original && original !== s.column) {
+    if (original && original !== colLabel(s.column)) {
       warnings.push({
         sectionId: s.sectionId,
-        message: `Moved to ${s.column === 'sidebar' ? 'Sidebar' : 'Main'} column (template has it in ${original === 'sidebar' ? 'Sidebar' : 'Main'}).`,
+        message: `Moved to the ${colLabel(s.column)} column (template has it in the ${original} column).`,
       });
     }
     if (!PERSONAL_IDS.has(s.sectionId) && custom.hidden.includes(s.sectionId)) {

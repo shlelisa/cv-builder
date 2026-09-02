@@ -8,7 +8,7 @@ import TemplateCVRenderer from '@/components/cv/TemplateCVRenderer';
 import TemplateLayoutEditor from '@/components/cv/TemplateLayoutEditor';
 import { scoreTemplateMatch } from '@/lib/fidelity';
 import { CustomLayout, defaultCustomLayout, validateLayout } from '@/lib/layout-engine';
-import { TemplateAnalysis, TemplateField, TemplateSection, TemplateStyle } from '@/types';
+import { TemplateAnalysis, TemplateField, TemplatePhotoCrop, TemplateSection, TemplateStyle } from '@/types';
 import { resizeDataUrl } from '@/lib/image-utils';
 import { applySampledColors, extractPalette } from '@/lib/palette';
 
@@ -87,6 +87,17 @@ export default function TemplateAnalyzer() {
     };
   }, []);
 
+  useEffect(() => {
+    if (analysis?.layout.geometry?.orientation !== 'landscape') return;
+    const el = document.createElement('style');
+    el.id = 'cv-landscape-print';
+    el.textContent = '@media print { @page { size: A4 landscape; } }';
+    document.head.appendChild(el);
+    return () => {
+      document.head.removeChild(el);
+    };
+  }, [analysis]);
+
   const simpleEntries = useMemo<Record<string, Array<Record<string, string>>>>(() => {
     const out: Record<string, Array<Record<string, string>>> = {};
     Object.entries(entries).forEach(([sectionId, group]) => {
@@ -138,6 +149,26 @@ export default function TemplateAnalyzer() {
     return canvas.toDataURL('image/png');
   }, []);
 
+  const cropRegion = useCallback((dataUrl: string, crop: TemplatePhotoCrop): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const w = Math.max(1, Math.round(crop.width * img.naturalWidth));
+        const h = Math.max(1, Math.round(crop.height * img.naturalHeight));
+        const x = Math.max(0, Math.min(img.naturalWidth - w, Math.round(crop.left * img.naturalWidth)));
+        const y = Math.max(0, Math.min(img.naturalHeight - h, Math.round(crop.top * img.naturalHeight)));
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, x, y, w, h, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = () => reject(new Error('Failed to load template image'));
+      img.src = dataUrl;
+    });
+  }, []);
+
   const processFile = useCallback(
     async (file: File) => {
       setError('');
@@ -177,6 +208,15 @@ export default function TemplateAnalyzer() {
         const analyzed = applySampledColors(result, pal);
         setAnalysis(analyzed);
         setSingletonValues(analyzed.content || {});
+        let defaultPhoto = '';
+        const templateCrop = analyzed.layout.photo?.crop;
+        if (templateCrop) {
+          try {
+            defaultPhoto = await cropRegion(imageToAnalyze, templateCrop);
+          } catch {
+            // template photo extraction failed — user can upload their own
+          }
+        }
         const initialEntries: Record<string, EntryGroup[]> = {};
         analyzed.sections.forEach((section) => {
           if (section.repeatable) {
@@ -188,7 +228,7 @@ export default function TemplateAnalyzer() {
           }
         });
         setEntries(initialEntries);
-        setPhotoUrl('');
+        setPhotoUrl(defaultPhoto);
         setStyleOverrides({});
         setLayoutType(undefined);
         setCustomLayout(null);
@@ -201,7 +241,7 @@ export default function TemplateAnalyzer() {
         setStep('upload');
       }
     },
-    [readFileAsDataUrl, convertPdfToImage],
+    [readFileAsDataUrl, convertPdfToImage, cropRegion],
   );
 
   const handleDrop = useCallback(
@@ -694,8 +734,8 @@ export default function TemplateAnalyzer() {
                 <div className="bg-gray-50 dark:bg-zinc-800 rounded-lg p-3">
                   <span className="text-xs text-gray-500 dark:text-zinc-400 block mb-1">Color Style</span>
                   <div className="flex gap-1 items-center mt-1">
-                    {[analysis.style.primaryColor, analysis.style.secondaryColor, analysis.style.accentColor].map((c) => (
-                      <span key={c} className="w-4 h-4 rounded-full border border-gray-300 dark:border-zinc-600" style={{ backgroundColor: c }} />
+                    {[analysis.style.primaryColor, analysis.style.secondaryColor, analysis.style.accentColor].map((c, i) => (
+                      <span key={`${c}-${i}`} className="w-4 h-4 rounded-full border border-gray-300 dark:border-zinc-600" style={{ backgroundColor: c }} />
                     ))}
                   </div>
                 </div>
@@ -715,9 +755,9 @@ export default function TemplateAnalyzer() {
                 <div className="bg-gray-50 dark:bg-zinc-800 rounded-lg p-3">
                   <span className="text-xs text-gray-500 dark:text-zinc-400 block mb-2">Detected Colors</span>
                   <div className="flex items-center gap-2">
-                    {palette.map((c) => (
+                    {palette.map((c, i) => (
                       <span
-                        key={c}
+                        key={`${c}-${i}`}
                         title={c}
                         className="w-6 h-6 rounded-full border border-gray-300 dark:border-zinc-600"
                         style={{ backgroundColor: c }}

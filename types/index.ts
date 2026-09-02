@@ -250,6 +250,14 @@ export interface TemplateComponentStyle {
   headerBackground?: boolean;
 }
 
+export interface TemplatePhotoCrop {
+  /** Normalized bounding box of the photo region within the template image (0..1 fractions, relative to the full image). */
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
 export interface TemplateLayout {
   type: 'single-column' | 'two-column' | 'sidebar-left' | 'sidebar-right';
   orderedSections: string[];
@@ -259,6 +267,7 @@ export interface TemplateLayout {
     position: 'top-center' | 'top-left' | 'top-right' | 'sidebar';
     shape: 'circle' | 'square' | 'rounded';
     size: 'small' | 'medium' | 'large';
+    crop?: TemplatePhotoCrop;
   };
   page?: TemplatePageSpec;
   columns?: TemplateColumnSpec[];
@@ -272,7 +281,7 @@ export interface TemplatePageSpec {
   margins?: { top: number; right: number; bottom: number; left: number };
 }
 
-export type TemplateColumnId = 'main' | 'sidebar';
+export type TemplateColumnId = 'main' | 'sidebar' | 'main-left' | 'main-right';
 
 export interface TemplateColumnSpec {
   id: TemplateColumnId;

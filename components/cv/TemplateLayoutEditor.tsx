@@ -20,31 +20,44 @@ interface TemplateLayoutEditorProps {
 }
 
 const PERSONAL_IDS = new Set(['personal', 'contact']);
+const ALL_COLUMNS: TemplateColumnId[] = ['main', 'sidebar', 'main-left', 'main-right'];
+
+type ColumnLists = Record<TemplateColumnId, string[]>;
+
+function emptyLists(): ColumnLists {
+  return { main: [], sidebar: [], 'main-left': [], 'main-right': [] };
+}
 
 interface DragSource {
-  col: 'main' | 'sidebar';
+  col: TemplateColumnId;
   index: number;
 }
 
-function partition(value: CustomLayout): { main: string[]; sidebar: string[]; hidden: Set<string> } {
-  const main: string[] = [];
-  const sidebar: string[] = [];
+function partition(value: CustomLayout): { lists: ColumnLists; hidden: Set<string> } {
+  const lists = emptyLists();
   [...value.sections]
     .sort((a, b) => a.order - b.order)
     .forEach((s) => {
       if (PERSONAL_IDS.has(s.sectionId)) return;
-      (s.column === 'sidebar' ? sidebar : main).push(s.sectionId);
+      lists[s.column] = [...lists[s.column], s.sectionId];
     });
-  return { main, sidebar, hidden: new Set(value.hidden) };
+  return { lists, hidden: new Set(value.hidden) };
 }
 
-function fromColumnLists(main: string[], sidebar: string[], prev: CustomLayout): CustomLayout {
+function fromColumnLists(lists: ColumnLists, prev: CustomLayout): CustomLayout {
   const sections: CustomLayoutSection[] = [];
-  main.forEach((id) => sections.push({ sectionId: id, column: 'main', order: sections.length }));
-  sidebar.forEach((id) =>
-    sections.push({ sectionId: id, column: 'sidebar', order: sections.length }),
-  );
+  ALL_COLUMNS.forEach((col) => {
+    lists[col].forEach((id) => sections.push({ sectionId: id, column: col, order: sections.length }));
+  });
   return reindex({ sections, hidden: [...prev.hidden] });
+}
+
+function listsFor(columns: TemplateColumnId[]): ColumnLists {
+  const base = emptyLists();
+  ALL_COLUMNS.forEach((col) => {
+    if (!columns.includes(col)) delete (base as Partial<ColumnLists>)[col];
+  });
+  return base;
 }
 
 export default function TemplateLayoutEditor({
@@ -55,9 +68,12 @@ export default function TemplateLayoutEditor({
   warnings,
 }: TemplateLayoutEditorProps) {
   const { t } = useApp();
-  const { main, sidebar, hidden } = useMemo(() => partition(value), [value]);
-  const isSidebarLayout = analysis.layout.type === 'sidebar-left' || analysis.layout.type === 'sidebar-right';
-  const columns: TemplateColumnId[] = isSidebarLayout ? ['main', 'sidebar'] : ['main'];
+  const { lists, hidden } = useMemo(() => partition(value), [value]);
+  const columns = useMemo<TemplateColumnId[]>(() => {
+    const isSidebarLayout = analysis.layout.type === 'sidebar-left' || analysis.layout.type === 'sidebar-right';
+    const isTwoColLayout = analysis.layout.type === 'two-column';
+    return isSidebarLayout ? ['main', 'sidebar'] : isTwoColLayout ? ['main-left', 'main-right'] : ['main'];
+  }, [analysis.layout.type]);
 
   const dragRef = useRef<DragSource | null>(null);
   const [overTarget, setOverTarget] = useState<string | null>(null);
@@ -74,13 +90,16 @@ export default function TemplateLayoutEditor({
   };
 
   const moveTo = (targetCol: TemplateColumnId, targetIndex: number | 'end', source: DragSource) => {
-    const work = { main: [...main], sidebar: [...sidebar] };
+    const work = listsFor(columns);
+    columns.forEach((col) => {
+      work[col] = [...lists[col]];
+    });
     const [moved] = work[source.col].splice(source.index, 1);
     if (!moved) return;
     let idx = targetIndex === 'end' ? work[targetCol].length : targetIndex;
     if (source.col === targetCol && source.index < idx) idx -= 1;
     work[targetCol].splice(idx, 0, moved);
-    commit(fromColumnLists(work.main, work.sidebar, value));
+    commit(fromColumnLists(work, value));
   };
 
   const toggleHidden = (id: string) => {
@@ -90,22 +109,20 @@ export default function TemplateLayoutEditor({
     commit({ sections: value.sections, hidden: nextHidden });
   };
 
-  const removeSection = (col: 'main' | 'sidebar', index: number) => {
-    const next = fromColumnLists(
-      col === 'main' ? main.filter((_, i) => i !== index) : main,
-      col === 'sidebar' ? sidebar.filter((_, i) => i !== index) : sidebar,
-      value,
-    );
-    commit(next);
+  const removeSection = (col: TemplateColumnId, index: number) => {
+    const work = listsFor(columns);
+    columns.forEach((c) => {
+      work[c] = c === col ? lists[c].filter((_, i) => i !== index) : [...lists[c]];
+    });
+    commit(fromColumnLists(work, value));
   };
 
   const addSection = (id: string, col: TemplateColumnId) => {
-    const next = fromColumnLists(
-      col === 'main' ? [...main, id] : main,
-      col === 'sidebar' ? [...sidebar, id] : sidebar,
-      value,
-    );
-    commit(next);
+    const work = listsFor(columns);
+    columns.forEach((c) => {
+      work[c] = c === col ? [...lists[c], id] : [...lists[c]];
+    });
+    commit(fromColumnLists(work, value));
   };
 
   const undo = () => {
@@ -129,13 +146,14 @@ export default function TemplateLayoutEditor({
     setOverTarget(null);
   };
 
+  const inAnyColumn = new Set(columns.flatMap((col) => lists[col]));
   const available = analysis.sections.filter(
-    (s) => !PERSONAL_IDS.has(s.id) && !main.includes(s.id) && !sidebar.includes(s.id),
+    (s) => !PERSONAL_IDS.has(s.id) && !inAnyColumn.has(s.id),
   );
 
   const renderRow = (id: string, col: TemplateColumnId, index: number) => {
     const isHidden = hidden.has(id);
-    const rows = col === 'main' ? main : sidebar;
+    const rows = lists[col] || [];
     return (
       <div key={`${col}-${id}`}>
         <div
@@ -207,8 +225,17 @@ export default function TemplateLayoutEditor({
     );
   };
 
+  const columnLabel = (col: TemplateColumnId) =>
+    col === 'main'
+      ? t.templates.mainColumn
+      : col === 'sidebar'
+        ? t.templates.sidebarColumn
+        : col === 'main-left'
+          ? t.templates.leftColumn
+          : t.templates.rightColumn;
+
   const renderColumn = (col: TemplateColumnId) => {
-    const rows = col === 'main' ? main : sidebar;
+    const rows = lists[col] || [];
     return (
       <div
         key={col}
@@ -227,7 +254,7 @@ export default function TemplateLayoutEditor({
       >
         <div className="mb-2 flex items-center justify-between px-1">
           <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            {col === 'main' ? t.templates.mainColumn : t.templates.sidebarColumn}
+            {columnLabel(col)}
           </span>
         </div>
         <div className="space-y-1.5">
