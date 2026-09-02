@@ -41,7 +41,7 @@ export default function JobAnalyzer() {
     "- Bachelor's degree in Software Engineering, Computer Science or related field\n- Proven proficiency in React.js and Node.js\n- Hands-on experience with SQL databases (MySQL/PostgreSQL) and MongoDB\n- Familiarity with Git version control and RESTful APIs\n- Strong problem-solving, collaboration, and verbal communication skills"
   );
   const [profileInput, setProfileInput] = useState(
-    "Lelisa Shashura Diriba - BSc in Software Engineering from Bule Hora University (CGPA 3.88, Exit Exam 75%).\nSkills: Java, C++, React.js, Node.js, SQL, MongoDB, Git, HTML, CSS, JavaScript, Problem Solving, Teamwork.\nExperience: IT Expert & Software Development Intern at OCC and Gadaa Software Company.\nProjects: Employee Hiring System (PHP/MySQL) and House Rental Portal (MERN stack)."
+    "Maqaa Kee/Your Name  - BSc in Software Engineering from Bule Hora University (CGPA 3.88, Exit Exam 75%).\nSkills: Java, C++, React.js, Node.js, SQL, MongoDB, Git, HTML, CSS, JavaScript, Problem Solving, Teamwork.\nExperience: IT Expert & Software Development Intern at OCC and Gadaa Software Company.\nProjects: Employee Hiring System (PHP/MySQL) and House Rental Portal (MERN stack)."
   );
 
   // Analysis State
@@ -148,7 +148,7 @@ export default function JobAnalyzer() {
         "- Bachelor's degree in Software Engineering or Computer Science\n- Solid foundation in JavaScript/TypeScript, React.js and Node.js\n- Experience designing and querying SQL and MongoDB databases\n- Familiarity with RESTful APIs, Git, and cloud concepts\n- Adaptable problem solver with good communication"
       );
       setProfileInput(
-        "Lelisa Shashura Diriba\nSoftware Engineer Graduate (CGPA: 3.88) from Bule Hora University.\nSkills: JavaScript, TypeScript, React.js, Node.js, Express, SQL, MySQL, MongoDB, Git, HTML, CSS, Problem Solving, Teamwork.\nExperience: IT Support & Software Intern at Gadaa Software Company.\nProjects: Automated University Hiring System (PHP/MySQL) and Student Housing Platform (MERN stack)."
+        "Maqaa Kee/Your Name \nSoftware Engineer Graduate (CGPA: 3.88) from Bule Hora University.\nSkills: JavaScript, TypeScript, React.js, Node.js, Express, SQL, MySQL, MongoDB, Git, HTML, CSS, Problem Solving, Teamwork.\nExperience: IT Support & Software Intern at Gadaa Software Company.\nProjects: Automated University Hiring System (PHP/MySQL) and Student Housing Platform (MERN stack)."
       );
     } else {
       setPosition('Marketing Manager');
@@ -304,23 +304,21 @@ export default function JobAnalyzer() {
                 Candidate Fit Score
               </span>
               <div className="flex items-baseline gap-2">
-                <span className={`text-4xl font-black ${
-                  matchResult.matchScore >= 70 ? 'text-emerald-600 dark:text-emerald-400' :
+                <span className={`text-4xl font-black ${matchResult.matchScore >= 70 ? 'text-emerald-600 dark:text-emerald-400' :
                   matchResult.matchScore >= 45 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'
-                }`}>
+                  }`}>
                   {matchResult.matchScore}%
                 </span>
                 <span className="text-xs font-semibold text-gray-500">
                   {matchResult.matchScore >= 70 ? 'Strong Alignment' :
-                   matchResult.matchScore >= 45 ? 'Moderate Match' : 'Skill Gap Detected'}
+                    matchResult.matchScore >= 45 ? 'Moderate Match' : 'Skill Gap Detected'}
                 </span>
               </div>
               <div className="w-full bg-gray-100 dark:bg-zinc-800 rounded-full h-2 mt-3 overflow-hidden">
                 <div
-                  className={`h-full rounded-full transition-all duration-500 ${
-                    matchResult.matchScore >= 70 ? 'bg-emerald-500' :
+                  className={`h-full rounded-full transition-all duration-500 ${matchResult.matchScore >= 70 ? 'bg-emerald-500' :
                     matchResult.matchScore >= 45 ? 'bg-amber-500' : 'bg-red-500'
-                  }`}
+                    }`}
                   style={{ width: `${matchResult.matchScore}%` }}
                 />
               </div>
@@ -332,10 +330,9 @@ export default function JobAnalyzer() {
                 ATS Pass Probability
               </span>
               <div className="flex items-baseline gap-2">
-                <span className={`text-4xl font-black ${
-                  atsResult.atsScore >= 70 ? 'text-blue-600 dark:text-blue-400' :
+                <span className={`text-4xl font-black ${atsResult.atsScore >= 70 ? 'text-blue-600 dark:text-blue-400' :
                   atsResult.atsScore >= 45 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'
-                }`}>
+                  }`}>
                   {atsResult.atsScore}%
                 </span>
                 <span className="text-xs font-semibold text-gray-500">

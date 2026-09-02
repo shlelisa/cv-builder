@@ -1177,7 +1177,7 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
       ],
     },
   },
-  // 7. ACADEMIC GRADUATE (Two-Column Lelisa Shashura format)
+  // 7. ACADEMIC GRADUATE (Two-Column Maqaa Kee/Your Name format)
   {
     id: 'academic-graduate',
     name: 'Academic Graduate (Two-Column)',
@@ -1311,7 +1311,7 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
       ],
     },
     defaultSingleton: {
-      fullName: 'Lelisa Shashura Diriba',
+      fullName: 'Maqaa Kee/Your Name ',
       field: 'Software Engineering',
       phone: '+251969642103/ +251970463204',
       email: 'lelisa.shashura@bhu.edu.et',

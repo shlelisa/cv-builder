@@ -13,7 +13,7 @@ export default function LetterGenerator() {
   const [tone, setTone] = useState<"professional" | "fresh-graduate" | "modern">("professional");
 
   // Candidate Details
-  const [applicantName, setApplicantName] = useState("Lelisa Shashura Diriba");
+  const [applicantName, setApplicantName] = useState("Maqaa Kee/Your Name ");
   const [email, setEmail] = useState("lelisa.shashura@bhu.edu.et");
   const [phone, setPhone] = useState("+251 969 642 103");
   const [location, setLocation] = useState("Bule Hora / Addis Ababa, Ethiopia");
@@ -66,7 +66,7 @@ export default function LetterGenerator() {
 
   const handleLoadSample = (type: "software" | "marketing") => {
     if (type === "software") {
-      setApplicantName("Lelisa Shashura Diriba");
+      setApplicantName("Maqaa Kee/Your Name ");
       setEmail("lelisa.shashura@bhu.edu.et");
       setPhone("+251 969 642 103");
       setLocation("Addis Ababa, Ethiopia");
@@ -227,22 +227,20 @@ export default function LetterGenerator() {
                 <button
                   type="button"
                   onClick={() => setLetterType("application")}
-                  className={`px-3 py-2 text-xs font-semibold rounded-lg border text-center transition-all ${
-                    letterType === "application"
-                      ? "bg-blue-600 text-white border-blue-600 shadow-xs"
-                      : "bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 hover:bg-gray-100"
-                  }`}
+                  className={`px-3 py-2 text-xs font-semibold rounded-lg border text-center transition-all ${letterType === "application"
+                    ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                    : "bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 hover:bg-gray-100"
+                    }`}
                 >
                   📝 Formal Application Letter
                 </button>
                 <button
                   type="button"
                   onClick={() => setLetterType("cover")}
-                  className={`px-3 py-2 text-xs font-semibold rounded-lg border text-center transition-all ${
-                    letterType === "cover"
-                      ? "bg-blue-600 text-white border-blue-600 shadow-xs"
-                      : "bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 hover:bg-gray-100"
-                  }`}
+                  className={`px-3 py-2 text-xs font-semibold rounded-lg border text-center transition-all ${letterType === "cover"
+                    ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                    : "bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 hover:bg-gray-100"
+                    }`}
                 >
                   💌 Persuasive Cover Letter
                 </button>
@@ -264,11 +262,10 @@ export default function LetterGenerator() {
                     key={t.id}
                     type="button"
                     onClick={() => setTone(t.id)}
-                    className={`p-2 rounded-lg border text-center transition-all ${
-                      tone === t.id
-                        ? "bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-700 dark:text-blue-300 font-bold"
-                        : "bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-400 hover:bg-gray-100"
-                    }`}
+                    className={`p-2 rounded-lg border text-center transition-all ${tone === t.id
+                      ? "bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-700 dark:text-blue-300 font-bold"
+                      : "bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-400 hover:bg-gray-100"
+                      }`}
                   >
                     <span className="text-xs block">{t.label}</span>
                     <span className="text-[10px] opacity-75 block">{t.desc}</span>
@@ -292,11 +289,10 @@ export default function LetterGenerator() {
                     key={lang.id}
                     type="button"
                     onClick={() => setLanguage(lang.id)}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-md border transition-all ${
-                      language === lang.id
-                        ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 shadow-xs"
-                        : "bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-400 hover:bg-gray-100"
-                    }`}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-md border transition-all ${language === lang.id
+                      ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 shadow-xs"
+                      : "bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-400 hover:bg-gray-100"
+                      }`}
                   >
                     {lang.label}
                   </button>
@@ -320,7 +316,7 @@ export default function LetterGenerator() {
                   type="text"
                   value={applicantName}
                   onChange={(e) => setApplicantName(e.target.value)}
-                  placeholder="e.g. Lelisa Shashura"
+                  placeholder="e.g. Maqaa Kee/Your Name"
                   className="w-full px-3 py-2 text-xs sm:text-sm border border-gray-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 outline-none"
                 />
               </div>
