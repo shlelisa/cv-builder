@@ -36,12 +36,12 @@ export default function JobAnalyzer() {
 
   // Inputs
   const [position, setPosition] = useState('Junior Software Engineer');
-  const [company, setCompany] = useState('Gadaa Software Company PLC');
+  const [company, setCompany] = useState('ABC Company');
   const [requirements, setRequirements] = useState(
     "- Bachelor's degree in Software Engineering, Computer Science or related field\n- Proven proficiency in React.js and Node.js\n- Hands-on experience with SQL databases (MySQL/PostgreSQL) and MongoDB\n- Familiarity with Git version control and RESTful APIs\n- Strong problem-solving, collaboration, and verbal communication skills"
   );
   const [profileInput, setProfileInput] = useState(
-    "Your Name / Maqaa Kee - BSc in Software Engineering from Bule Hora University (CGPA 3.88, Exit Exam 75%).\nSkills: Java, C++, React.js, Node.js, SQL, MongoDB, Git, HTML, CSS, JavaScript, Problem Solving, Teamwork.\nExperience: IT Expert & Software Development Intern at OCC and Gadaa Software Company.\nProjects: Employee Hiring System (PHP/MySQL) and House Rental Portal (MERN stack)."
+    "Your Name / Maqaa Kee - BSc in Software Engineering from Bule Hora University (CGPA 4, Exit Exam 99%).\nSkills: Java, C++, React.js, Node.js, SQL, MongoDB, Git, HTML, CSS, JavaScript, Problem Solving, Teamwork.\nExperience: IT Expert & Software Development Intern at ABC Company.\nProjects: Employee Hiring System (PHP/MySQL) and House Rental Portal (MERN stack)."
   );
 
   // Analysis State
@@ -143,12 +143,12 @@ export default function JobAnalyzer() {
   const handleLoadSample = (sample: 'tech' | 'marketing') => {
     if (sample === 'tech') {
       setPosition('Junior Full-Stack Engineer');
-      setCompany('Gadaa Tech Solutions');
+      setCompany('ABC Tech Solutions');
       setRequirements(
         "- Bachelor's degree in Software Engineering or Computer Science\n- Solid foundation in JavaScript/TypeScript, React.js and Node.js\n- Experience designing and querying SQL and MongoDB databases\n- Familiarity with RESTful APIs, Git, and cloud concepts\n- Adaptable problem solver with good communication"
       );
       setProfileInput(
-        "Your Name / Maqaa Kee\nSoftware Engineer Graduate (CGPA: 3.88) from Bule Hora University.\nSkills: JavaScript, TypeScript, React.js, Node.js, Express, SQL, MySQL, MongoDB, Git, HTML, CSS, Problem Solving, Teamwork.\nExperience: IT Support & Software Intern at Gadaa Software Company.\nProjects: Automated University Hiring System (PHP/MySQL) and Student Housing Platform (MERN stack)."
+        "Your Name / Maqaa Kee\nSoftware Engineer Graduate (CGPA: 4) from Bule Hora University.\nSkills: JavaScript, TypeScript, React.js, Node.js, Express, SQL, MySQL, MongoDB, Git, HTML, CSS, Problem Solving, Teamwork.\nExperience: IT Support & Software Intern at ABC Company.\nProjects: Automated University Hiring System (PHP/MySQL) and Student Housing Platform (MERN stack)."
       );
     } else {
       setPosition('Marketing Manager');

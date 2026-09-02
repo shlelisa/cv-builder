@@ -1316,7 +1316,7 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
       phone: '+251912345678',
       email: 'yourname@example.com',
       summaryText:
-        'I am a dedicated Software Engineering graduate from Bule Hora University with a CGPA of 3.88 and an exit exam score of 75%. I possess strong technical skills in Java, C++, C, Android, React, and web development technologies, along with experience in managing both SQL and NoSQL databases. I am currently enhancing my expertise in full-stack development using the MERN (MongoDB, Express, React, Node.js) stack. During my internship at Gadaa Software Company PLC, I gained practical experience in software development, database management, and data analysis.\n\nI am a quick learner with strong problem-solving, adaptability, and teamwork skills. I am eager to contribute to innovative projects where I can apply my knowledge and grow as a software engineer.',
+        'I am a dedicated Software Engineering graduate from Bule Hora University with a CGPA of 4 and an exit exam score of 99%. I possess strong technical skills in Java, C++, C, Android, React, and web development technologies, along with experience in managing both SQL and NoSQL databases. I am currently enhancing my expertise in full-stack development using the MERN (MongoDB, Express, React, Node.js) stack. During my internship at ABC Company, I gained practical experience in software development, database management, and data analysis.\n\nI am a quick learner with strong problem-solving, adaptability, and teamwork skills. I am eager to contribute to innovative projects where I can apply my knowledge and grow as a software engineer.',
       techSkillsText:
         'Programming Languages: Java, C++, C, JavaScript, PHP.\nWeb Technologies: HTML, CSS, React.js, Node.js, Express.js.\nDatabases: MySQL, MongoDB\nFrameworks & Tools: Android Studio, Git, VS Code.',
       softSkillsText: 'Adaptability\nCommunication\nTeamwork and Collaboration',
@@ -1340,13 +1340,13 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
         {
           degree: 'BSc in Software Engineering',
           institution: 'Bule Hora University',
-          cgpa: 'CGPA: 3.88 / 4.00',
-          exitExam: 'Exit Exam Result: 75%',
+          cgpa: 'CGPA: 4 / 4.00',
+          exitExam: 'Exit Exam Result: 99%',
         },
       ],
       experience: [
         {
-          company: 'OCC(Oromia construction corporation)',
+          company: 'ABC Company',
           role: 'Position: IT expert',
           duration: 'Duration: 1 year and 2+ Months',
         },

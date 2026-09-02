@@ -19,7 +19,7 @@ export default function LetterGenerator() {
   const [location, setLocation] = useState("Addis Ababa, Ethiopia");
 
   // Job Details
-  const [company, setCompany] = useState("Gadaa Software Company PLC");
+  const [company, setCompany] = useState("ABC Company");
   const [position, setPosition] = useState("Junior Software Engineer");
   const [recipient, setRecipient] = useState("Hiring Committee");
 
@@ -27,7 +27,7 @@ export default function LetterGenerator() {
   const [degree, setDegree] = useState("BSc in Software Engineering");
   const [university, setUniversity] = useState("Bule Hora University");
   const [skills, setSkills] = useState("Java, C++, React.js, Node.js, SQL, MongoDB, Git, Problem Solving");
-  const [experienceSummary, setExperienceSummary] = useState("Software Development Intern at Gadaa Software Company PLC");
+  const [experienceSummary, setExperienceSummary] = useState("Software Development Intern at ABC Company");
   const [keyProjects, setKeyProjects] = useState("Employee Hiring System (Final Year Project) & House Rental Platform");
   const [requirements, setRequirements] = useState("- Degree in Software Engineering or CS\n- Proficiency in React & Node.js\n- Database knowledge (SQL/MongoDB)\n- Strong problem-solving & collaborative attitude");
 
@@ -70,13 +70,13 @@ export default function LetterGenerator() {
       setEmail("yourname@example.com");
       setPhone("+251 91 234 5678");
       setLocation("Addis Ababa, Ethiopia");
-      setCompany("Gadaa Software Company PLC");
+      setCompany("ABC Company");
       setPosition("Junior Software Engineer");
       setRecipient("Engineering Hiring Team");
       setDegree("BSc in Software Engineering");
       setUniversity("Bule Hora University");
       setSkills("Java, C++, React.js, Node.js, SQL, MongoDB, Git, REST APIs, Teamwork");
-      setExperienceSummary("IT and Software Engineering Internship at Gadaa Software Company PLC");
+      setExperienceSummary("IT and Software Engineering Internship at ABC Company");
       setKeyProjects("Automated University Hiring System (PHP/MySQL) & House Rental Portal (MERN stack)");
       setRequirements("- Bachelor's degree in Software Engineering\n- Experience in full-stack web technologies\n- Database management (SQL & NoSQL)\n- Collaborative mindset");
     } else {
@@ -458,7 +458,7 @@ export default function LetterGenerator() {
                 type="text"
                 value={experienceSummary}
                 onChange={(e) => setExperienceSummary(e.target.value)}
-                placeholder="e.g. Software Development Intern at Gadaa Software Company PLC"
+                placeholder="e.g. Software Development Intern at ABC Company"
                 className="w-full px-3 py-2 text-xs sm:text-sm border border-gray-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>

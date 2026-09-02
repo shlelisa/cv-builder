@@ -731,11 +731,10 @@ export default function TemplateAnalyzer() {
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onClick={() => fileInputRef.current?.click()}
-          className={`cursor-pointer rounded-xl border-2 border-dashed p-16 text-center transition-colors ${
-            dragOver
+          className={`cursor-pointer rounded-xl border-2 border-dashed p-16 text-center transition-colors ${dragOver
               ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
               : 'border-gray-300 dark:border-zinc-600 hover:border-blue-400 hover:bg-gray-50 dark:hover:bg-zinc-800/50'
-          }`}
+            }`}
         >
           <input ref={fileInputRef} type="file" accept="image/*,.pdf" onChange={handleFileChange} className="hidden" />
           <div className="text-4xl mb-4">📄</div>
@@ -962,16 +961,14 @@ export default function TemplateAnalyzer() {
             {(refinedSingleton || refinedEntries) && (
               <button
                 onClick={() => setUseRewrites((v) => !v)}
-                className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
-                  useRewrites
+                className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${useRewrites
                     ? 'border-blue-600 bg-blue-600 text-white'
                     : 'border-gray-300 dark:border-zinc-700 text-gray-600 dark:text-zinc-300'
-                }`}
+                  }`}
               >
                 <span
-                  className={`w-4 h-4 rounded border flex items-center justify-center text-[10px] font-bold ${
-                    useRewrites ? 'bg-white text-blue-600 border-white' : 'border-gray-400 dark:border-zinc-600'
-                  }`}
+                  className={`w-4 h-4 rounded border flex items-center justify-center text-[10px] font-bold ${useRewrites ? 'bg-white text-blue-600 border-white' : 'border-gray-400 dark:border-zinc-600'
+                    }`}
                 >
                   {useRewrites ? '✓' : ''}
                 </span>
@@ -992,7 +989,7 @@ export default function TemplateAnalyzer() {
                 className="bg-transparent text-gray-800 dark:text-zinc-200 font-semibold cursor-pointer focus:outline-none"
               >
                 <option value={0.65}>Fit (65%)</option>
-                <option value={0.75}>Standard A4 (75%)</option>
+                <option value={0.75}>Standard A4 (99%)</option>
                 <option value={0.85}>Large (85%)</option>
                 <option value={1.0}>Actual A4 (100%)</option>
               </select>
@@ -1048,13 +1045,12 @@ export default function TemplateAnalyzer() {
                   {t.templates.templateMatch}
                 </h4>
                 <span
-                  className={`text-2xl font-bold ${
-                    fidelity.overall >= 90
+                  className={`text-2xl font-bold ${fidelity.overall >= 90
                       ? 'text-green-600 dark:text-green-400'
                       : fidelity.overall >= 70
                         ? 'text-amber-600 dark:text-amber-400'
                         : 'text-red-600 dark:text-red-400'
-                  }`}
+                    }`}
                 >
                   {fidelity.overall}%
                 </span>
