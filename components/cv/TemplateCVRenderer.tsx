@@ -853,7 +853,7 @@ export default function TemplateCVRenderer({
   );
 
   return (
-    <div className="overflow-x-auto pb-4 flex flex-col items-center">
+    <div className="w-fit min-w-full pb-4 flex flex-col items-center">
       {/* A4 Paper Indicator Badge - Outside of print root */}
       <div
         className="print-hide flex items-center justify-between text-xs text-gray-500 dark:text-zinc-400 mb-2 px-1 select-none"

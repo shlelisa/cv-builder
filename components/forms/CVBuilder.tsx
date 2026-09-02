@@ -708,16 +708,18 @@ export default function CVBuilder() {
 
       {/* Main View: Full A4 View or Split-View */}
       {viewMode === 'fullA4' ? (
-        <div className="bg-gray-100 dark:bg-zinc-800/50 p-6 rounded-xl border border-gray-200 dark:border-zinc-800 flex justify-center overflow-auto min-h-[85vh]">
-          <TemplateCVRenderer
-            analysis={selectedTemplate.analysis}
-            singletonValues={singletonValues}
-            entries={entries}
-            photoUrl={photoUrl || undefined}
-            zoom={zoom}
-            styleOverrides={styleOverrides}
-            onPhotoClick={() => photoInputRef.current?.click()}
-          />
+        <div className="bg-gray-100 dark:bg-zinc-800/50 p-4 sm:p-6 rounded-xl border border-gray-200 dark:border-zinc-800 overflow-x-auto overflow-y-auto min-h-[85vh]">
+          <div className="w-fit min-w-full flex justify-center">
+            <TemplateCVRenderer
+              analysis={selectedTemplate.analysis}
+              singletonValues={singletonValues}
+              entries={entries}
+              photoUrl={photoUrl || undefined}
+              zoom={zoom}
+              styleOverrides={styleOverrides}
+              onPhotoClick={() => photoInputRef.current?.click()}
+            />
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -1171,16 +1173,18 @@ export default function CVBuilder() {
 
           {/* Right Column: Live A4 Preview (7 of 12 cols, sticky) */}
           <div className={`lg:col-span-7 sticky top-20 ${mobilePane === 'preview' ? 'block' : 'hidden lg:block'}`}>
-            <div className="bg-gray-100 dark:bg-zinc-800/50 p-2 sm:p-4 rounded-xl border border-gray-200 dark:border-zinc-800 flex justify-center overflow-x-auto overflow-y-auto max-h-[calc(100vh-6rem)]">
-              <TemplateCVRenderer
-                analysis={selectedTemplate.analysis}
-                singletonValues={singletonValues}
-                entries={entries}
-                photoUrl={photoUrl || undefined}
-                zoom={zoom}
-                styleOverrides={styleOverrides}
-                onPhotoClick={() => photoInputRef.current?.click()}
-              />
+            <div className="bg-gray-100 dark:bg-zinc-800/50 p-2 sm:p-4 rounded-xl border border-gray-200 dark:border-zinc-800 overflow-x-auto overflow-y-auto max-h-[calc(100vh-6rem)]">
+              <div className="w-fit min-w-full flex justify-center">
+                <TemplateCVRenderer
+                  analysis={selectedTemplate.analysis}
+                  singletonValues={singletonValues}
+                  entries={entries}
+                  photoUrl={photoUrl || undefined}
+                  zoom={zoom}
+                  styleOverrides={styleOverrides}
+                  onPhotoClick={() => photoInputRef.current?.click()}
+                />
+              </div>
             </div>
           </div>
         </div>
