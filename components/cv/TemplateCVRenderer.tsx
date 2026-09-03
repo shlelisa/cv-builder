@@ -199,13 +199,15 @@ export default function TemplateCVRenderer({
         ? theme.borderColor || '#cbd5e1'
         : 'rgba(255, 255, 255, 0.45)';
 
+    const photoMargin = photoPos === 'sidebar' ? 20 : 16;
+
     if (photoUrl) {
       return (
         <div
           onClick={onPhotoClick}
           className={onPhotoClick ? 'cursor-pointer group relative' : undefined}
           title={onPhotoClick ? 'Click to change photo' : undefined}
-          style={{ width: size, height: size, marginBottom: 12, ...alignStyle }}
+          style={{ width: size, height: size, marginBottom: photoMargin, ...alignStyle }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -218,7 +220,7 @@ export default function TemplateCVRenderer({
               objectFit: 'cover',
               borderRadius: PHOTO_RADIUS[photoShape] ?? '50%',
               border: photoShape === 'circle' ? '4px solid #ffffff' : `3px solid ${borderColor}`,
-              boxShadow: photoShape === 'circle' ? '0 4px 14px rgba(0,0,0,0.15)' : undefined,
+              boxShadow: photoShape === 'circle' ? '0 6px 20px rgba(0,0,0,0.18)' : '0 4px 14px rgba(0,0,0,0.12)',
             }}
           />
           {onPhotoClick && (
@@ -240,13 +242,13 @@ export default function TemplateCVRenderer({
           height: size,
           borderRadius: PHOTO_RADIUS[photoShape] ?? '50%',
           border: photoShape === 'circle' ? '4px solid #ffffff' : `3px solid ${borderColor}`,
-          boxShadow: photoShape === 'circle' ? '0 4px 14px rgba(0,0,0,0.12)' : undefined,
+          boxShadow: photoShape === 'circle' ? '0 6px 20px rgba(0,0,0,0.14)' : '0 4px 12px rgba(0,0,0,0.08)',
           backgroundColor: 'rgba(255, 255, 255, 0.4)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: 12,
+          marginBottom: photoMargin,
           color: theme.sidebarHeadingColor || theme.iconColor || '#64748b',
           position: 'relative',
           ...alignStyle,
@@ -306,9 +308,9 @@ export default function TemplateCVRenderer({
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 8,
-                  marginTop: 4,
-                  marginBottom: 5,
+                  gap: 10,
+                  marginTop: 5,
+                  marginBottom: 6,
                 }}
               >
                 <span
@@ -731,7 +733,7 @@ export default function TemplateCVRenderer({
           display: 'flex',
           alignItems: 'center',
           justifyContent: headerAlign === 'center' ? 'center' : headerAlign === 'right' ? 'flex-end' : 'flex-start',
-          gap: 16,
+          gap: 24,
           flexWrap: 'wrap',
         }}
       >
@@ -766,7 +768,7 @@ export default function TemplateCVRenderer({
           )}
         </div>
       </div>
-      {(!forMainCol || photoPos !== 'sidebar') && showPhoto && photoPos === 'top-center' && <div className="flex justify-center mt-2">{photoEl('center')}</div>}
+      {(!forMainCol || photoPos !== 'sidebar') && showPhoto && photoPos === 'top-center' && <div className="flex justify-center mt-3 mb-2">{photoEl('center')}</div>}
     </div>
   );
 
@@ -774,9 +776,9 @@ export default function TemplateCVRenderer({
   const mainColHeaderBand = hasHeaderBand && renderHeaderContent(true);
 
   const inlineHeader = !hasHeaderBand && !layout.hideInlineHeader && (
-    <div style={{ textAlign: headerAlign, marginBottom: isTwoCol ? 18 : 20, borderBottom: isSidebar ? 'none' : `3px solid ${theme.borderColor}`, paddingBottom: 12 }}>
-      {showPhoto && photoPos === 'top-center' && <div className="flex justify-center">{photoEl('center')}</div>}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: headerAlign === 'center' ? 'center' : headerAlign === 'right' ? 'flex-end' : 'flex-start', gap: 16 }}>
+    <div style={{ textAlign: headerAlign, marginBottom: isTwoCol ? 18 : 22, borderBottom: isSidebar ? 'none' : `3px solid ${theme.borderColor}`, paddingBottom: 14 }}>
+      {showPhoto && photoPos === 'top-center' && <div className="flex justify-center mb-3">{photoEl('center')}</div>}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: headerAlign === 'center' ? 'center' : headerAlign === 'right' ? 'flex-end' : 'flex-start', gap: 24 }}>
         {photoInRow && photoEl(photoPos === 'top-right' ? 'right' : undefined)}
         <div>
           <h1 style={{ fontFamily: typo.name.family, fontSize: typo.name.size, fontWeight: typo.name.weight, letterSpacing: typo.name.letterSpacing, textTransform: tt(typo.name.textTransform), color: theme.headingColor }}>
@@ -788,7 +790,7 @@ export default function TemplateCVRenderer({
             </p>
           )}
           {contactLines.length > 0 && (
-            <p style={{ fontSize: typo.body.size, lineHeight: 1.6, color: theme.textColor, marginTop: 6 }}>
+            <p style={{ fontSize: typo.body.size, lineHeight: 1.6, color: theme.textColor, marginTop: 8 }}>
               {contactLines.map((line, i) => (
                 <span key={i} style={{ display: 'block' }}>
                   {line}
@@ -847,7 +849,7 @@ export default function TemplateCVRenderer({
         fontFamily,
       }}
     >
-      {(showPhoto && photoPos === 'sidebar') && <div className="flex justify-center">{photoEl('center')}</div>}
+      {(showPhoto && photoPos === 'sidebar') && <div className="flex justify-center mb-4">{photoEl('center')}</div>}
       {visibleSidebarIds.length > 0 && (
         <div>
           {visibleSidebarIds.map((sId, i, arr) => renderSection(sId, true, i, arr.length))}
