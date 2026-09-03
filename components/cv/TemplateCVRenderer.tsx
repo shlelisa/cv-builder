@@ -40,6 +40,17 @@ const BULLET_CHAR: Record<string, string> = {
   line: '—',
 };
 
+/**
+ * Strips leading dashes, dots, bullets, and combos like "- .", "-.", "• ", "* "
+ * so that AI-generated bullet points render cleanly without duplicate bullet characters.
+ */
+export function cleanBulletText(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/^[\s\-\*\•\–\—\.\·\›\>\o\u2022\u2023\u25E6\u2043\u2219]+[\s\.\-]*/, '')
+    .trim();
+}
+
 const ICON_PATHS: Record<string, string> = {
   user: 'M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2 M12 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8',
   phone:
@@ -390,7 +401,7 @@ export default function TemplateCVRenderer({
                     >
                       {rail ? '•' : char}
                     </span>
-                    <span style={{ fontWeight: 400 }}>{line}</span>
+                    <span style={{ fontWeight: 400 }}>{cleanBulletText(line)}</span>
                   </div>
                 );
               });
@@ -400,7 +411,7 @@ export default function TemplateCVRenderer({
             return (
               <div key={field.id} style={{ display: 'flex', alignItems: 'baseline', gap: 7, marginTop: 3, marginBottom: 3 }}>
                 <span style={{ color: theme.iconColor || fg, fontSize: 10, lineHeight: 1, flexShrink: 0 }}>•</span>
-                <span style={{ fontSize: size, fontWeight: 400, lineHeight: lh, color: fg }}>{raw}</span>
+                <span style={{ fontSize: size, fontWeight: 400, lineHeight: lh, color: fg }}>{cleanBulletText(raw)}</span>
               </div>
             );
           }

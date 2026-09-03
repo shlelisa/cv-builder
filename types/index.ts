@@ -309,6 +309,9 @@ export interface TemplateStyle {
   nameSize?: number;
   headingSize?: number;
   bodySize?: number;
+  lineHeight?: number;
+  bulletStyle?: 'dot' | 'square' | 'dash' | 'arrow' | 'line';
+  headingVariant?: 'underline' | 'border' | 'filled' | 'plain';
   theme?: TemplateTheme;
   typography?: TemplateTypography;
   componentStyle?: TemplateComponentStyle;

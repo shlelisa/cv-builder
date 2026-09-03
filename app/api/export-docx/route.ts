@@ -21,6 +21,13 @@ function cleanHex(colorStr?: string): string {
   return colorStr.replace('#', '').trim() || '1E293B';
 }
 
+function cleanBulletText(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/^[\s\-\*\•\–\—\.\·\›\>\o\u2022\u2023\u25E6\u2043\u2219]+[\s\.\-]*/, '')
+    .trim();
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -295,7 +302,7 @@ export async function POST(req: NextRequest) {
                       spacing: { before: 20, after: 30 },
                       children: [
                         new TextRun({
-                          text: line.trim(),
+                          text: cleanBulletText(line),
                           size: 20,
                           font: fontName,
                           color: '374151',
@@ -343,7 +350,7 @@ export async function POST(req: NextRequest) {
                       spacing: { before: 20, after: 30 },
                       children: [
                         new TextRun({
-                          text: line.trim(),
+                          text: cleanBulletText(line),
                           size: 20,
                           font: fontName,
                           color: '374151',

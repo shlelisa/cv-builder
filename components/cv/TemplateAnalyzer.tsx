@@ -28,14 +28,55 @@ const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'a
 const LAYOUT_OPTIONS = ['single-column', 'two-column', 'sidebar-left', 'sidebar-right'];
 const HEADER_OPTIONS = ['centered', 'left-aligned', 'right-aligned'];
 const DIVIDER_OPTIONS = ['line', 'space', 'border'];
+const PRESET_PALETTES = [
+  { name: 'Corporate Navy', primary: '#1e3a8a', sidebar: '#0f172a', header: '#1e3a8a', accent: '#3b82f6' },
+  { name: 'Emerald Modern', primary: '#065f46', sidebar: '#064e3b', header: '#065f46', accent: '#10b981' },
+  { name: 'Charcoal Slate', primary: '#27272a', sidebar: '#27272a', header: '#27272a', accent: '#3b82f6' },
+  { name: 'Cobalt Executive', primary: '#1e40af', sidebar: '#f0f4f8', header: '#1e40af', accent: '#2563eb' },
+  { name: 'Bordeaux Burgundy', primary: '#881337', sidebar: '#4c0519', header: '#881337', accent: '#e11d48' },
+  { name: 'Monochrome ATS', primary: '#09090b', sidebar: '#18181b', header: '#09090b', accent: '#71717a' },
+];
+
+const FONT_OPTIONS = [
+  { id: 'Arial, sans-serif', label: 'Arial', category: 'Standard Office' },
+  { id: 'Calibri, Candara, "Segoe UI", Optima, Arial, sans-serif', label: 'Calibri', category: 'Modern Office' },
+  { id: "'Times New Roman', Times, serif", label: 'Times New Roman', category: 'Classic Formal' },
+  { id: 'Georgia, serif', label: 'Georgia', category: 'Academic Serif' },
+  { id: 'Garamond, Baskerville, "Times New Roman", serif', label: 'Garamond', category: 'Executive Serif' },
+  { id: 'Verdana, Geneva, sans-serif', label: 'Verdana', category: 'Clean Sans' },
+  { id: "'Trebuchet MS', 'Lucida Sans', Arial, sans-serif", label: 'Trebuchet MS', category: 'Contemporary' },
+  { id: "'Courier New', Courier, monospace", label: 'Courier New', category: 'Monospace' },
+  { id: 'Inter, sans-serif', label: 'Inter', category: 'Ultra Clean' },
+  { id: 'Roboto, sans-serif', label: 'Roboto', category: 'Versatile Sans' },
+  { id: 'Outfit, sans-serif', label: 'Outfit', category: 'Geometric Modern' },
+  { id: 'Merriweather, serif', label: 'Merriweather', category: 'Editorial Serif' },
+  { id: "'Playfair Display', serif", label: 'Playfair Display', category: 'Luxury Serif' },
+  { id: 'Montserrat, sans-serif', label: 'Montserrat', category: 'Bold Geometric' },
+  { id: 'Poppins, sans-serif', label: 'Poppins', category: 'Modern Rounded' },
+];
+
+const BULLET_STYLE_OPTIONS = [
+  { id: 'dot', label: 'Dot •' },
+  { id: 'square', label: 'Square ▪' },
+  { id: 'dash', label: 'Dash –' },
+  { id: 'arrow', label: 'Arrow ›' },
+  { id: 'line', label: 'Line —' },
+];
+
+const HEADING_VARIANT_OPTIONS = [
+  { id: 'underline', label: 'Underline Accent' },
+  { id: 'border', label: 'Box Border' },
+  { id: 'filled', label: 'Filled Band' },
+  { id: 'plain', label: 'Clean Plain' },
+];
 
 type ColorFieldKey = 'primaryColor' | 'secondaryColor' | 'accentColor' | 'backgroundColor' | 'textColor';
 const COLOR_FIELDS: { key: ColorFieldKey; label: string }[] = [
-  { key: 'primaryColor', label: 'Primary' },
-  { key: 'secondaryColor', label: 'Secondary' },
-  { key: 'accentColor', label: 'Accent' },
+  { key: 'primaryColor', label: 'Primary Accent' },
+  { key: 'secondaryColor', label: 'Sidebar / Header' },
+  { key: 'accentColor', label: 'Accent / Icon' },
   { key: 'backgroundColor', label: 'Background' },
-  { key: 'textColor', label: 'Text' },
+  { key: 'textColor', label: 'Text Color' },
 ];
 
 export default function TemplateAnalyzer() {
@@ -68,6 +109,86 @@ export default function TemplateAnalyzer() {
   const [refinedSingleton, setRefinedSingleton] = useState<Record<string, string> | null>(null);
   const [refinedEntries, setRefinedEntries] = useState<Record<string, Array<Record<string, string>>> | null>(null);
   const [useRewrites, setUseRewrites] = useState(true);
+  const [fontTarget, setFontTarget] = useState<'all' | 'name' | 'headings' | 'body'>('all');
+
+  const currentFontFamily = styleOverrides.fontFamily || analysis?.style.fontFamily || 'Arial, sans-serif';
+
+  const currentActiveFontSize = useMemo(() => {
+    const styleNow = { ...analysis?.style, ...styleOverrides };
+    if (fontTarget === 'name') return styleNow.nameSize || 24;
+    if (fontTarget === 'headings') return styleNow.headingSize || 12.5;
+    if (fontTarget === 'body') return styleNow.bodySize || 9.5;
+    return styleNow.bodySize || 9.5;
+  }, [fontTarget, analysis, styleOverrides]);
+
+  const handleWordFontFamilyChange = (fontId: string) => {
+    setStyleOverrides((prev) => ({
+      ...prev,
+      fontFamily: fontId,
+    }));
+  };
+
+  const handleWordFontSizeChange = (newSizePt: number) => {
+    setStyleOverrides((prev) => {
+      if (fontTarget === 'name') return { ...prev, nameSize: newSizePt };
+      if (fontTarget === 'headings') return { ...prev, headingSize: newSizePt };
+      if (fontTarget === 'body') return { ...prev, bodySize: newSizePt };
+      const currentBody = prev.bodySize || analysis?.style.bodySize || 9.5;
+      const ratio = newSizePt / currentBody;
+      return {
+        ...prev,
+        bodySize: newSizePt,
+        nameSize: Math.round(((prev.nameSize || analysis?.style.nameSize || 24) * ratio) * 10) / 10,
+        headingSize: Math.round(((prev.headingSize || analysis?.style.headingSize || 12.5) * ratio) * 10) / 10,
+      };
+    });
+  };
+
+  const handleGrowFont = () => {
+    const stepVal = fontTarget === 'name' ? 1 : 0.5;
+    handleWordFontSizeChange(currentActiveFontSize + stepVal);
+  };
+
+  const handleShrinkFont = () => {
+    const stepVal = fontTarget === 'name' ? 1 : 0.5;
+    const minVal = fontTarget === 'name' ? 14 : fontTarget === 'headings' ? 8 : 6.5;
+    handleWordFontSizeChange(Math.max(minVal, currentActiveFontSize - stepVal));
+  };
+
+  const handleLineHeightChange = (lh: number) => {
+    setStyleOverrides((prev) => ({
+      ...prev,
+      lineHeight: lh,
+    }));
+  };
+
+  const handleResetTypography = () => {
+    setStyleOverrides((prev) => {
+      const next = { ...prev };
+      delete next.fontFamily;
+      delete next.nameSize;
+      delete next.headingSize;
+      delete next.bodySize;
+      delete next.lineHeight;
+      return next;
+    });
+  };
+
+  const applyPalette = (p: typeof PRESET_PALETTES[0]) => {
+    setStyleOverrides((prev) => ({
+      ...prev,
+      primaryColor: p.primary,
+      secondaryColor: p.sidebar,
+      accentColor: p.accent,
+      theme: {
+        ...(prev.theme || analysis?.style.theme || {}),
+        headingColor: p.primary,
+        sidebarBackground: p.sidebar,
+        borderColor: p.primary,
+        iconColor: p.accent,
+      },
+    }));
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -627,6 +748,93 @@ export default function TemplateAnalyzer() {
             </select>
           </div>
 
+          {/* Preset Palettes */}
+          <div className="sm:col-span-2 lg:col-span-3 bg-gray-50 dark:bg-zinc-800/60 p-3.5 rounded-xl border border-gray-200 dark:border-zinc-700">
+            <span className="text-xs font-bold text-gray-900 dark:text-zinc-100 block mb-2">
+              🎨 Curated Theme Palettes
+            </span>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+              {PRESET_PALETTES.map((pal) => (
+                <button
+                  key={pal.name}
+                  type="button"
+                  onClick={() => applyPalette(pal)}
+                  className="flex flex-col items-center gap-1.5 p-2 rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-blue-500 hover:shadow-xs transition-all text-center"
+                >
+                  <div className="flex items-center gap-1">
+                    <span className="w-3.5 h-3.5 rounded-full border border-white/40 shadow-xs" style={{ backgroundColor: pal.primary }} />
+                    <span className="w-3.5 h-3.5 rounded-full border border-white/40 shadow-xs" style={{ backgroundColor: pal.sidebar }} />
+                    <span className="w-3.5 h-3.5 rounded-full border border-white/40 shadow-xs" style={{ backgroundColor: pal.accent }} />
+                  </div>
+                  <span className="text-[11px] font-semibold text-gray-700 dark:text-zinc-300 truncate w-full">
+                    {pal.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Bullet Style & Heading Variant */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">
+              Bullet Style (List Marks)
+            </label>
+            <select
+              className={BASE_FIELD_CLASS}
+              value={styleNow.bulletStyle || 'dot'}
+              onChange={(e) =>
+                setStyleOverrides((prev) => ({
+                  ...prev,
+                  bulletStyle: e.target.value as any,
+                }))
+              }
+            >
+              {BULLET_STYLE_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">
+              Heading Style
+            </label>
+            <select
+              className={BASE_FIELD_CLASS}
+              value={styleNow.headingVariant || 'underline'}
+              onChange={(e) =>
+                setStyleOverrides((prev) => ({
+                  ...prev,
+                  headingVariant: e.target.value as any,
+                }))
+              }
+            >
+              {HEADING_VARIANT_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">
+              Line Spacing (Density)
+            </label>
+            <select
+              className={BASE_FIELD_CLASS}
+              value={styleNow.lineHeight || 1.45}
+              onChange={(e) => handleLineHeightChange(parseFloat(e.target.value))}
+            >
+              <option value={1.15}>Tight (1.15) · Max Content</option>
+              <option value={1.35}>Normal (1.35) · Compact</option>
+              <option value={1.45}>Standard (1.45) · Recommended</option>
+              <option value={1.6}>Spacious (1.6) · Elegant</option>
+            </select>
+          </div>
+
           {/* Typography & Word Office Font Family */}
           <div className="sm:col-span-2 lg:col-span-3">
             <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">
@@ -636,13 +844,13 @@ export default function TemplateAnalyzer() {
               <input
                 type="text"
                 className={BASE_FIELD_CLASS}
-                value={styleNow.fontFamily}
+                value={styleNow.fontFamily || ''}
                 onChange={(e) => setStyleOverrides((prev) => ({ ...prev, fontFamily: e.target.value }))}
-                placeholder="Font Family CSS"
+                placeholder="Font Family CSS (e.g. Arial, Inter, Calibri)"
               />
               <select
-                className={`${BASE_FIELD_CLASS} w-48 shrink-0`}
-                value={styleNow.fontFamily}
+                className={`${BASE_FIELD_CLASS} w-52 shrink-0`}
+                value={styleNow.fontFamily || ''}
                 onChange={(e) =>
                   setStyleOverrides((prev) => ({ ...prev, fontFamily: e.target.value }))
                 }
@@ -775,7 +983,7 @@ export default function TemplateAnalyzer() {
 
           <div className="sm:col-span-2 lg:col-span-3">
             <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">
-              Colors
+              Custom Colors
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
               {COLOR_FIELDS.map(({ key: ckey, label }) => (
@@ -784,7 +992,7 @@ export default function TemplateAnalyzer() {
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
-                      value={styleNow[ckey]}
+                      value={styleNow[ckey] || (ckey === 'primaryColor' ? '#1e3a8a' : ckey === 'textColor' ? '#1f2937' : '#ffffff')}
                       onChange={(e) =>
                         setStyleOverrides((prev) => ({ ...prev, [ckey]: e.target.value }))
                       }
@@ -1245,16 +1453,122 @@ export default function TemplateAnalyzer() {
 
             <div className="space-y-4">
               {viewMode === 'visual' ? (
-                <TemplateCVRenderer
-                  analysis={analysis}
-                  singletonValues={renderSingleton}
-                  entries={renderEntries}
-                  photoUrl={photoUrl || undefined}
-                  styleOverrides={styleOverrides}
-                  layoutType={layoutType}
-                  customLayout={customLayout ?? undefined}
-                  zoom={cvZoom}
-                />
+                <div className="space-y-4">
+                  {/* MS Word-Style Typography & Font Management Bar */}
+                  <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl p-2.5 shadow-sm flex flex-wrap items-center gap-2.5 text-xs">
+                    <div className="flex items-center gap-1.5 font-bold text-gray-700 dark:text-zinc-300 pr-1">
+                      <span className="text-sm">🔤</span>
+                      <span className="hidden sm:inline font-semibold">Word Typography:</span>
+                    </div>
+
+                    {/* Target Level */}
+                    <div className="flex items-center gap-1 bg-gray-100 dark:bg-zinc-800 px-2 py-1 rounded-lg border border-gray-200 dark:border-zinc-700">
+                      <span className="text-[10px] uppercase font-bold text-gray-400 dark:text-zinc-500">Target</span>
+                      <select
+                        value={fontTarget}
+                        onChange={(e) => setFontTarget(e.target.value as any)}
+                        className="bg-transparent text-xs font-bold text-blue-600 dark:text-blue-400 focus:outline-none cursor-pointer"
+                      >
+                        <option value="all">Entire CV</option>
+                        <option value="name">Candidate Name</option>
+                        <option value="headings">Section Headings</option>
+                        <option value="body">Body / Bullet Text</option>
+                      </select>
+                    </div>
+
+                    <div className="h-4 w-px bg-gray-200 dark:bg-zinc-700 hidden sm:block" />
+
+                    {/* Font Family Selector with Live preview */}
+                    <div className="flex items-center gap-1">
+                      <select
+                        value={currentFontFamily}
+                        onChange={(e) => handleWordFontFamilyChange(e.target.value)}
+                        className="bg-gray-50 dark:bg-zinc-800 border border-gray-300 dark:border-zinc-700 text-xs font-medium rounded-lg px-2.5 py-1.5 text-gray-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer max-w-[150px] sm:max-w-[190px] truncate"
+                      >
+                        {FONT_OPTIONS.map((f) => (
+                          <option key={f.id} value={f.id} style={{ fontFamily: f.id }}>
+                            {f.label} ({f.category})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Font Size & Grow / Shrink Steppers */}
+                    <div className="flex items-center gap-1">
+                      <select
+                        value={currentActiveFontSize}
+                        onChange={(e) => handleWordFontSizeChange(parseFloat(e.target.value))}
+                        className="bg-gray-50 dark:bg-zinc-800 border border-gray-300 dark:border-zinc-700 text-xs font-bold rounded-lg px-2 py-1.5 text-gray-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer w-[68px] text-center"
+                      >
+                        {[7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 13, 14, 15, 16, 18, 20, 22, 24, 26, 28, 32, 36].map((s) => (
+                          <option key={s} value={s}>
+                            {s} pt
+                          </option>
+                        ))}
+                      </select>
+
+                      {/* Grow Font Button: A▲ */}
+                      <button
+                        type="button"
+                        title="Increase Font Size (Grow Font)"
+                        onClick={handleGrowFont}
+                        className="flex items-center justify-center gap-0.5 px-2 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-gray-300 dark:border-zinc-700 rounded-lg text-gray-900 dark:text-zinc-100 font-bold hover:scale-105 active:scale-95 transition-all shadow-xs"
+                      >
+                        <span>A</span>
+                        <span className="text-[9px] text-blue-600 dark:text-blue-400">▲</span>
+                      </button>
+
+                      {/* Shrink Font Button: A▼ */}
+                      <button
+                        type="button"
+                        title="Decrease Font Size (Shrink Font)"
+                        onClick={handleShrinkFont}
+                        className="flex items-center justify-center gap-0.5 px-2 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-gray-300 dark:border-zinc-700 rounded-lg text-gray-900 dark:text-zinc-100 font-bold hover:scale-105 active:scale-95 transition-all shadow-xs"
+                      >
+                        <span className="text-[11px]">A</span>
+                        <span className="text-[9px] text-red-500 dark:text-red-400">▼</span>
+                      </button>
+                    </div>
+
+                    <div className="h-4 w-px bg-gray-200 dark:bg-zinc-700 hidden sm:block" />
+
+                    {/* Line Spacing */}
+                    <div className="flex items-center gap-1">
+                      <select
+                        value={styleOverrides.lineHeight || 1.45}
+                        onChange={(e) => handleLineHeightChange(parseFloat(e.target.value))}
+                        className="bg-gray-50 dark:bg-zinc-800 border border-gray-300 dark:border-zinc-700 text-xs font-semibold rounded-lg px-2 py-1.5 text-gray-900 dark:text-zinc-100 focus:outline-none cursor-pointer"
+                      >
+                        <option value={1.15}>Spacing: 1.15</option>
+                        <option value={1.35}>Spacing: 1.35</option>
+                        <option value={1.45}>Spacing: 1.45</option>
+                        <option value={1.6}>Spacing: 1.6</option>
+                      </select>
+                    </div>
+
+                    {/* Reset Button */}
+                    <button
+                      type="button"
+                      title="Reset Typography Overrides"
+                      onClick={handleResetTypography}
+                      className="ml-auto text-[11px] text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 font-medium hover:underline flex items-center gap-1"
+                    >
+                      <span>↺</span>
+                      <span className="hidden md:inline">Reset Fonts</span>
+                    </button>
+                  </div>
+
+                  <TemplateCVRenderer
+                    analysis={analysis}
+                    singletonValues={renderSingleton}
+                    entries={renderEntries}
+                    photoUrl={photoUrl || undefined}
+                    styleOverrides={styleOverrides}
+                    layoutType={layoutType}
+                    customLayout={customLayout ?? undefined}
+                    zoom={cvZoom}
+                  />
+                </div>
               ) : (
                 <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg p-6 shadow-sm">
                   <h4 className="font-semibold text-gray-900 dark:text-zinc-100 mb-3">{t.templates.generatedCv}</h4>

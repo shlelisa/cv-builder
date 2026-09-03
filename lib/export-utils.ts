@@ -48,6 +48,13 @@ function ensureExtension(filename: string, ext: string): string {
   return has ? filename : `${filename}.${exts[0]}`;
 }
 
+export function cleanBulletText(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/^[\s\-\*\•\–\—\.\·\›\>\o\u2022\u2023\u25E6\u2043\u2219]+[\s\.\-]*/, '')
+    .trim();
+}
+
 /**
  * Renders the on-screen CV page to a <canvas>, neutralizing the zoom transform
  * first. html2canvas does not support `transform: scale()` on the target's own
@@ -380,7 +387,7 @@ function buildTwoColumnDocx(
                   spacing: { before: 20, after: 30 },
                   children: [
                     new TextRun({
-                      text: line.trim(),
+                      text: cleanBulletText(line),
                       size: 20,
                       font: fontName,
                       color: "374151",
@@ -423,7 +430,7 @@ function buildTwoColumnDocx(
                   spacing: { before: 20, after: 30 },
                   children: [
                     new TextRun({
-                      text: line.trim(),
+                      text: cleanBulletText(line),
                       size: 20,
                       font: fontName,
                       color: "374151",
