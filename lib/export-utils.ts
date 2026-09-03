@@ -1,6 +1,7 @@
 'use client';
 
 import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import { saveAs } from 'file-saver';
 import {
   Document,
@@ -13,21 +14,24 @@ import {
 } from 'docx';
 import { TemplateAnalysis, TemplateStyle } from '@/types';
 
-export function exportToPdf() {
-  window.print();
-}
-
-export async function exportToImage(elementId = 'cv-print-root', filename = 'my-cv.png'): Promise<void> {
+/**
+ * Downloads a pixel-perfect, crisp, 1-page A4 PDF directly to the user's computer.
+ */
+export async function exportToPdfDownload(
+  elementId = 'cv-print-root',
+  filename = 'My_CV.pdf',
+): Promise<void> {
   const rootEl = document.getElementById(elementId);
   if (!rootEl) {
-    throw new Error(`Element with id "${elementId}" not found.`);
+    window.print();
+    return;
   }
 
   const pageEl = (rootEl.querySelector('.cv-page') as HTMLElement) || rootEl;
 
-  // Capture at 2x high resolution for crisp text
+  // Capture at 2x resolution for razor-sharp typography
   const canvas = await html2canvas(pageEl, {
-    scale: 2,
+    scale: 2.5,
     useCORS: true,
     logging: false,
     backgroundColor: '#ffffff',
@@ -35,13 +39,56 @@ export async function exportToImage(elementId = 'cv-print-root', filename = 'my-
     windowHeight: 1123,
   });
 
-  const dataUrl = canvas.toDataURL('image/png');
-  const link = document.createElement('a');
-  link.download = filename.endsWith('.png') ? filename : `${filename}.png`;
-  link.href = dataUrl;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  const imgData = canvas.toDataURL('image/jpeg', 0.98);
+
+  // A4 dimensions in mm: 210 x 297
+  const pdf = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
+  });
+
+  pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
+  const outName = filename.endsWith('.pdf') ? filename : `${filename}.pdf`;
+  pdf.save(outName);
+}
+
+/**
+ * Opens the native browser print/save dialog.
+ */
+export function exportToPdf() {
+  window.print();
+}
+
+/**
+ * Captures the rendered CV as a high-resolution PNG image.
+ */
+export async function exportToImage(
+  elementId = 'cv-print-root',
+  filename = 'My_CV.png',
+): Promise<void> {
+  const rootEl = document.getElementById(elementId);
+  if (!rootEl) {
+    throw new Error(`Element with id "${elementId}" not found.`);
+  }
+
+  const pageEl = (rootEl.querySelector('.cv-page') as HTMLElement) || rootEl;
+
+  const canvas = await html2canvas(pageEl, {
+    scale: 2.5,
+    useCORS: true,
+    logging: false,
+    backgroundColor: '#ffffff',
+    windowWidth: 794,
+    windowHeight: 1123,
+  });
+
+  canvas.toBlob((blob) => {
+    if (blob) {
+      const outName = filename.endsWith('.png') ? filename : `${filename}.png`;
+      saveAs(blob, outName);
+    }
+  }, 'image/png');
 }
 
 function cleanFontName(fontStr?: string): string {
@@ -55,13 +102,48 @@ function cleanHex(colorStr?: string): string {
   return colorStr.replace('#', '').trim() || '1E293B';
 }
 
+/**
+ * Generates and downloads a native Microsoft Word (.docx) document.
+ */
 export async function exportToWord(
   analysis: TemplateAnalysis,
   singletonValues: Record<string, string>,
   entries: Record<string, Array<Record<string, string>>>,
-  filename = 'my-cv.docx',
+  filename = 'My_CV.docx',
   styleOverrides?: Partial<TemplateStyle>,
 ): Promise<void> {
+  const outName = filename.endsWith('.docx')
+    ? filename
+    : `${filename.replace(/\.[^/.]+$/, '')}.docx`;
+
+  // 1. Try server API download first for 100% native HTTP header download
+  try {
+    const res = await fetch('/api/export-docx', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'cv',
+        analysis,
+        singletonValues,
+        entries,
+        styleOverrides,
+        filename: outName,
+      }),
+    });
+
+    if (res.ok) {
+      const blob = await res.blob();
+      const docxBlob = new Blob([blob], {
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      });
+      saveAs(docxBlob, outName);
+      return;
+    }
+  } catch (err) {
+    console.warn('Server docx export fallback to client:', err);
+  }
+
+  // 2. Client-side fallback with docx Packer
   const rawPrimary =
     styleOverrides?.primaryColor ||
     styleOverrides?.theme?.headingColor ||
@@ -69,7 +151,6 @@ export async function exportToWord(
     analysis.style.primaryColor ||
     '#1e293b';
   const primaryHex = cleanHex(rawPrimary);
-
   const fontName = cleanFontName(
     styleOverrides?.fontFamily || analysis.style.fontFamily || 'Arial',
   );
@@ -87,7 +168,6 @@ export async function exportToWord(
   const sections = analysis.sections || [];
   const docParagraphs: Paragraph[] = [];
 
-  // 1. Candidate Name (Header)
   docParagraphs.push(
     new Paragraph({
       alignment: AlignmentType.CENTER,
@@ -96,7 +176,7 @@ export async function exportToWord(
         new TextRun({
           text: name.toUpperCase(),
           bold: true,
-          size: 44, // 22pt (in half-points)
+          size: 44,
           font: fontName,
           color: primaryHex,
         }),
@@ -104,7 +184,6 @@ export async function exportToWord(
     }),
   );
 
-  // 2. Job Title
   if (jobTitle) {
     docParagraphs.push(
       new Paragraph({
@@ -114,7 +193,7 @@ export async function exportToWord(
           new TextRun({
             text: jobTitle.toUpperCase(),
             bold: true,
-            size: 24, // 12pt
+            size: 24,
             font: fontName,
             color: '4B5563',
           }),
@@ -123,7 +202,6 @@ export async function exportToWord(
     );
   }
 
-  // 3. Contact Details
   const contactFields = analysis.fields.filter(
     (f) =>
       (f.section === 'personal' || f.section === 'contact') &&
@@ -138,7 +216,7 @@ export async function exportToWord(
         new TextRun({
           text: `${f.label}: `,
           bold: true,
-          size: 19, // 9.5pt
+          size: 19,
           font: fontName,
           color: '374151',
         }),
@@ -178,7 +256,6 @@ export async function exportToWord(
     );
   }
 
-  // 4. Content Sections
   for (const section of sections) {
     if (section.id === 'personal' && !section.repeatable) continue;
 
@@ -186,11 +263,9 @@ export async function exportToWord(
     const sectionEntries = entries[section.id] || [];
     const fields = analysis.fields.filter((f) => f.section === section.id);
 
-    // Skip empty sections
     if (isRepeatable && sectionEntries.length === 0) continue;
     if (!isRepeatable && !fields.some((f) => (singletonValues[f.id] || '').trim())) continue;
 
-    // Section Heading
     docParagraphs.push(
       new Paragraph({
         spacing: { before: 200, after: 100 },
@@ -206,7 +281,7 @@ export async function exportToWord(
           new TextRun({
             text: section.name.toUpperCase(),
             bold: true,
-            size: 24, // 12pt
+            size: 24,
             font: fontName,
             color: primaryHex,
           }),
@@ -237,12 +312,11 @@ export async function exportToWord(
         );
         const orgVal = orgField ? entry[orgField.id].trim() : '';
 
-        // Entry header line (Title + Org + Date)
         const entryHeaderRuns: TextRun[] = [
           new TextRun({
             text: title,
             bold: true,
-            size: 21, // 10.5pt
+            size: 21,
             font: fontName,
             color: '111827',
           }),
@@ -279,7 +353,6 @@ export async function exportToWord(
           }),
         );
 
-        // Remaining detail fields
         for (const f of fields) {
           if (f.id === firstField?.id || f.id === dateField?.id || f.id === orgField?.id) continue;
           const val = (entry[f.id] || '').trim();
@@ -295,7 +368,7 @@ export async function exportToWord(
                   children: [
                     new TextRun({
                       text: line.trim(),
-                      size: 20, // 10pt
+                      size: 20,
                       font: fontName,
                       color: '374151',
                     }),
@@ -328,7 +401,6 @@ export async function exportToWord(
         }
       }
     } else {
-      // Non-repeatable fields (e.g. Summary, Objective, Skills)
       for (const f of fields) {
         const val = (singletonValues[f.id] || '').trim();
         if (!val) continue;
@@ -393,7 +465,6 @@ export async function exportToWord(
     }
   }
 
-  // Create OpenXML Word Document with standard A4 margins
   const doc = new Document({
     sections: [
       {
@@ -413,10 +484,6 @@ export async function exportToWord(
   });
 
   const rawBlob = await Packer.toBlob(doc);
-  const outName = filename.endsWith('.docx')
-    ? filename
-    : `${filename.replace(/\.[^/.]+$/, '')}.docx`;
-
   const docxBlob = new Blob([rawBlob], {
     type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   });
@@ -424,12 +491,46 @@ export async function exportToWord(
   saveAs(docxBlob, outName);
 }
 
+/**
+ * Exports a Cover Letter or Application Letter to native Word (.docx).
+ */
 export async function exportLetterToWord(
   content: string,
   applicantName: string,
   jobTitle = 'Application',
   filename = 'Cover_Letter.docx',
 ): Promise<void> {
+  const outName = filename.endsWith('.docx')
+    ? filename
+    : `${filename.replace(/\.[^/.]+$/, '')}.docx`;
+
+  // 1. Try server API download
+  try {
+    const res = await fetch('/api/export-docx', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'letter',
+        content,
+        applicantName,
+        jobTitle,
+        filename: outName,
+      }),
+    });
+
+    if (res.ok) {
+      const blob = await res.blob();
+      const docxBlob = new Blob([blob], {
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      });
+      saveAs(docxBlob, outName);
+      return;
+    }
+  } catch (err) {
+    console.warn('Server letter docx export fallback to client:', err);
+  }
+
+  // 2. Client-side fallback
   const paragraphs = content
     .split(/\r?\n\r?\n/)
     .map((p) => p.trim())
@@ -441,7 +542,7 @@ export async function exportLetterToWord(
       children: [
         new TextRun({
           text,
-          size: 22, // 11pt
+          size: 22,
           font: 'Calibri',
           color: '1F2937',
         }),
@@ -468,10 +569,6 @@ export async function exportLetterToWord(
   });
 
   const rawBlob = await Packer.toBlob(doc);
-  const outName = filename.endsWith('.docx')
-    ? filename
-    : `${filename.replace(/\.[^/.]+$/, '')}.docx`;
-
   const docxBlob = new Blob([rawBlob], {
     type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   });

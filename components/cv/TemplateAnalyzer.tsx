@@ -11,7 +11,7 @@ import { CustomLayout, defaultCustomLayout, validateLayout } from '@/lib/layout-
 import { TemplateAnalysis, TemplateField, TemplatePhotoCrop, TemplateSection, TemplateStyle } from '@/types';
 import { resizeDataUrl } from '@/lib/image-utils';
 import { applySampledColors, extractPalette } from '@/lib/palette';
-import { exportToWord, exportToImage } from '@/lib/export-utils';
+import { exportToWord, exportToImage, exportToPdfDownload, exportToPdf } from '@/lib/export-utils';
 
 type Step = 'upload' | 'analyzing' | 'result' | 'form' | 'generated';
 
@@ -386,8 +386,15 @@ export default function TemplateAnalyzer() {
     setPalette([]);
   };
 
-  const handleDownloadPdf = () => {
-    window.print();
+  const handleDownloadPdf = async () => {
+    const name = renderSingleton.fullName || renderSingleton.name || renderSingleton.full_name || 'My_CV';
+    const filename = `${name.replace(/\s+/g, '_')}_CV.pdf`;
+    try {
+      await exportToPdfDownload('cv-print-root', filename);
+    } catch (err) {
+      console.error('Direct PDF export failed, fallback to print:', err);
+      exportToPdf();
+    }
   };
 
   const handleDownloadWord = async () => {

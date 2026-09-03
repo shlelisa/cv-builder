@@ -5,7 +5,7 @@ import { Button } from '@/components/ui';
 import { useApp } from '@/lib/AppContext';
 import TemplateCVRenderer from '@/components/cv/TemplateCVRenderer';
 import { STATIC_TEMPLATES, StaticTemplateDefinition } from '@/lib/static-templates';
-import { exportToPdf, exportToWord, exportToImage } from '@/lib/export-utils';
+import { exportToPdf, exportToPdfDownload, exportToWord, exportToImage } from '@/lib/export-utils';
 import { TemplateField, TemplateSection, TemplateStyle } from '@/types';
 
 type CategoryFilter = 'All' | 'Executive' | 'Corporate' | 'Tech' | 'Academic' | 'Minimalist';
@@ -491,9 +491,21 @@ export default function CVBuilder() {
     }
   };
 
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = async () => {
+    if (!selectedTemplate) return;
     setShowExportMenu(false);
-    exportToPdf();
+    setIsExporting(true);
+    setExportMessage('Generating high-resolution PDF document...');
+    try {
+      const filename = `${(singletonValues.fullName || 'My_CV').replace(/\s+/g, '_')}_CV.pdf`;
+      await exportToPdfDownload('cv-print-root', filename);
+    } catch (err) {
+      console.error('Direct PDF export failed, fallback to print:', err);
+      exportToPdf();
+    } finally {
+      setIsExporting(false);
+      setExportMessage('');
+    }
   };
 
   // Section entry helpers
