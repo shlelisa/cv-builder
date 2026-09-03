@@ -71,6 +71,7 @@ const BASE_INPUT_CLASS =
 
 export default function CVBuilder() {
   const { t } = useApp();
+  const tb = t.builder;
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   // Template state
@@ -555,31 +556,45 @@ export default function CVBuilder() {
 
         <div className="text-center max-w-3xl mx-auto space-y-3">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-            ✨ Professional CV Designer
+            {tb.badge}
           </span>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-zinc-100 tracking-tight">
-            Choose a CV Template to Begin
+            {tb.title}
           </h1>
           <p className="text-base text-gray-600 dark:text-zinc-400">
-            Select any of our modern, recruiter-tested A4 templates. You can customize all text, colors, photo, and layout options with live preview, then download in Word, PDF, or Image.
+            {tb.subtitle}
           </p>
 
           {/* Category Filter Tabs - Horizontally scrollable on mobile */}
           <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap p-1 max-w-full justify-start sm:justify-center scrollbar-none">
-            {(['All', 'Executive', 'Corporate', 'Tech', 'Academic', 'Minimalist'] as CategoryFilter[]).map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => setCategoryFilter(cat)}
-                className={`px-4 py-1.5 text-xs sm:text-sm font-semibold rounded-full shrink-0 transition-colors ${
-                  categoryFilter === cat
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-700'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
+            {(['All', 'Executive', 'Corporate', 'Tech', 'Academic', 'Minimalist'] as CategoryFilter[]).map((cat) => {
+              const catLabel =
+                cat === 'Executive'
+                  ? tb.catExecutive
+                  : cat === 'Corporate'
+                    ? tb.catCorporate
+                    : cat === 'Tech'
+                      ? tb.catTech
+                      : cat === 'Academic'
+                        ? tb.catAcademic
+                        : cat === 'Minimalist'
+                          ? tb.catMinimalist
+                          : tb.catAll;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setCategoryFilter(cat)}
+                  className={`px-4 py-1.5 text-xs sm:text-sm font-semibold rounded-full shrink-0 transition-colors ${
+                    categoryFilter === cat
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-700'
+                  }`}
+                >
+                  {catLabel}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -619,7 +634,7 @@ export default function CVBuilder() {
                       handleSelectTemplate(template);
                     }}
                   >
-                    Use This Template →
+                    {tb.useTemplate}
                   </Button>
                 </div>
               </div>
@@ -653,7 +668,7 @@ export default function CVBuilder() {
                     className="w-full justify-center text-xs font-semibold group-hover:border-blue-500 group-hover:text-blue-600 dark:group-hover:text-blue-400"
                     onClick={() => handleSelectTemplate(template)}
                   >
-                    Customize Template →
+                    {tb.customizeTemplate}
                   </Button>
                 </div>
               </div>
@@ -686,10 +701,10 @@ export default function CVBuilder() {
             size="sm"
             onClick={() => setSelectedTemplateId(null)}
           >
-            ← Change Template
+            {tb.changeTemplate}
           </Button>
           <div className="border-l border-gray-200 dark:border-zinc-700 pl-3">
-            <span className="text-xs text-gray-400 dark:text-zinc-500 block">Template</span>
+            <span className="text-xs text-gray-400 dark:text-zinc-500 block">{tb.templateLabel}</span>
             <span className="text-sm font-bold text-gray-900 dark:text-zinc-100">
               {selectedTemplate.name}
             </span>
@@ -705,7 +720,7 @@ export default function CVBuilder() {
             size="sm"
             onClick={() => photoInputRef.current?.click()}
           >
-            📷 {photoUrl ? 'Change Photo' : 'Upload Photo'}
+            📷 {photoUrl ? tb.changePhoto : tb.uploadPhoto}
           </Button>
           {photoUrl && (
             <Button
@@ -733,7 +748,7 @@ export default function CVBuilder() {
                   : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100'
               }`}
             >
-              Split Editor
+              {tb.splitEditor}
             </button>
             <button
               type="button"
@@ -747,13 +762,13 @@ export default function CVBuilder() {
                   : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100'
               }`}
             >
-              📄 Full A4 View
+              {tb.fullA4View}
             </button>
           </div>
 
           {/* Paper Zoom Selector */}
           <div className="flex items-center gap-1.5 rounded-lg border border-gray-300 dark:border-zinc-700 px-2.5 py-1 text-xs bg-gray-50 dark:bg-zinc-800">
-            <span className="text-gray-500 dark:text-zinc-400 font-medium">Zoom:</span>
+            <span className="text-gray-500 dark:text-zinc-400 font-medium">{tb.zoomLabel}</span>
             <select
               value={zoom}
               onChange={(e) => setZoom(Number(e.target.value))}
@@ -776,7 +791,7 @@ export default function CVBuilder() {
               onClick={() => setShowExportMenu((v) => !v)}
               disabled={isExporting}
             >
-              <span>📥 Download CV</span>
+              <span>{tb.downloadCv}</span>
               <span className="text-[10px]">▼</span>
             </Button>
 
@@ -789,8 +804,8 @@ export default function CVBuilder() {
                 >
                   <span className="text-base">📄</span>
                   <div>
-                    <span className="font-semibold block">Download PDF</span>
-                    <span className="text-xs text-gray-400 block">Print-ready A4 document</span>
+                    <span className="font-semibold block">{tb.downloadPdf}</span>
+                    <span className="text-xs text-gray-400 block">{tb.downloadPdfSub}</span>
                   </div>
                 </button>
 
@@ -801,8 +816,8 @@ export default function CVBuilder() {
                 >
                   <span className="text-base">📝</span>
                   <div>
-                    <span className="font-semibold block">Download Word (.docx)</span>
-                    <span className="text-xs text-gray-400 block">Native Microsoft Word document</span>
+                    <span className="font-semibold block">{tb.downloadWord}</span>
+                    <span className="text-xs text-gray-400 block">{tb.downloadWordSub}</span>
                   </div>
                 </button>
 
@@ -813,8 +828,8 @@ export default function CVBuilder() {
                 >
                   <span className="text-base">🖼️</span>
                   <div>
-                    <span className="font-semibold block">Download Image (.png)</span>
-                    <span className="text-xs text-gray-400 block">High-resolution PNG file</span>
+                    <span className="font-semibold block">{tb.downloadImage}</span>
+                    <span className="text-xs text-gray-400 block">{tb.downloadImageSub}</span>
                   </div>
                 </button>
               </div>
@@ -842,7 +857,7 @@ export default function CVBuilder() {
                 : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900'
             }`}
           >
-            <span>📝 Form & Style Editor</span>
+            <span>{tb.mobileEditorTab}</span>
           </button>
           <button
             type="button"
@@ -853,7 +868,7 @@ export default function CVBuilder() {
                 : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900'
             }`}
           >
-            <span>👁️ Live A4 Preview</span>
+            <span>{tb.mobilePreviewTab}</span>
           </button>
         </div>
       )}
@@ -862,21 +877,21 @@ export default function CVBuilder() {
       <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl p-2.5 shadow-sm flex flex-wrap items-center gap-2.5 text-xs">
         <div className="flex items-center gap-1.5 font-bold text-gray-700 dark:text-zinc-300 pr-1">
           <span className="text-sm">🔤</span>
-          <span className="hidden sm:inline font-semibold">Word Typography:</span>
+          <span className="hidden sm:inline font-semibold">{tb.wordTypographyRibbon}</span>
         </div>
 
         {/* Target Level */}
         <div className="flex items-center gap-1 bg-gray-100 dark:bg-zinc-800 px-2 py-1 rounded-lg border border-gray-200 dark:border-zinc-700">
-          <span className="text-[10px] uppercase font-bold text-gray-400 dark:text-zinc-500">Target</span>
+          <span className="text-[10px] uppercase font-bold text-gray-400 dark:text-zinc-500">{tb.target}</span>
           <select
             value={fontTarget}
             onChange={(e) => setFontTarget(e.target.value as any)}
             className="bg-transparent text-xs font-bold text-blue-600 dark:text-blue-400 focus:outline-none cursor-pointer"
           >
-            <option value="all">Entire CV</option>
-            <option value="name">Candidate Name</option>
-            <option value="headings">Section Headings</option>
-            <option value="body">Body / Experience Text</option>
+            <option value="all">{tb.entireCv}</option>
+            <option value="name">{tb.candidateName}</option>
+            <option value="headings">{tb.sectionHeadings}</option>
+            <option value="body">{tb.bodyText}</option>
           </select>
         </div>
 
@@ -938,7 +953,7 @@ export default function CVBuilder() {
 
         {/* Line Spacing */}
         <div className="flex items-center gap-1">
-          <span className="text-[10px] uppercase font-bold text-gray-400 dark:text-zinc-500 hidden sm:inline">Spacing:</span>
+          <span className="text-[10px] uppercase font-bold text-gray-400 dark:text-zinc-500 hidden sm:inline">{tb.lineSpacing}:</span>
           <select
             value={currentLineHeight}
             onChange={(e) => handleLineHeightChange(parseFloat(e.target.value))}
@@ -958,7 +973,7 @@ export default function CVBuilder() {
           title="Reset Font & Sizes to Template Defaults"
           className="ml-auto text-[11px] text-gray-500 hover:text-red-500 dark:text-zinc-400 dark:hover:text-red-400 px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
         >
-          ↺ Reset Fonts
+          ↺ {tb.resetFonts}
         </button>
       </div>
 

@@ -166,38 +166,40 @@ export default function JobAnalyzer() {
     router.push('/letters');
   };
 
+  const tj = t.jobs;
+
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
       {/* Top Banner */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-200 dark:border-zinc-800 pb-6">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 mb-2">
-            🔍 AI ATS & Skill Match Analyzer
+            {tj.badge}
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-zinc-100 tracking-tight">
-            Job Match & ATS Diagnostic
+            {tj.title}
           </h1>
           <p className="text-sm sm:text-base text-gray-600 dark:text-zinc-400 mt-1">
-            Compare your profile directly against any vacancy to uncover keyword overlap, calculate ATS pass probability, and identify key gaps.
+            {tj.subtitle}
           </p>
         </div>
 
         {/* Quick Sample Presets */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400">Load Test Data:</span>
+          <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400">{tj.sampleData}</span>
           <button
             type="button"
             onClick={() => handleLoadSample('tech')}
             className="text-xs font-medium px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:border-emerald-500 hover:text-emerald-600 transition-colors shadow-xs"
           >
-            💻 Tech Job & CV
+            {tj.sampleTech}
           </button>
           <button
             type="button"
             onClick={() => handleLoadSample('marketing')}
             className="text-xs font-medium px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:border-emerald-500 hover:text-emerald-600 transition-colors shadow-xs"
           >
-            📊 Marketing Job & CV
+            {tj.sampleMarketing}
           </button>
         </div>
       </div>
@@ -209,15 +211,15 @@ export default function JobAnalyzer() {
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200 flex items-center gap-2">
               <span>📋</span>
-              <span>1. Target Job Details</span>
+              <span>{tj.targetJobTitle}</span>
             </h3>
-            <span className="text-[11px] text-gray-400">Vacancy Info</span>
+            <span className="text-[11px] text-gray-400">{tj.vacancyInfo}</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                Position Title
+                {tj.positionTitle}
               </label>
               <input
                 type="text"
@@ -229,7 +231,7 @@ export default function JobAnalyzer() {
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                Company / Organization
+                {tj.companyName}
               </label>
               <input
                 type="text"
@@ -243,7 +245,7 @@ export default function JobAnalyzer() {
 
           <div>
             <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-              Job Requirements & Description (one per line or paste full text)
+              {tj.requirementsLabel}
             </label>
             <textarea
               rows={8}
@@ -260,14 +262,14 @@ export default function JobAnalyzer() {
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200 flex items-center gap-2">
               <span>👤</span>
-              <span>2. Your CV & Background</span>
+              <span>{tj.candidateProfileTitle}</span>
             </h3>
-            <span className="text-[11px] text-gray-400">Candidate Info</span>
+            <span className="text-[11px] text-gray-400">{t.form.personalTitle}</span>
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-              Paste Your CV Summary, Skills & Background
+              {tj.profileContentLabel}
             </label>
             <textarea
               rows={11}
@@ -285,9 +287,9 @@ export default function JobAnalyzer() {
             className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
           >
             {isAnalyzing ? (
-              <span>⏳ Analyzing Overlaps...</span>
+              <span>{tj.calculatingBtn}</span>
             ) : (
-              <span>⚡ Run In-Depth Match & ATS Diagnostic</span>
+              <span>{tj.calculateMatchBtn}</span>
             )}
           </button>
         </div>
@@ -380,7 +382,7 @@ export default function JobAnalyzer() {
                 onClick={handleGoToLetters}
                 className="mt-3 w-full py-2 px-3 rounded-lg bg-white text-blue-700 font-bold text-xs hover:bg-blue-50 transition-colors shadow-xs flex items-center justify-center gap-1 cursor-pointer"
               >
-                <span>Write Letter for this Job →</span>
+                <span>{tj.generateLetterBtn}</span>
               </button>
             </div>
           </div>
@@ -392,14 +394,14 @@ export default function JobAnalyzer() {
               <div className="flex items-center gap-2 border-b border-gray-100 dark:border-zinc-800 pb-3">
                 <span className="text-emerald-600 text-base">✓</span>
                 <h4 className="text-sm font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
-                  Matched Qualifications & Strengths
+                  {tj.matchedQualifications}
                 </h4>
               </div>
 
               {matchResult.matchedTechnicalSkills.length > 0 ? (
                 <div>
                   <span className="text-xs font-semibold text-gray-600 dark:text-zinc-400 block mb-2">
-                    Direct Technical Match:
+                    {tj.matchedTechSkills}:
                   </span>
                   <div className="flex flex-wrap gap-2">
                     {matchResult.matchedTechnicalSkills.map((skill, i) => (
@@ -420,7 +422,7 @@ export default function JobAnalyzer() {
               {matchResult.matchedEducation.length > 0 && (
                 <div className="pt-2">
                   <span className="text-xs font-semibold text-gray-600 dark:text-zinc-400 block mb-1.5">
-                    Education Criteria Met:
+                    {tj.requiredEducation}
                   </span>
                   <ul className="space-y-1">
                     {matchResult.matchedEducation.map((edu, i) => (
@@ -439,7 +441,7 @@ export default function JobAnalyzer() {
               <div className="flex items-center gap-2 border-b border-gray-100 dark:border-zinc-800 pb-3">
                 <span className="text-amber-600 text-base">⚠️</span>
                 <h4 className="text-sm font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
-                  Missing Keywords (Add to CV for ATS)
+                  {tj.missingWeakAreas}
                 </h4>
               </div>
 
