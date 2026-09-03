@@ -1,6 +1,7 @@
 'use client';
 
 import html2canvas from 'html2canvas';
+import { saveAs } from 'file-saver';
 import {
   Document,
   Packer,
@@ -411,26 +412,16 @@ export async function exportToWord(
     ],
   });
 
-  const blob = await Packer.toBlob(doc);
+  const rawBlob = await Packer.toBlob(doc);
   const outName = filename.endsWith('.docx')
     ? filename
     : `${filename.replace(/\.[^/.]+$/, '')}.docx`;
 
-  const blobUrl = URL.createObjectURL(blob);
-  const downloadLink = document.createElement('a');
-  downloadLink.href = blobUrl;
-  downloadLink.setAttribute('download', outName);
-  downloadLink.style.display = 'none';
-  document.body.appendChild(downloadLink);
-  downloadLink.click();
+  const docxBlob = new Blob([rawBlob], {
+    type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  });
 
-  // Delay revoke so Chromium finishes writing the file with the correct .docx extension
-  setTimeout(() => {
-    if (document.body.contains(downloadLink)) {
-      document.body.removeChild(downloadLink);
-    }
-    URL.revokeObjectURL(blobUrl);
-  }, 15000);
+  saveAs(docxBlob, outName);
 }
 
 export async function exportLetterToWord(
@@ -476,24 +467,14 @@ export async function exportLetterToWord(
     ],
   });
 
-  const blob = await Packer.toBlob(doc);
+  const rawBlob = await Packer.toBlob(doc);
   const outName = filename.endsWith('.docx')
     ? filename
     : `${filename.replace(/\.[^/.]+$/, '')}.docx`;
 
-  const blobUrl = URL.createObjectURL(blob);
-  const downloadLink = document.createElement('a');
-  downloadLink.href = blobUrl;
-  downloadLink.setAttribute('download', outName);
-  downloadLink.style.display = 'none';
-  document.body.appendChild(downloadLink);
-  downloadLink.click();
+  const docxBlob = new Blob([rawBlob], {
+    type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  });
 
-  // Delay revoke so Chromium finishes writing the file with the correct .docx extension
-  setTimeout(() => {
-    if (document.body.contains(downloadLink)) {
-      document.body.removeChild(downloadLink);
-    }
-    URL.revokeObjectURL(blobUrl);
-  }, 15000);
+  saveAs(docxBlob, outName);
 }
