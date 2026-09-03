@@ -4,7 +4,7 @@ interface ImageInput {
   dataUrl: string;
 }
 
-const GEMINI_FALLBACK_MODELS = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
+const GEMINI_FALLBACK_MODELS = ['gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-3.8-flash', 'gemini-flash-latest'];
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 

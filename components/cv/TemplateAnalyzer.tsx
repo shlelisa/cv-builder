@@ -255,7 +255,14 @@ export default function TemplateAnalyzer() {
         setRefinedSingleton(null);
         setRefinedEntries(null);
         if (apiError) {
-          setError(`AI analysis unavailable (${apiError}). Showing estimated template — please verify sections and fields.`);
+          const isQuota = apiError.includes('429') || apiError.toLowerCase().includes('quota');
+          const isModel = apiError.includes('404');
+          const msg = isQuota
+            ? 'AI rate limit reached on free tier. Showing estimated template — you can verify and customize all sections below.'
+            : isModel
+            ? 'AI model unavailable. Showing estimated template — you can verify and customize all sections below.'
+            : `AI service notice: ${apiError.length > 120 ? apiError.slice(0, 120) + '...' : apiError}. Showing estimated template.`;
+          setError(msg);
         }
         setStep('result');
       } catch {

@@ -18,7 +18,7 @@ export function getAiConfig(): AiConfig {
 
   const model =
     provider === 'gemini'
-      ? process.env.AI_MODEL || process.env.GEMINI_MODEL || 'gemini-1.5-flash'
+      ? process.env.AI_MODEL || process.env.GEMINI_MODEL || 'gemini-3.6-flash'
       : process.env.AI_MODEL || process.env.OPENAI_MODEL || 'gpt-4o-mini';
 
   const baseUrl = process.env.OPENAI_BASE_URL || process.env.AI_BASE_URL || 'https://api.openai.com/v1';
