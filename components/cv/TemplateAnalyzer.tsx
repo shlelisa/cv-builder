@@ -605,9 +605,10 @@ export default function TemplateAnalyzer() {
             </select>
           </div>
 
+          {/* Typography & Word Office Font Family */}
           <div className="sm:col-span-2 lg:col-span-3">
             <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">
-              {t.templates.fontFamily}
+              {t.templates.fontFamily} (Word Office & Modern)
             </label>
             <div className="flex gap-2">
               <input
@@ -615,22 +616,116 @@ export default function TemplateAnalyzer() {
                 className={BASE_FIELD_CLASS}
                 value={styleNow.fontFamily}
                 onChange={(e) => setStyleOverrides((prev) => ({ ...prev, fontFamily: e.target.value }))}
+                placeholder="Font Family CSS"
               />
               <select
-                className={`${BASE_FIELD_CLASS} w-40 shrink-0`}
-                value={''}
+                className={`${BASE_FIELD_CLASS} w-48 shrink-0`}
+                value={styleNow.fontFamily}
                 onChange={(e) =>
                   setStyleOverrides((prev) => ({ ...prev, fontFamily: e.target.value }))
                 }
               >
-                <option value="" disabled>
-                  Presets
-                </option>
-                <option value="Inter, sans-serif">Modern Sans</option>
-                <option value="Georgia, serif">Classic Serif</option>
-                <option value="Arial, Helvetica, sans-serif">Arial</option>
-                <option value="Courier New, monospace">Monospace</option>
+                <option value="" disabled>Presets</option>
+                <optgroup label="Word Office Standards">
+                  <option value="Arial, sans-serif">Arial</option>
+                  <option value='Calibri, Candara, "Segoe UI", Optima, Arial, sans-serif'>Calibri</option>
+                  <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                  <option value="Georgia, serif">Georgia</option>
+                  <option value='Garamond, Baskerville, "Times New Roman", serif'>Garamond</option>
+                  <option value="Verdana, Geneva, sans-serif">Verdana</option>
+                  <option value="'Trebuchet MS', 'Lucida Sans', Arial, sans-serif">Trebuchet MS</option>
+                  <option value="'Courier New', Courier, monospace">Courier New</option>
+                </optgroup>
+                <optgroup label="Modern Google Fonts">
+                  <option value="Inter, sans-serif">Inter (Clean)</option>
+                  <option value="Roboto, sans-serif">Roboto</option>
+                  <option value="Outfit, sans-serif">Outfit (Modern)</option>
+                  <option value="Merriweather, serif">Merriweather</option>
+                  <option value="'Playfair Display', serif">Playfair Display</option>
+                  <option value="Montserrat, sans-serif">Montserrat</option>
+                  <option value="Poppins, sans-serif">Poppins</option>
+                </optgroup>
               </select>
+            </div>
+          </div>
+
+          {/* Word Office Font Size Steppers */}
+          <div className="sm:col-span-2 lg:col-span-3 bg-gray-50 dark:bg-zinc-800/60 p-3.5 rounded-xl border border-gray-200 dark:border-zinc-700">
+            <span className="text-xs font-bold text-gray-900 dark:text-zinc-100 block mb-2.5">
+              🔤 Word Office Font Size Steppers
+            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Name Size */}
+              <div className="space-y-1">
+                <span className="text-xs text-gray-600 dark:text-zinc-400 block">Candidate Name</span>
+                <div className="flex items-center gap-1.5 bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 rounded-lg p-1">
+                  <button
+                    type="button"
+                    onClick={() => setStyleOverrides((prev) => ({ ...prev, nameSize: Math.max(12, ((prev.nameSize || styleNow.nameSize || 24) - 1)) }))}
+                    className="w-7 h-7 flex items-center justify-center font-bold text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded"
+                  >
+                    -
+                  </button>
+                  <span className="flex-1 text-center font-mono text-xs font-bold text-gray-900 dark:text-zinc-100">
+                    {styleNow.nameSize || 24}pt
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setStyleOverrides((prev) => ({ ...prev, nameSize: Math.min(40, ((prev.nameSize || styleNow.nameSize || 24) + 1)) }))}
+                    className="w-7 h-7 flex items-center justify-center font-bold text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              {/* Headings Size */}
+              <div className="space-y-1">
+                <span className="text-xs text-gray-600 dark:text-zinc-400 block">Section Headings</span>
+                <div className="flex items-center gap-1.5 bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 rounded-lg p-1">
+                  <button
+                    type="button"
+                    onClick={() => setStyleOverrides((prev) => ({ ...prev, headingSize: Math.max(8, ((prev.headingSize || styleNow.headingSize || 12.5) - 0.5)) }))}
+                    className="w-7 h-7 flex items-center justify-center font-bold text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded"
+                  >
+                    -
+                  </button>
+                  <span className="flex-1 text-center font-mono text-xs font-bold text-gray-900 dark:text-zinc-100">
+                    {styleNow.headingSize || 12.5}pt
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setStyleOverrides((prev) => ({ ...prev, headingSize: Math.min(24, ((prev.headingSize || styleNow.headingSize || 12.5) + 0.5)) }))}
+                    className="w-7 h-7 flex items-center justify-center font-bold text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              {/* Body Size */}
+              <div className="space-y-1">
+                <span className="text-xs text-gray-600 dark:text-zinc-400 block">Body & Bullet Text</span>
+                <div className="flex items-center gap-1.5 bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 rounded-lg p-1">
+                  <button
+                    type="button"
+                    onClick={() => setStyleOverrides((prev) => ({ ...prev, bodySize: Math.max(6.5, ((prev.bodySize || styleNow.bodySize || 9.5) - 0.5)) }))}
+                    className="w-7 h-7 flex items-center justify-center font-bold text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded"
+                  >
+                    -
+                  </button>
+                  <span className="flex-1 text-center font-mono text-xs font-bold text-gray-900 dark:text-zinc-100">
+                    {styleNow.bodySize || 9.5}pt
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setStyleOverrides((prev) => ({ ...prev, bodySize: Math.min(16, ((prev.bodySize || styleNow.bodySize || 9.5) + 0.5)) }))}
+                    className="w-7 h-7 flex items-center justify-center font-bold text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 

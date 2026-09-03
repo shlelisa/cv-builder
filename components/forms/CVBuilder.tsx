@@ -28,13 +28,24 @@ const PRESET_PALETTES: PresetPalette[] = [
 ];
 
 const FONT_OPTIONS = [
-  { id: 'Inter, sans-serif', label: 'Inter', category: 'Clean Modern' },
+  // Standard Word & ATS Fonts
+  { id: 'Arial, sans-serif', label: 'Arial', category: 'Standard Office' },
+  { id: 'Calibri, Candara, "Segoe UI", Optima, Arial, sans-serif', label: 'Calibri', category: 'Modern Office' },
+  { id: "'Times New Roman', Times, serif", label: 'Times New Roman', category: 'Classic Formal' },
+  { id: 'Georgia, serif', label: 'Georgia', category: 'Academic Serif' },
+  { id: 'Garamond, Baskerville, "Times New Roman", serif', label: 'Garamond', category: 'Executive Serif' },
+  { id: 'Verdana, Geneva, sans-serif', label: 'Verdana', category: 'Clean Sans' },
+  { id: "'Trebuchet MS', 'Lucida Sans', Arial, sans-serif", label: 'Trebuchet MS', category: 'Contemporary' },
+  { id: "'Courier New', Courier, monospace", label: 'Courier New', category: 'Monospace' },
+
+  // Google Fonts & Modern Clean Typefaces
+  { id: 'Inter, sans-serif', label: 'Inter', category: 'Ultra Clean' },
   { id: 'Roboto, sans-serif', label: 'Roboto', category: 'Versatile Sans' },
   { id: 'Outfit, sans-serif', label: 'Outfit', category: 'Geometric Modern' },
-  { id: 'Merriweather, serif', label: 'Merriweather', category: 'Classic Editorial' },
-  { id: "'Playfair Display', serif", label: 'Playfair Display', category: 'Prestigious Serif' },
-  { id: 'Georgia, serif', label: 'Georgia', category: 'Academic Serif' },
-  { id: 'Arial, sans-serif', label: 'Arial', category: 'Universal ATS' },
+  { id: 'Merriweather, serif', label: 'Merriweather', category: 'Editorial Serif' },
+  { id: "'Playfair Display', serif", label: 'Playfair Display', category: 'Luxury Serif' },
+  { id: 'Montserrat, sans-serif', label: 'Montserrat', category: 'Bold Geometric' },
+  { id: 'Poppins, sans-serif', label: 'Poppins', category: 'Modern Rounded' },
 ];
 
 function isDarkHex(hex?: string): boolean {
@@ -79,6 +90,7 @@ export default function CVBuilder() {
   const [mobilePane, setMobilePane] = useState<'editor' | 'preview'>('editor');
   const [styleOverrides, setStyleOverrides] = useState<Partial<TemplateStyle>>({});
   const [fontScale, setFontScale] = useState<'compact' | 'standard' | 'spacious'>('standard');
+  const [fontTarget, setFontTarget] = useState<'all' | 'name' | 'headings' | 'body'>('all');
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [exportMessage, setExportMessage] = useState<string>('');
   const [showExportMenu, setShowExportMenu] = useState<boolean>(false);
@@ -214,45 +226,171 @@ export default function CVBuilder() {
     });
   };
 
+  const handleWordFontFamilyChange = (fontFamily: string, target = fontTarget) => {
+    setStyleOverrides((prev) => {
+      const currentTypo = prev.typography || selectedTemplate?.analysis.style.typography || {};
+      const newTypo = { ...currentTypo };
+
+      if (target === 'all' || target === 'name') {
+        newTypo.name = { ...(newTypo.name || { size: 24, weight: 800 }), family: fontFamily };
+        newTypo.jobTitle = { ...(newTypo.jobTitle || { size: 13, weight: 600 }), family: fontFamily };
+      }
+      if (target === 'all' || target === 'headings') {
+        newTypo.sectionHeading = { ...(newTypo.sectionHeading || { size: 12.5, weight: 700 }), family: fontFamily };
+        newTypo.sidebarHeading = { ...(newTypo.sidebarHeading || { size: 12, weight: 700 }), family: fontFamily };
+      }
+      if (target === 'all' || target === 'body') {
+        newTypo.body = { ...(newTypo.body || { size: 9.5, weight: 400 }), family: fontFamily };
+        newTypo.sidebarText = { ...(newTypo.sidebarText || { size: 9, weight: 400 }), family: fontFamily };
+      }
+
+      return {
+        ...prev,
+        ...(target === 'all' ? { fontFamily } : {}),
+        typography: newTypo,
+      };
+    });
+  };
+
+  const handleWordFontSizeChange = (size: number, target = fontTarget) => {
+    setStyleOverrides((prev) => {
+      const currentTypo = prev.typography || selectedTemplate?.analysis.style.typography || {};
+      const newTypo = { ...currentTypo };
+
+      if (target === 'all' || target === 'body') {
+        newTypo.body = { ...(newTypo.body || { weight: 400 }), size };
+        newTypo.sidebarText = { ...(newTypo.sidebarText || { weight: 400 }), size: Math.max(7, size - 0.5) };
+      }
+      if (target === 'all' || target === 'headings') {
+        const headingSize = target === 'headings' ? size : Math.max(10, size + 3);
+        newTypo.sectionHeading = { ...(newTypo.sectionHeading || { weight: 700 }), size: headingSize };
+        newTypo.sidebarHeading = { ...(newTypo.sidebarHeading || { weight: 700 }), size: Math.max(9, headingSize - 1) };
+      }
+      if (target === 'all' || target === 'name') {
+        const nameSize = target === 'name' ? size : Math.max(16, size * 2.2);
+        newTypo.name = { ...(newTypo.name || { weight: 800 }), size: nameSize };
+        newTypo.jobTitle = { ...(newTypo.jobTitle || { weight: 600 }), size: Math.max(11, nameSize - 10) };
+      }
+
+      return {
+        ...prev,
+        bodySize: target === 'body' || target === 'all' ? size : prev.bodySize,
+        headingSize: target === 'headings' || target === 'all' ? (target === 'headings' ? size : size + 3) : prev.headingSize,
+        nameSize: target === 'name' || target === 'all' ? (target === 'name' ? size : size * 2.2) : prev.nameSize,
+        typography: newTypo,
+      };
+    });
+  };
+
+  const handleGrowFont = () => {
+    setStyleOverrides((prev) => {
+      const currentTypo = prev.typography || selectedTemplate?.analysis.style.typography || {};
+      const curBody = currentTypo.body?.size || prev.bodySize || selectedTemplate?.analysis.style.bodySize || 9.5;
+      const curHeading = currentTypo.sectionHeading?.size || prev.headingSize || selectedTemplate?.analysis.style.headingSize || 12.5;
+      const curName = currentTypo.name?.size || prev.nameSize || selectedTemplate?.analysis.style.nameSize || 24;
+
+      const newTypo = { ...currentTypo };
+      if (fontTarget === 'all' || fontTarget === 'body') {
+        const newBody = Math.round((curBody + 0.5) * 10) / 10;
+        newTypo.body = { ...(newTypo.body || { weight: 400 }), size: newBody };
+        newTypo.sidebarText = { ...(newTypo.sidebarText || { weight: 400 }), size: Math.max(7, newBody - 0.5) };
+      }
+      if (fontTarget === 'all' || fontTarget === 'headings') {
+        const newHeading = Math.round((curHeading + 1.0) * 10) / 10;
+        newTypo.sectionHeading = { ...(newTypo.sectionHeading || { weight: 700 }), size: newHeading };
+        newTypo.sidebarHeading = { ...(newTypo.sidebarHeading || { weight: 700 }), size: Math.max(9, newHeading - 1) };
+      }
+      if (fontTarget === 'all' || fontTarget === 'name') {
+        const newName = Math.round((curName + 1.5) * 10) / 10;
+        newTypo.name = { ...(newTypo.name || { weight: 800 }), size: newName };
+        newTypo.jobTitle = { ...(newTypo.jobTitle || { weight: 600 }), size: Math.max(11, newName - 10) };
+      }
+
+      return {
+        ...prev,
+        bodySize: newTypo.body?.size,
+        headingSize: newTypo.sectionHeading?.size,
+        nameSize: newTypo.name?.size,
+        typography: newTypo,
+      };
+    });
+  };
+
+  const handleShrinkFont = () => {
+    setStyleOverrides((prev) => {
+      const currentTypo = prev.typography || selectedTemplate?.analysis.style.typography || {};
+      const curBody = currentTypo.body?.size || prev.bodySize || selectedTemplate?.analysis.style.bodySize || 9.5;
+      const curHeading = currentTypo.sectionHeading?.size || prev.headingSize || selectedTemplate?.analysis.style.headingSize || 12.5;
+      const curName = currentTypo.name?.size || prev.nameSize || selectedTemplate?.analysis.style.nameSize || 24;
+
+      const newTypo = { ...currentTypo };
+      if (fontTarget === 'all' || fontTarget === 'body') {
+        const newBody = Math.max(6.5, Math.round((curBody - 0.5) * 10) / 10);
+        newTypo.body = { ...(newTypo.body || { weight: 400 }), size: newBody };
+        newTypo.sidebarText = { ...(newTypo.sidebarText || { weight: 400 }), size: Math.max(6, newBody - 0.5) };
+      }
+      if (fontTarget === 'all' || fontTarget === 'headings') {
+        const newHeading = Math.max(8, Math.round((curHeading - 1.0) * 10) / 10);
+        newTypo.sectionHeading = { ...(newTypo.sectionHeading || { weight: 700 }), size: newHeading };
+        newTypo.sidebarHeading = { ...(newTypo.sidebarHeading || { weight: 700 }), size: Math.max(7.5, newHeading - 1) };
+      }
+      if (fontTarget === 'all' || fontTarget === 'name') {
+        const newName = Math.max(12, Math.round((curName - 1.5) * 10) / 10);
+        newTypo.name = { ...(newTypo.name || { weight: 800 }), size: newName };
+        newTypo.jobTitle = { ...(newTypo.jobTitle || { weight: 600 }), size: Math.max(10, newName - 10) };
+      }
+
+      return {
+        ...prev,
+        bodySize: newTypo.body?.size,
+        headingSize: newTypo.sectionHeading?.size,
+        nameSize: newTypo.name?.size,
+        typography: newTypo,
+      };
+    });
+  };
+
+  const handleLineHeightChange = (lineHeight: number) => {
+    setStyleOverrides((prev) => {
+      const currentTypo = prev.typography || selectedTemplate?.analysis.style.typography || {};
+      return {
+        ...prev,
+        typography: {
+          ...currentTypo,
+          body: { ...(currentTypo.body || { size: 9.5, weight: 400 }), lineHeight },
+          sidebarText: { ...(currentTypo.sidebarText || { size: 9, weight: 400 }), lineHeight: Math.max(1.1, lineHeight - 0.05) },
+        },
+      };
+    });
+  };
+
+  const handleResetTypography = () => {
+    setStyleOverrides((prev) => {
+      const { fontFamily, bodySize, headingSize, nameSize, typography, ...rest } = prev;
+      return rest;
+    });
+    setFontScale('standard');
+  };
+
+  const currentFontFamily = useMemo(() => {
+    if (fontTarget === 'name') return styleOverrides.typography?.name?.family || styleOverrides.fontFamily || selectedTemplate?.analysis.style.fontFamily || 'Inter, sans-serif';
+    if (fontTarget === 'headings') return styleOverrides.typography?.sectionHeading?.family || styleOverrides.fontFamily || selectedTemplate?.analysis.style.fontFamily || 'Inter, sans-serif';
+    if (fontTarget === 'body') return styleOverrides.typography?.body?.family || styleOverrides.fontFamily || selectedTemplate?.analysis.style.fontFamily || 'Inter, sans-serif';
+    return styleOverrides.fontFamily || selectedTemplate?.analysis.style.fontFamily || 'Inter, sans-serif';
+  }, [fontTarget, styleOverrides, selectedTemplate]);
+
+  const currentActiveFontSize = useMemo(() => {
+    if (fontTarget === 'name') return styleOverrides.typography?.name?.size || styleOverrides.nameSize || selectedTemplate?.analysis.style.nameSize || 24;
+    if (fontTarget === 'headings') return styleOverrides.typography?.sectionHeading?.size || styleOverrides.headingSize || selectedTemplate?.analysis.style.headingSize || 12.5;
+    return styleOverrides.typography?.body?.size || styleOverrides.bodySize || selectedTemplate?.analysis.style.bodySize || 9.5;
+  }, [fontTarget, styleOverrides, selectedTemplate]);
+
+  const currentLineHeight = useMemo(() => {
+    return styleOverrides.typography?.body?.lineHeight || 1.42;
+  }, [styleOverrides]);
+
   const handleFontChange = (fontFamily: string) => {
-    setStyleOverrides((prev) => ({
-      ...prev,
-      fontFamily,
-      typography: {
-        ...(selectedTemplate?.analysis.style.typography || {}),
-        ...(prev.typography || {}),
-        body: {
-          ...(selectedTemplate?.analysis.style.typography?.body || { size: 9.5, weight: 400 }),
-          ...(prev.typography?.body || {}),
-          family: fontFamily,
-        },
-        sidebarText: {
-          ...(selectedTemplate?.analysis.style.typography?.sidebarText || { size: 9, weight: 400 }),
-          ...(prev.typography?.sidebarText || {}),
-          family: fontFamily,
-        },
-        sectionHeading: {
-          ...(selectedTemplate?.analysis.style.typography?.sectionHeading || { size: 12.5, weight: 700 }),
-          ...(prev.typography?.sectionHeading || {}),
-          family: fontFamily,
-        },
-        sidebarHeading: {
-          ...(selectedTemplate?.analysis.style.typography?.sidebarHeading || { size: 12, weight: 700 }),
-          ...(prev.typography?.sidebarHeading || {}),
-          family: fontFamily,
-        },
-        name: {
-          ...(selectedTemplate?.analysis.style.typography?.name || { size: 24, weight: 800 }),
-          ...(prev.typography?.name || {}),
-          family: fontFamily,
-        },
-        jobTitle: {
-          ...(selectedTemplate?.analysis.style.typography?.jobTitle || { size: 13, weight: 600 }),
-          ...(prev.typography?.jobTitle || {}),
-          family: fontFamily,
-        },
-      },
-    }));
+    handleWordFontFamilyChange(fontFamily, 'all');
   };
 
   const handleFontScaleChange = (scale: 'compact' | 'standard' | 'spacious') => {
@@ -706,6 +844,110 @@ export default function CVBuilder() {
         </div>
       )}
 
+      {/* MS Word-Style Typography & Font Management Bar */}
+      <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl p-2.5 shadow-sm flex flex-wrap items-center gap-2.5 text-xs">
+        <div className="flex items-center gap-1.5 font-bold text-gray-700 dark:text-zinc-300 pr-1">
+          <span className="text-sm">🔤</span>
+          <span className="hidden sm:inline font-semibold">Word Typography:</span>
+        </div>
+
+        {/* Target Level */}
+        <div className="flex items-center gap-1 bg-gray-100 dark:bg-zinc-800 px-2 py-1 rounded-lg border border-gray-200 dark:border-zinc-700">
+          <span className="text-[10px] uppercase font-bold text-gray-400 dark:text-zinc-500">Target</span>
+          <select
+            value={fontTarget}
+            onChange={(e) => setFontTarget(e.target.value as any)}
+            className="bg-transparent text-xs font-bold text-blue-600 dark:text-blue-400 focus:outline-none cursor-pointer"
+          >
+            <option value="all">Entire CV</option>
+            <option value="name">Candidate Name</option>
+            <option value="headings">Section Headings</option>
+            <option value="body">Body / Experience Text</option>
+          </select>
+        </div>
+
+        <div className="h-4 w-px bg-gray-200 dark:bg-zinc-700 hidden sm:block" />
+
+        {/* Font Family Selector with Live preview */}
+        <div className="flex items-center gap-1">
+          <select
+            value={currentFontFamily}
+            onChange={(e) => handleWordFontFamilyChange(e.target.value)}
+            className="bg-gray-50 dark:bg-zinc-800 border border-gray-300 dark:border-zinc-700 text-xs font-medium rounded-lg px-2.5 py-1.5 text-gray-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer max-w-[150px] sm:max-w-[190px] truncate"
+          >
+            {FONT_OPTIONS.map((f) => (
+              <option key={f.id} value={f.id} style={{ fontFamily: f.id }}>
+                {f.label} ({f.category})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Font Size & Grow / Shrink Steppers */}
+        <div className="flex items-center gap-1">
+          <select
+            value={currentActiveFontSize}
+            onChange={(e) => handleWordFontSizeChange(parseFloat(e.target.value))}
+            className="bg-gray-50 dark:bg-zinc-800 border border-gray-300 dark:border-zinc-700 text-xs font-bold rounded-lg px-2 py-1.5 text-gray-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer w-[68px] text-center"
+          >
+            {[7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 13, 14, 15, 16, 18, 20, 22, 24, 26, 28, 32, 36].map((s) => (
+              <option key={s} value={s}>
+                {s} pt
+              </option>
+            ))}
+          </select>
+
+          {/* Grow Font Button: A▲ */}
+          <button
+            type="button"
+            title="Increase Font Size (Grow Font)"
+            onClick={handleGrowFont}
+            className="flex items-center justify-center gap-0.5 px-2 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-gray-300 dark:border-zinc-700 rounded-lg text-gray-900 dark:text-zinc-100 font-bold hover:scale-105 active:scale-95 transition-all shadow-xs"
+          >
+            <span className="text-xs font-black">A</span>
+            <span className="text-[9px] text-blue-600 dark:text-blue-400 font-extrabold">▲</span>
+          </button>
+
+          {/* Shrink Font Button: A▼ */}
+          <button
+            type="button"
+            title="Decrease Font Size (Shrink Font)"
+            onClick={handleShrinkFont}
+            className="flex items-center justify-center gap-0.5 px-2 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-gray-300 dark:border-zinc-700 rounded-lg text-gray-900 dark:text-zinc-100 font-bold hover:scale-105 active:scale-95 transition-all shadow-xs"
+          >
+            <span className="text-[11px] font-bold">A</span>
+            <span className="text-[9px] text-blue-600 dark:text-blue-400 font-extrabold">▼</span>
+          </button>
+        </div>
+
+        <div className="h-4 w-px bg-gray-200 dark:bg-zinc-700 hidden md:block" />
+
+        {/* Line Spacing */}
+        <div className="flex items-center gap-1">
+          <span className="text-[10px] uppercase font-bold text-gray-400 dark:text-zinc-500 hidden sm:inline">Spacing:</span>
+          <select
+            value={currentLineHeight}
+            onChange={(e) => handleLineHeightChange(parseFloat(e.target.value))}
+            className="bg-gray-50 dark:bg-zinc-800 border border-gray-300 dark:border-zinc-700 text-xs font-medium rounded-lg px-2 py-1.5 text-gray-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
+          >
+            <option value={1.15}>Tight (1.15)</option>
+            <option value={1.35}>Normal (1.35)</option>
+            <option value={1.45}>Standard (1.45)</option>
+            <option value={1.6}>Spacious (1.6)</option>
+          </select>
+        </div>
+
+        {/* Reset Typography */}
+        <button
+          type="button"
+          onClick={handleResetTypography}
+          title="Reset Font & Sizes to Template Defaults"
+          className="ml-auto text-[11px] text-gray-500 hover:text-red-500 dark:text-zinc-400 dark:hover:text-red-400 px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+        >
+          ↺ Reset Fonts
+        </button>
+      </div>
+
       {/* Main View: Full A4 View or Split-View */}
       {viewMode === 'fullA4' ? (
         <div className="bg-gray-100 dark:bg-zinc-800/50 p-4 sm:p-6 rounded-xl border border-gray-200 dark:border-zinc-800 overflow-x-auto overflow-y-auto min-h-[85vh]">
@@ -1084,11 +1326,16 @@ export default function CVBuilder() {
                   </div>
                 </div>
 
-                {/* 4. Font Size Scale */}
-                <div className="space-y-3 pt-2 border-t border-gray-100 dark:border-zinc-800">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-zinc-400">
-                    Font Sizing & Scale
-                  </label>
+                {/* 4. Font Size Scale & Granular Word Office Steppers */}
+                <div className="space-y-4 pt-2 border-t border-gray-100 dark:border-zinc-800">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-zinc-400">
+                      Font Sizing & Granular Controls
+                    </label>
+                    <span className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">Word Office Scale</span>
+                  </div>
+
+                  {/* Preset Scale Buttons */}
                   <div className="grid grid-cols-3 gap-2">
                     {[
                       { id: 'compact' as const, label: 'Compact (0.9x)', desc: 'Fit more experience' },
@@ -1109,6 +1356,105 @@ export default function CVBuilder() {
                         <span className="text-[10px] text-gray-400 block mt-0.5">{scale.desc}</span>
                       </button>
                     ))}
+                  </div>
+
+                  {/* Word-Style Granular Size Steppers */}
+                  <div className="bg-gray-50/80 dark:bg-zinc-800/50 p-3.5 rounded-xl border border-gray-200 dark:border-zinc-800 space-y-3">
+                    <span className="text-xs font-bold text-gray-900 dark:text-zinc-100 block border-b border-gray-200 dark:border-zinc-700 pb-1.5">
+                      Individual Element Size Steppers
+                    </span>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {/* Name Size */}
+                      <div className="space-y-1">
+                        <span className="text-[11px] font-medium text-gray-600 dark:text-zinc-400 block">Candidate Name</span>
+                        <div className="flex items-center gap-1.5 bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 rounded-lg p-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const cur = styleOverrides.typography?.name?.size || styleOverrides.nameSize || selectedTemplate.analysis.style.nameSize || 24;
+                              handleWordFontSizeChange(Math.max(12, Math.round((cur - 1) * 10) / 10), 'name');
+                            }}
+                            className="w-7 h-7 flex items-center justify-center font-bold text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded"
+                          >
+                            -
+                          </button>
+                          <span className="flex-1 text-center font-mono text-xs font-bold text-gray-900 dark:text-zinc-100">
+                            {styleOverrides.typography?.name?.size || styleOverrides.nameSize || selectedTemplate.analysis.style.nameSize || 24}pt
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const cur = styleOverrides.typography?.name?.size || styleOverrides.nameSize || selectedTemplate.analysis.style.nameSize || 24;
+                              handleWordFontSizeChange(Math.min(40, Math.round((cur + 1) * 10) / 10), 'name');
+                            }}
+                            className="w-7 h-7 flex items-center justify-center font-bold text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Headings Size */}
+                      <div className="space-y-1">
+                        <span className="text-[11px] font-medium text-gray-600 dark:text-zinc-400 block">Section Headings</span>
+                        <div className="flex items-center gap-1.5 bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 rounded-lg p-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const cur = styleOverrides.typography?.sectionHeading?.size || styleOverrides.headingSize || selectedTemplate.analysis.style.headingSize || 12.5;
+                              handleWordFontSizeChange(Math.max(8, Math.round((cur - 0.5) * 10) / 10), 'headings');
+                            }}
+                            className="w-7 h-7 flex items-center justify-center font-bold text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded"
+                          >
+                            -
+                          </button>
+                          <span className="flex-1 text-center font-mono text-xs font-bold text-gray-900 dark:text-zinc-100">
+                            {styleOverrides.typography?.sectionHeading?.size || styleOverrides.headingSize || selectedTemplate.analysis.style.headingSize || 12.5}pt
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const cur = styleOverrides.typography?.sectionHeading?.size || styleOverrides.headingSize || selectedTemplate.analysis.style.headingSize || 12.5;
+                              handleWordFontSizeChange(Math.min(22, Math.round((cur + 0.5) * 10) / 10), 'headings');
+                            }}
+                            className="w-7 h-7 flex items-center justify-center font-bold text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Body Size */}
+                      <div className="space-y-1">
+                        <span className="text-[11px] font-medium text-gray-600 dark:text-zinc-400 block">Body Text</span>
+                        <div className="flex items-center gap-1.5 bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 rounded-lg p-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const cur = styleOverrides.typography?.body?.size || styleOverrides.bodySize || selectedTemplate.analysis.style.bodySize || 9.5;
+                              handleWordFontSizeChange(Math.max(6.5, Math.round((cur - 0.5) * 10) / 10), 'body');
+                            }}
+                            className="w-7 h-7 flex items-center justify-center font-bold text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded"
+                          >
+                            -
+                          </button>
+                          <span className="flex-1 text-center font-mono text-xs font-bold text-gray-900 dark:text-zinc-100">
+                            {styleOverrides.typography?.body?.size || styleOverrides.bodySize || selectedTemplate.analysis.style.bodySize || 9.5}pt
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const cur = styleOverrides.typography?.body?.size || styleOverrides.bodySize || selectedTemplate.analysis.style.bodySize || 9.5;
+                              handleWordFontSizeChange(Math.min(16, Math.round((cur + 0.5) * 10) / 10), 'body');
+                            }}
+                            className="w-7 h-7 flex items-center justify-center font-bold text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
