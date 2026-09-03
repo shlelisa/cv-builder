@@ -199,7 +199,6 @@ export default function TemplateAnalyzer() {
         try {
           const apiRes = await fetch('/api/analyze-template', {
             method: 'POST',
-            signal: AbortSignal.timeout(50000),
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ image: imageToAnalyze, palette: pal }),
           });
@@ -260,8 +259,8 @@ export default function TemplateAnalyzer() {
           const msg = isQuota
             ? 'AI rate limit reached on free tier. Showing estimated template — you can verify and customize all sections below.'
             : isModel
-            ? 'AI model unavailable. Showing estimated template — you can verify and customize all sections below.'
-            : `AI service notice: ${apiError.length > 120 ? apiError.slice(0, 120) + '...' : apiError}. Showing estimated template.`;
+              ? 'AI model unavailable. Showing estimated template — you can verify and customize all sections below.'
+              : `AI service notice: ${apiError.length > 120 ? apiError.slice(0, 120) + '...' : apiError}. Showing estimated template.`;
           setError(msg);
         }
         setStep('result');
@@ -744,8 +743,8 @@ export default function TemplateAnalyzer() {
           onDragLeave={() => setDragOver(false)}
           onClick={() => fileInputRef.current?.click()}
           className={`cursor-pointer rounded-xl border-2 border-dashed p-16 text-center transition-colors ${dragOver
-              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-              : 'border-gray-300 dark:border-zinc-600 hover:border-blue-400 hover:bg-gray-50 dark:hover:bg-zinc-800/50'
+            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+            : 'border-gray-300 dark:border-zinc-600 hover:border-blue-400 hover:bg-gray-50 dark:hover:bg-zinc-800/50'
             }`}
         >
           <input ref={fileInputRef} type="file" accept="image/*,.pdf" onChange={handleFileChange} className="hidden" />
@@ -974,8 +973,8 @@ export default function TemplateAnalyzer() {
               <button
                 onClick={() => setUseRewrites((v) => !v)}
                 className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${useRewrites
-                    ? 'border-blue-600 bg-blue-600 text-white'
-                    : 'border-gray-300 dark:border-zinc-700 text-gray-600 dark:text-zinc-300'
+                  ? 'border-blue-600 bg-blue-600 text-white'
+                  : 'border-gray-300 dark:border-zinc-700 text-gray-600 dark:text-zinc-300'
                   }`}
               >
                 <span
@@ -1058,10 +1057,10 @@ export default function TemplateAnalyzer() {
                 </h4>
                 <span
                   className={`text-2xl font-bold ${fidelity.overall >= 90
-                      ? 'text-green-600 dark:text-green-400'
-                      : fidelity.overall >= 70
-                        ? 'text-amber-600 dark:text-amber-400'
-                        : 'text-red-600 dark:text-red-400'
+                    ? 'text-green-600 dark:text-green-400'
+                    : fidelity.overall >= 70
+                      ? 'text-amber-600 dark:text-amber-400'
+                      : 'text-red-600 dark:text-red-400'
                     }`}
                 >
                   {fidelity.overall}%
