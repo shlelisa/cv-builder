@@ -199,7 +199,7 @@ export default function TemplateAnalyzer() {
         try {
           const apiRes = await fetch('/api/analyze-template', {
             method: 'POST',
-            signal: AbortSignal.timeout(9000),
+            signal: AbortSignal.timeout(50000),
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ image: imageToAnalyze, palette: pal }),
           });

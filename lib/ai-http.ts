@@ -32,7 +32,7 @@ async function openaiJsonOnce(cfg: AiConfig, prompt: string, images: ImageInput[
 
   const res = await fetch(`${cfg.baseUrl}/chat/completions`, {
     method: 'POST',
-    signal: AbortSignal.timeout(8500),
+    signal: AbortSignal.timeout(45000),
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${cfg.key}`,
@@ -70,7 +70,7 @@ async function geminiJsonOnce(
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(cfg.key)}`;
   const res = await fetch(url, {
     method: 'POST',
-    signal: AbortSignal.timeout(8500),
+    signal: AbortSignal.timeout(45000),
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents: [{ role: 'user', parts }],
