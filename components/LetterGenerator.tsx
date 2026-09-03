@@ -7,7 +7,8 @@ import { LanguageCode } from "@/types";
 import { exportLetterToWord } from "@/lib/export-utils";
 
 export default function LetterGenerator() {
-  const { language, setLanguage } = useApp();
+  const { t, language, setLanguage } = useApp();
+  const tl = t.letters;
 
   // Settings
   const [letterType, setLetterType] = useState<"application" | "cover">("application");
@@ -164,32 +165,32 @@ export default function LetterGenerator() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-200 dark:border-zinc-800 pb-6">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 mb-2">
-            ✨ Human-Grade Career Letters
+            {tl.badge}
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-zinc-100 tracking-tight">
-            Application & Cover Letter Studio
+            {tl.title}
           </h1>
           <p className="text-sm sm:text-base text-gray-600 dark:text-zinc-400 mt-1">
-            Generate eloquent, human-written cover letters and formal job applications tailored to your target company.
+            {tl.subtitle}
           </p>
         </div>
 
         {/* Quick Sample Presets */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400">Sample Profiles:</span>
+          <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400">{tl.sampleProfiles}</span>
           <button
             type="button"
             onClick={() => handleLoadSample("software")}
             className="text-xs font-medium px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:border-blue-500 hover:text-blue-600 transition-colors shadow-xs"
           >
-            💻 Tech Graduate
+            {tl.techGrad}
           </button>
           <button
             type="button"
             onClick={() => handleLoadSample("marketing")}
             className="text-xs font-medium px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:border-blue-500 hover:text-blue-600 transition-colors shadow-xs"
           >
-            📊 Business Pro
+            {tl.businessPro}
           </button>
         </div>
       </div>
@@ -201,13 +202,13 @@ export default function LetterGenerator() {
           {/* Format & Style Selectors */}
           <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl p-5 shadow-xs space-y-4">
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-              1. Letter Format & Tone
+              {tl.formatAndTone}
             </h3>
 
             {/* Letter Type */}
             <div>
               <label className="block text-xs font-semibold text-gray-600 dark:text-zinc-400 mb-1.5">
-                Document Type
+                {tl.documentType}
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <button
@@ -218,7 +219,7 @@ export default function LetterGenerator() {
                     : "bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 hover:bg-gray-100"
                     }`}
                 >
-                  📝 Formal Application Letter
+                  {tl.formalApp}
                 </button>
                 <button
                   type="button"
@@ -228,7 +229,7 @@ export default function LetterGenerator() {
                     : "bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 hover:bg-gray-100"
                     }`}
                 >
-                  💌 Persuasive Cover Letter
+                  {tl.coverLetter}
                 </button>
               </div>
             </div>
@@ -236,25 +237,24 @@ export default function LetterGenerator() {
             {/* Writing Tone */}
             <div>
               <label className="block text-xs font-semibold text-gray-600 dark:text-zinc-400 mb-1.5">
-                Voice & Tone
+                {tl.writingTone}
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { id: "professional" as const, label: "💼 Professional", desc: "Corporate standard" },
-                  { id: "fresh-graduate" as const, label: "🎓 Graduate", desc: "Entry-level hunger" },
-                  { id: "modern" as const, label: "🚀 Direct", desc: "Bulleted impact" },
-                ].map((t) => (
+                  { id: "professional" as const, label: tl.toneProfessional },
+                  { id: "fresh-graduate" as const, label: tl.toneFreshGrad },
+                  { id: "modern" as const, label: tl.toneModern },
+                ].map((item) => (
                   <button
-                    key={t.id}
+                    key={item.id}
                     type="button"
-                    onClick={() => setTone(t.id)}
-                    className={`p-2 rounded-lg border text-center transition-all ${tone === t.id
+                    onClick={() => setTone(item.id)}
+                    className={`p-2 rounded-lg border text-center transition-all ${tone === item.id
                       ? "bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-700 dark:text-blue-300 font-bold"
                       : "bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-400 hover:bg-gray-100"
                       }`}
                   >
-                    <span className="text-xs block">{t.label}</span>
-                    <span className="text-[10px] opacity-75 block">{t.desc}</span>
+                    <span className="text-xs block">{item.label}</span>
                   </button>
                 ))}
               </div>
@@ -263,7 +263,7 @@ export default function LetterGenerator() {
             {/* Language */}
             <div>
               <label className="block text-xs font-semibold text-gray-600 dark:text-zinc-400 mb-1.5">
-                Output Language
+                Language
               </label>
               <div className="flex gap-2">
                 {[
@@ -290,13 +290,13 @@ export default function LetterGenerator() {
           {/* Candidate & Target Information Form */}
           <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl p-5 shadow-xs space-y-4">
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-              2. Applicant & Target Company
+              {tl.candidateInfo}
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                  Your Full Name *
+                  {tl.applicantName} *
                 </label>
                 <input
                   type="text"
@@ -309,7 +309,7 @@ export default function LetterGenerator() {
 
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                  Email Address *
+                  {tl.email} *
                 </label>
                 <input
                   type="email"
@@ -322,7 +322,7 @@ export default function LetterGenerator() {
 
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                  Phone Number
+                  {tl.phone}
                 </label>
                 <input
                   type="text"
@@ -335,7 +335,7 @@ export default function LetterGenerator() {
 
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                  City / Location
+                  {tl.location}
                 </label>
                 <input
                   type="text"
@@ -350,7 +350,7 @@ export default function LetterGenerator() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-gray-100 dark:border-zinc-800">
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                  Target Company / Organization *
+                  {tl.company} *
                 </label>
                 <input
                   type="text"
@@ -363,7 +363,7 @@ export default function LetterGenerator() {
 
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                  Target Position / Role *
+                  {tl.position} *
                 </label>
                 <input
                   type="text"
@@ -377,7 +377,7 @@ export default function LetterGenerator() {
 
             <div>
               <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                Recipient / Addressed To
+                {tl.recipient}
               </label>
               <input
                 type="text"
@@ -392,13 +392,13 @@ export default function LetterGenerator() {
           {/* Qualifications & Experience Form */}
           <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl p-5 shadow-xs space-y-4">
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-              3. Background, Skills & Strengths
+              {tl.qualifications}
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                  Degree / Field of Study
+                  {tl.degreeUni}
                 </label>
                 <input
                   type="text"
@@ -425,7 +425,7 @@ export default function LetterGenerator() {
 
             <div>
               <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                Key Skills & Technologies (comma separated)
+                {tl.skills}
               </label>
               <input
                 type="text"
@@ -438,7 +438,7 @@ export default function LetterGenerator() {
 
             <div>
               <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                Relevant Practical Experience or Internship
+                {tl.experience}
               </label>
               <input
                 type="text"
@@ -451,7 +451,7 @@ export default function LetterGenerator() {
 
             <div>
               <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                Notable Project(s)
+                {tl.projects}
               </label>
               <input
                 type="text"
@@ -464,13 +464,13 @@ export default function LetterGenerator() {
 
             <div>
               <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                Job Requirements / Keywords (optional)
+                {tl.jobRequirements}
               </label>
               <textarea
                 rows={3}
                 value={requirements}
                 onChange={(e) => setRequirements(e.target.value)}
-                placeholder="- Bachelor's degree&#10;- React & Node.js&#10;- Database expertise"
+                placeholder={tl.requirementsPlaceholder}
                 className="w-full px-3 py-2 text-xs sm:text-sm border border-gray-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
@@ -482,7 +482,7 @@ export default function LetterGenerator() {
             onClick={handleGenerate}
             className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-sm shadow-md transition-all hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
           >
-            <span>✨ Generate {letterType === "application" ? "Application" : "Cover"} Letter</span>
+            <span>{tl.generateBtn}</span>
           </button>
         </div>
 
@@ -494,11 +494,11 @@ export default function LetterGenerator() {
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300 flex items-center gap-1.5">
                   <span>📄</span>
-                  <span>Document Editor</span>
+                  <span>{tl.outputTitle}</span>
                 </span>
                 {generatedLetter && (
                   <span className="text-[11px] font-mono text-gray-500 dark:text-zinc-400 bg-gray-200/60 dark:bg-zinc-700/60 px-2 py-0.5 rounded">
-                    {wordCount} words · {readTimeMin} min read
+                    {wordCount} {tl.wordCount} · {readTimeMin} {tl.readTime}
                   </span>
                 )}
               </div>
@@ -510,28 +510,28 @@ export default function LetterGenerator() {
                     onClick={handleCopy}
                     className="px-2.5 py-1 text-xs font-semibold rounded-md border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 transition-colors shadow-2xs"
                   >
-                    {copied ? "✓ Copied!" : "📋 Copy"}
+                    {copied ? tl.copied : tl.copy}
                   </button>
                   <button
                     type="button"
                     onClick={handleDownloadDoc}
                     className="px-2.5 py-1 text-xs font-semibold rounded-md border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 transition-colors shadow-2xs"
                   >
-                    📝 Word (.docx)
+                    {tl.wordDoc}
                   </button>
                   <button
                     type="button"
                     onClick={handlePrint}
                     className="px-2.5 py-1 text-xs font-semibold rounded-md border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 transition-colors shadow-2xs"
                   >
-                    🖨️ Print / PDF
+                    {tl.printPdf}
                   </button>
                   <button
                     type="button"
                     onClick={handleDownloadTxt}
                     className="px-2.5 py-1 text-xs font-semibold rounded-md border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 transition-colors shadow-2xs"
                   >
-                    📄 Text
+                    {tl.txtFile}
                   </button>
                 </div>
               )}
@@ -556,17 +556,17 @@ export default function LetterGenerator() {
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-12 border-2 border-dashed border-gray-200 dark:border-zinc-800 rounded-xl">
                   <span className="text-4xl mb-3">✍️</span>
                   <h4 className="text-base font-bold text-gray-800 dark:text-zinc-200 mb-1">
-                    Your Letter Will Appear Here
+                    {tl.outputTitle}
                   </h4>
                   <p className="text-xs sm:text-sm text-gray-500 dark:text-zinc-400 max-w-sm mb-5">
-                    Fill in your details on the left or click one of the quick samples above, then click &quot;Generate Letter&quot;.
+                    {tl.emptyHint}
                   </p>
                   <button
                     type="button"
                     onClick={handleGenerate}
                     className="px-4 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-bold text-xs hover:bg-blue-100 transition-colors cursor-pointer"
                   >
-                    Generate with Current Info →
+                    {tl.generateBtn} →
                   </button>
                 </div>
               )}
