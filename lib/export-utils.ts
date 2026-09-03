@@ -416,13 +416,21 @@ export async function exportToWord(
     ? filename
     : `${filename.replace(/\.[^/.]+$/, '')}.docx`;
 
+  const blobUrl = URL.createObjectURL(blob);
   const downloadLink = document.createElement('a');
-  downloadLink.href = URL.createObjectURL(blob);
-  downloadLink.download = outName;
+  downloadLink.href = blobUrl;
+  downloadLink.setAttribute('download', outName);
+  downloadLink.style.display = 'none';
   document.body.appendChild(downloadLink);
   downloadLink.click();
-  document.body.removeChild(downloadLink);
-  URL.revokeObjectURL(downloadLink.href);
+
+  // Delay revoke so Chromium finishes writing the file with the correct .docx extension
+  setTimeout(() => {
+    if (document.body.contains(downloadLink)) {
+      document.body.removeChild(downloadLink);
+    }
+    URL.revokeObjectURL(blobUrl);
+  }, 15000);
 }
 
 export async function exportLetterToWord(
@@ -473,11 +481,19 @@ export async function exportLetterToWord(
     ? filename
     : `${filename.replace(/\.[^/.]+$/, '')}.docx`;
 
+  const blobUrl = URL.createObjectURL(blob);
   const downloadLink = document.createElement('a');
-  downloadLink.href = URL.createObjectURL(blob);
-  downloadLink.download = outName;
+  downloadLink.href = blobUrl;
+  downloadLink.setAttribute('download', outName);
+  downloadLink.style.display = 'none';
   document.body.appendChild(downloadLink);
   downloadLink.click();
-  document.body.removeChild(downloadLink);
-  URL.revokeObjectURL(downloadLink.href);
+
+  // Delay revoke so Chromium finishes writing the file with the correct .docx extension
+  setTimeout(() => {
+    if (document.body.contains(downloadLink)) {
+      document.body.removeChild(downloadLink);
+    }
+    URL.revokeObjectURL(blobUrl);
+  }, 15000);
 }
