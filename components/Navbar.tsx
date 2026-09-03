@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation';
 import { useApp } from '@/lib/AppContext';
 import { LanguageCode } from '@/types';
 
+import Logo from '@/components/Logo';
+
 const Navbar: React.FC = () => {
   const pathname = usePathname();
   const { t, language, setLanguage, theme, toggleTheme } = useApp();
@@ -27,9 +29,7 @@ const Navbar: React.FC = () => {
     <nav className="border-b sticky top-0 z-50 bg-white/95 backdrop-blur dark:bg-zinc-900/95 border-gray-200 dark:border-zinc-800">
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <Link href="/" className="text-xl font-bold text-blue-600 dark:text-blue-400">
-            LelisaCV Builder
-          </Link>
+          <Logo size="md" showBadge={true} asLink={true} />
 
           <div className="flex items-center gap-2 md:gap-3">
             <div className="hidden md:flex gap-1">
