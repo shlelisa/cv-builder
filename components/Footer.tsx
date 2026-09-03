@@ -122,7 +122,7 @@ export default function Footer() {
           <div className="md:col-span-4 space-y-3">
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-bold uppercase tracking-wider text-gray-900 dark:text-zinc-200">
-                Connect & Developer
+                Contact Us
               </h4>
               <span className="text-[11px] text-gray-400 dark:text-zinc-500">Lelisa</span>
             </div>
@@ -151,7 +151,7 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="mt-10 pt-6 border-t border-gray-100 dark:border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-400 dark:text-zinc-500">
-          <p>© {new Date().getFullYear()} LcV Builder. Crafted with precision for job seekers.</p>
+          <p>© {new Date().getFullYear()} Developed By Lelisa Shashura</p>
           <div className="flex items-center gap-3">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-[11px] font-medium text-gray-600 dark:text-zinc-400">
               🌍 English · Afaan Oromoo · አማርኛ
