@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useApp } from "@/lib/AppContext";
 import { aiService } from "@/services/ai";
 import { LanguageCode } from "@/types";
+import { exportLetterToWord } from "@/lib/export-utils";
 
 export default function LetterGenerator() {
   const { language, setLanguage } = useApp();
@@ -107,25 +108,10 @@ export default function LetterGenerator() {
     }
   };
 
-  const handleDownloadDoc = () => {
+  const handleDownloadDoc = async () => {
     if (!generatedLetter) return;
-    const header = `
-      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-      <head><meta charset='utf-8'><title>${position} Letter</title>
-      <style>body { font-family: 'Times New Roman', serif; font-size: 11pt; line-height: 1.5; margin: 1in; }</style>
-      </head><body>
-      ${generatedLetter.split("\n\n").map((p) => `<p>${p.replace(/\n/g, "<br/>")}</p>`).join("")}
-      </body></html>
-    `;
-    const blob = new Blob(["\ufeff", header], { type: "application/msword" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${(applicantName || "Application").replace(/\s+/g, "_")}_Letter.doc`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const filename = `${(applicantName || "Application").replace(/\s+/g, "_")}_Letter.docx`;
+    await exportLetterToWord(generatedLetter, applicantName, position, filename);
   };
 
   const handleDownloadTxt = () => {
@@ -531,7 +517,7 @@ export default function LetterGenerator() {
                     onClick={handleDownloadDoc}
                     className="px-2.5 py-1 text-xs font-semibold rounded-md border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 transition-colors shadow-2xs"
                   >
-                    📝 Word (.doc)
+                    📝 Word (.docx)
                   </button>
                   <button
                     type="button"

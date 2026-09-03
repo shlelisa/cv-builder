@@ -1,6 +1,15 @@
 'use client';
 
 import html2canvas from 'html2canvas';
+import {
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  AlignmentType,
+  BorderStyle,
+  convertInchesToTwip,
+} from 'docx';
 import { TemplateAnalysis, TemplateStyle } from '@/types';
 
 export function exportToPdf() {
@@ -15,9 +24,9 @@ export async function exportToImage(elementId = 'cv-print-root', filename = 'my-
 
   const pageEl = (rootEl.querySelector('.cv-page') as HTMLElement) || rootEl;
 
-  // Temporarily clone or capture at full native resolution (zoom = 1)
+  // Capture at 2x high resolution for crisp text
   const canvas = await html2canvas(pageEl, {
-    scale: 2, // 2x high-resolution capture for crisp text
+    scale: 2,
     useCORS: true,
     logging: false,
     backgroundColor: '#ffffff',
@@ -34,41 +43,86 @@ export async function exportToImage(elementId = 'cv-print-root', filename = 'my-
   document.body.removeChild(link);
 }
 
-export function exportToWord(
+function cleanFontName(fontStr?: string): string {
+  if (!fontStr) return 'Arial';
+  const first = fontStr.split(',')[0].replace(/['"]/g, '').trim();
+  return first || 'Arial';
+}
+
+function cleanHex(colorStr?: string): string {
+  if (!colorStr) return '1E293B';
+  return colorStr.replace('#', '').trim() || '1E293B';
+}
+
+export async function exportToWord(
   analysis: TemplateAnalysis,
   singletonValues: Record<string, string>,
   entries: Record<string, Array<Record<string, string>>>,
-  filename = 'my-cv.doc',
+  filename = 'my-cv.docx',
   styleOverrides?: Partial<TemplateStyle>,
-): void {
-  const primaryColor =
+): Promise<void> {
+  const rawPrimary =
     styleOverrides?.primaryColor ||
     styleOverrides?.theme?.headingColor ||
     analysis.style.theme?.headingColor ||
     analysis.style.primaryColor ||
-    '#111111';
-  const fontFamily = styleOverrides?.fontFamily || analysis.style.fontFamily || 'Arial, sans-serif';
+    '#1e293b';
+  const primaryHex = cleanHex(rawPrimary);
+
+  const fontName = cleanFontName(
+    styleOverrides?.fontFamily || analysis.style.fontFamily || 'Arial',
+  );
 
   const name =
     singletonValues.fullName ||
     singletonValues.name ||
     singletonValues.full_name ||
-    'Your Name';
+    'Candidate Name';
   const jobTitle =
     singletonValues.jobTitle ||
     singletonValues.title ||
     '';
 
   const sections = analysis.sections || [];
+  const docParagraphs: Paragraph[] = [];
 
-  let bodyHtml = `
-    <div style="font-family: ${escapeHtml(fontFamily)}; color: #333333; max-width: 750px; margin: 0 auto; line-height: 1.4;">
-      <div style="text-align: center; border-bottom: 2px solid ${escapeHtml(primaryColor)}; padding-bottom: 12px; margin-bottom: 20px;">
-        <h1 style="font-size: 24pt; margin: 0 0 6px 0; text-transform: uppercase; color: ${escapeHtml(primaryColor)};">${escapeHtml(name)}</h1>
-        ${jobTitle ? `<p style="font-size: 13pt; margin: 0 0 8px 0; font-weight: bold; color: #555555; text-transform: uppercase;">${escapeHtml(jobTitle)}</p>` : ''}
-  `;
+  // 1. Candidate Name (Header)
+  docParagraphs.push(
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 0, after: 60 },
+      children: [
+        new TextRun({
+          text: name.toUpperCase(),
+          bold: true,
+          size: 44, // 22pt (in half-points)
+          font: fontName,
+          color: primaryHex,
+        }),
+      ],
+    }),
+  );
 
-  // Collect contact fields
+  // 2. Job Title
+  if (jobTitle) {
+    docParagraphs.push(
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 0, after: 80 },
+        children: [
+          new TextRun({
+            text: jobTitle.toUpperCase(),
+            bold: true,
+            size: 24, // 12pt
+            font: fontName,
+            color: '4B5563',
+          }),
+        ],
+      }),
+    );
+  }
+
+  // 3. Contact Details
   const contactFields = analysis.fields.filter(
     (f) =>
       (f.section === 'personal' || f.section === 'contact') &&
@@ -77,15 +131,53 @@ export function exportToWord(
   );
 
   if (contactFields.length > 0) {
-    const contactText = contactFields
-      .map((f) => `${escapeHtml(f.label)}: ${escapeHtml(singletonValues[f.id] || '')}`)
-      .join(' | ');
-    bodyHtml += `<p style="font-size: 9.5pt; color: #666666; margin: 0;">${contactText}</p>`;
+    const contactRuns: TextRun[] = [];
+    contactFields.forEach((f, idx) => {
+      contactRuns.push(
+        new TextRun({
+          text: `${f.label}: `,
+          bold: true,
+          size: 19, // 9.5pt
+          font: fontName,
+          color: '374151',
+        }),
+        new TextRun({
+          text: singletonValues[f.id] || '',
+          size: 19,
+          font: fontName,
+          color: '4B5563',
+        }),
+      );
+      if (idx < contactFields.length - 1) {
+        contactRuns.push(
+          new TextRun({
+            text: '   |   ',
+            size: 19,
+            font: fontName,
+            color: '9CA3AF',
+          }),
+        );
+      }
+    });
+
+    docParagraphs.push(
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 40, after: 180 },
+        border: {
+          bottom: {
+            color: primaryHex,
+            space: 8,
+            style: BorderStyle.SINGLE,
+            size: 12,
+          },
+        },
+        children: contactRuns,
+      }),
+    );
   }
 
-  bodyHtml += `</div>`;
-
-  // Render each section
+  // 4. Content Sections
   for (const section of sections) {
     if (section.id === 'personal' && !section.repeatable) continue;
 
@@ -93,21 +185,38 @@ export function exportToWord(
     const sectionEntries = entries[section.id] || [];
     const fields = analysis.fields.filter((f) => f.section === section.id);
 
-    // Skip section if empty
+    // Skip empty sections
     if (isRepeatable && sectionEntries.length === 0) continue;
     if (!isRepeatable && !fields.some((f) => (singletonValues[f.id] || '').trim())) continue;
 
-    bodyHtml += `
-      <div style="margin-bottom: 16px;">
-        <h2 style="font-size: 12pt; text-transform: uppercase; border-bottom: 1.5px solid #222222; padding-bottom: 3px; margin: 0 0 8px 0; color: #111111;">
-          ${escapeHtml(section.name)}
-        </h2>
-    `;
+    // Section Heading
+    docParagraphs.push(
+      new Paragraph({
+        spacing: { before: 200, after: 100 },
+        border: {
+          bottom: {
+            color: primaryHex,
+            space: 4,
+            style: BorderStyle.SINGLE,
+            size: 8,
+          },
+        },
+        children: [
+          new TextRun({
+            text: section.name.toUpperCase(),
+            bold: true,
+            size: 24, // 12pt
+            font: fontName,
+            color: primaryHex,
+          }),
+        ],
+      }),
+    );
 
     if (isRepeatable) {
       for (const entry of sectionEntries) {
         const firstField = fields.find((f) => (entry[f.id] || '').trim());
-        const title = firstField ? entry[firstField.id].trim() : 'Entry';
+        const title = firstField ? entry[firstField.id].trim() : 'Role / Entry';
         const dateField = fields.find(
           (f) =>
             f.id !== firstField?.id &&
@@ -116,36 +225,109 @@ export function exportToWord(
         );
         const dateVal = dateField ? entry[dateField.id].trim() : '';
 
-        bodyHtml += `
-          <div style="margin-bottom: 8px;">
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 2px;">
-              <tr>
-                <td style="font-size: 10.5pt; font-weight: bold; color: #222222; text-align: left;">${escapeHtml(title)}</td>
-                ${dateVal ? `<td style="font-size: 9.5pt; color: #666666; text-align: right;">${escapeHtml(dateVal)}</td>` : ''}
-              </tr>
-            </table>
-        `;
+        const orgField = fields.find(
+          (f) =>
+            f.id !== firstField?.id &&
+            f.id !== dateField?.id &&
+            /company|organization|institution|school|university|employer|location/i.test(
+              `${f.id} ${f.label}`,
+            ) &&
+            (entry[f.id] || '').trim(),
+        );
+        const orgVal = orgField ? entry[orgField.id].trim() : '';
 
+        // Entry header line (Title + Org + Date)
+        const entryHeaderRuns: TextRun[] = [
+          new TextRun({
+            text: title,
+            bold: true,
+            size: 21, // 10.5pt
+            font: fontName,
+            color: '111827',
+          }),
+        ];
+
+        if (orgVal) {
+          entryHeaderRuns.push(
+            new TextRun({
+              text: `  —  ${orgVal}`,
+              bold: true,
+              size: 20,
+              font: fontName,
+              color: '374151',
+            }),
+          );
+        }
+
+        if (dateVal) {
+          entryHeaderRuns.push(
+            new TextRun({
+              text: `  (${dateVal})`,
+              italics: true,
+              size: 19,
+              font: fontName,
+              color: '6B7280',
+            }),
+          );
+        }
+
+        docParagraphs.push(
+          new Paragraph({
+            spacing: { before: 80, after: 40 },
+            children: entryHeaderRuns,
+          }),
+        );
+
+        // Remaining detail fields
         for (const f of fields) {
-          if (f.id === firstField?.id || f.id === dateField?.id) continue;
+          if (f.id === firstField?.id || f.id === dateField?.id || f.id === orgField?.id) continue;
           const val = (entry[f.id] || '').trim();
           if (!val) continue;
 
           if (f.type === 'textarea') {
             const lines = val.split(/\s*\|\s*|\r?\n/).filter(Boolean);
-            bodyHtml += `<ul style="margin: 3px 0 6px 18px; padding: 0; font-size: 10pt;">`;
             for (const line of lines) {
-              bodyHtml += `<li style="margin-bottom: 2px;">${escapeHtml(line)}</li>`;
+              docParagraphs.push(
+                new Paragraph({
+                  bullet: { level: 0 },
+                  spacing: { before: 20, after: 30 },
+                  children: [
+                    new TextRun({
+                      text: line.trim(),
+                      size: 20, // 10pt
+                      font: fontName,
+                      color: '374151',
+                    }),
+                  ],
+                }),
+              );
             }
-            bodyHtml += `</ul>`;
           } else {
-            bodyHtml += `<p style="font-size: 10pt; margin: 2px 0; color: #444444;">${escapeHtml(val)}</p>`;
+            docParagraphs.push(
+              new Paragraph({
+                spacing: { before: 20, after: 30 },
+                children: [
+                  new TextRun({
+                    text: `${f.label}: `,
+                    bold: true,
+                    size: 20,
+                    font: fontName,
+                    color: '374151',
+                  }),
+                  new TextRun({
+                    text: val,
+                    size: 20,
+                    font: fontName,
+                    color: '4B5563',
+                  }),
+                ],
+              }),
+            );
           }
         }
-
-        bodyHtml += `</div>`;
       }
     } else {
+      // Non-repeatable fields (e.g. Summary, Objective, Skills)
       for (const f of fields) {
         const val = (singletonValues[f.id] || '').trim();
         if (!val) continue;
@@ -153,76 +335,149 @@ export function exportToWord(
         if (f.type === 'textarea') {
           const lines = val.split(/\s*\|\s*|\r?\n/).filter(Boolean);
           if (lines.length > 1) {
-            bodyHtml += `<ul style="margin: 3px 0 6px 18px; padding: 0; font-size: 10pt;">`;
             for (const line of lines) {
-              bodyHtml += `<li style="margin-bottom: 2px;">${escapeHtml(line)}</li>`;
+              docParagraphs.push(
+                new Paragraph({
+                  bullet: { level: 0 },
+                  spacing: { before: 20, after: 30 },
+                  children: [
+                    new TextRun({
+                      text: line.trim(),
+                      size: 20,
+                      font: fontName,
+                      color: '374151',
+                    }),
+                  ],
+                }),
+              );
             }
-            bodyHtml += `</ul>`;
           } else {
-            bodyHtml += `<p style="font-size: 10pt; margin: 2px 0; line-height: 1.45;">${escapeHtml(val)}</p>`;
+            docParagraphs.push(
+              new Paragraph({
+                spacing: { before: 30, after: 60 },
+                children: [
+                  new TextRun({
+                    text: val,
+                    size: 20,
+                    font: fontName,
+                    color: '374151',
+                  }),
+                ],
+              }),
+            );
           }
         } else {
-          bodyHtml += `<p style="font-size: 10pt; margin: 2px 0;"><strong style="color: #333333;">${escapeHtml(f.label)}:</strong> ${escapeHtml(val)}</p>`;
+          docParagraphs.push(
+            new Paragraph({
+              spacing: { before: 20, after: 40 },
+              children: [
+                new TextRun({
+                  text: `${f.label}: `,
+                  bold: true,
+                  size: 20,
+                  font: fontName,
+                  color: '374151',
+                }),
+                new TextRun({
+                  text: val,
+                  size: 20,
+                  font: fontName,
+                  color: '4B5563',
+                }),
+              ],
+            }),
+          );
         }
       }
     }
-
-    bodyHtml += `</div>`;
   }
 
-  bodyHtml += `</div>`;
-
-  const wordHtml = `
-    <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-      <head>
-        <meta charset="utf-8">
-        <title>${escapeHtml(name)} - CV</title>
-        <!--[if gte mso 9]>
-        <xml>
-          <w:WordDocument>
-            <w:View>Print</w:View>
-            <w:Zoom>100</w:Zoom>
-            <w:DoNotOptimizeForBrowser/>
-          </w:WordDocument>
-        </xml>
-        <![endif]-->
-        <style>
-          @page {
-            size: 21.0cm 29.7cm; /* A4 */
-            margin: 2.0cm 2.0cm 2.0cm 2.0cm;
-            mso-page-orientation: portrait;
-          }
-          body {
-            font-family: Arial, sans-serif;
-            font-size: 10pt;
-            color: #222222;
-          }
-        </style>
-      </head>
-      <body>
-        ${bodyHtml}
-      </body>
-    </html>
-  `;
-
-  const blob = new Blob(['\ufeff' + wordHtml], {
-    type: 'application/msword;charset=utf-8',
+  // Create OpenXML Word Document with standard A4 margins
+  const doc = new Document({
+    sections: [
+      {
+        properties: {
+          page: {
+            margin: {
+              top: convertInchesToTwip(0.8),
+              right: convertInchesToTwip(0.8),
+              bottom: convertInchesToTwip(0.8),
+              left: convertInchesToTwip(0.8),
+            },
+          },
+        },
+        children: docParagraphs,
+      },
+    ],
   });
+
+  const blob = await Packer.toBlob(doc);
+  const outName = filename.endsWith('.docx')
+    ? filename
+    : `${filename.replace(/\.[^/.]+$/, '')}.docx`;
 
   const downloadLink = document.createElement('a');
   downloadLink.href = URL.createObjectURL(blob);
-  downloadLink.download = filename.endsWith('.doc') ? filename : `${filename}.doc`;
+  downloadLink.download = outName;
   document.body.appendChild(downloadLink);
   downloadLink.click();
   document.body.removeChild(downloadLink);
   URL.revokeObjectURL(downloadLink.href);
 }
 
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+export async function exportLetterToWord(
+  content: string,
+  applicantName: string,
+  jobTitle = 'Application',
+  filename = 'Cover_Letter.docx',
+): Promise<void> {
+  const paragraphs = content
+    .split(/\r?\n\r?\n/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  const docParagraphs: Paragraph[] = paragraphs.map((text) => {
+    return new Paragraph({
+      spacing: { before: 60, after: 120 },
+      children: [
+        new TextRun({
+          text,
+          size: 22, // 11pt
+          font: 'Calibri',
+          color: '1F2937',
+        }),
+      ],
+    });
+  });
+
+  const doc = new Document({
+    sections: [
+      {
+        properties: {
+          page: {
+            margin: {
+              top: convertInchesToTwip(1),
+              right: convertInchesToTwip(1),
+              bottom: convertInchesToTwip(1),
+              left: convertInchesToTwip(1),
+            },
+          },
+        },
+        children: docParagraphs,
+      },
+    ],
+  });
+
+  const blob = await Packer.toBlob(doc);
+  const outName = filename.endsWith('.docx')
+    ? filename
+    : `${filename.replace(/\.[^/.]+$/, '')}.docx`;
+
+  const downloadLink = document.createElement('a');
+  downloadLink.href = URL.createObjectURL(blob);
+  downloadLink.download = outName;
+  document.body.appendChild(downloadLink);
+  downloadLink.click();
+  document.body.removeChild(downloadLink);
+  URL.revokeObjectURL(downloadLink.href);
 }

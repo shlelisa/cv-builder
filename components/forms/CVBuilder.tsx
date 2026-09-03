@@ -459,14 +459,16 @@ export default function CVBuilder() {
     }));
   };
 
-  const handleDownloadWord = () => {
+  const handleDownloadWord = async () => {
     if (!selectedTemplate) return;
     setShowExportMenu(false);
     setIsExporting(true);
-    setExportMessage('Generating Word document...');
+    setExportMessage('Generating native Word (.docx) document...');
     try {
-      const filename = `${(singletonValues.fullName || 'My_CV').replace(/\s+/g, '_')}_CV.doc`;
-      exportToWord(selectedTemplate.analysis, singletonValues, entries, filename, styleOverrides);
+      const filename = `${(singletonValues.fullName || 'My_CV').replace(/\s+/g, '_')}_CV.docx`;
+      await exportToWord(selectedTemplate.analysis, singletonValues, entries, filename, styleOverrides);
+    } catch (err) {
+      console.error('Word export failed:', err);
     } finally {
       setIsExporting(false);
       setExportMessage('');
@@ -787,8 +789,8 @@ export default function CVBuilder() {
                 >
                   <span className="text-base">📝</span>
                   <div>
-                    <span className="font-semibold block">Download Word (.doc)</span>
-                    <span className="text-xs text-gray-400 block">Editable in Microsoft Word</span>
+                    <span className="font-semibold block">Download Word (.docx)</span>
+                    <span className="text-xs text-gray-400 block">Native Microsoft Word document</span>
                   </div>
                 </button>
 

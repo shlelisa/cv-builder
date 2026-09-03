@@ -11,6 +11,7 @@ import { CustomLayout, defaultCustomLayout, validateLayout } from '@/lib/layout-
 import { TemplateAnalysis, TemplateField, TemplatePhotoCrop, TemplateSection, TemplateStyle } from '@/types';
 import { resizeDataUrl } from '@/lib/image-utils';
 import { applySampledColors, extractPalette } from '@/lib/palette';
+import { exportToWord, exportToImage } from '@/lib/export-utils';
 
 type Step = 'upload' | 'analyzing' | 'result' | 'form' | 'generated';
 
@@ -387,6 +388,20 @@ export default function TemplateAnalyzer() {
 
   const handleDownloadPdf = () => {
     window.print();
+  };
+
+  const handleDownloadWord = async () => {
+    if (!analysis) return;
+    const name = renderSingleton.fullName || renderSingleton.name || renderSingleton.full_name || 'My_CV';
+    const filename = `${name.replace(/\s+/g, '_')}_CV.docx`;
+    await exportToWord(analysis, renderSingleton, renderEntries, filename, styleOverrides);
+  };
+
+  const handleDownloadImage = async () => {
+    if (!analysis) return;
+    const name = renderSingleton.fullName || renderSingleton.name || renderSingleton.full_name || 'My_CV';
+    const filename = `${name.replace(/\s+/g, '_')}_CV.png`;
+    await exportToImage('cv-print-root', filename);
   };
 
   const renderField = (field: TemplateField, value: string, onValue: (v: string) => void) => {
@@ -1084,8 +1099,14 @@ export default function TemplateAnalyzer() {
             <Button variant="outline" size="sm" onClick={() => photoInputRef.current?.click()}>
               📷 {photoUrl ? 'Change Photo' : 'Add Photo'}
             </Button>
-            <Button variant="outline" size="sm" onClick={handleDownloadPdf}>
-              {t.templates.downloadCv}
+            <Button variant="primary" size="sm" onClick={handleDownloadPdf}>
+              📄 {t.templates.downloadCv}
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleDownloadWord}>
+              📝 Word (.docx)
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleDownloadImage}>
+              🖼️ Image (.png)
             </Button>
             <div className="flex items-center gap-1.5 rounded-lg border border-gray-300 dark:border-zinc-700 px-2.5 py-1 text-xs">
               <span className="text-gray-500 dark:text-zinc-400 font-medium">Paper Zoom:</span>
