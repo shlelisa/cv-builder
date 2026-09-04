@@ -5,6 +5,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { AppProvider } from "@/lib/AppContext";
+import { AuthProvider } from "@/lib/AuthContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,11 +40,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         {/* Puter.js Multi-AI Provider Bridge */}
         <Script src="https://js.puter.com/v2/" strategy="afterInteractive" />
-        <AppProvider>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </AppProvider>
+        <AuthProvider>
+          <AppProvider>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </AppProvider>
+        </AuthProvider>
       </body>
     </html>
   );

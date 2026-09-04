@@ -3,6 +3,7 @@
 import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui';
 import { useApp } from '@/lib/AppContext';
+import { useAuth, SavedCvDocument } from '@/lib/AuthContext';
 import TemplateCVRenderer from '@/components/cv/TemplateCVRenderer';
 import { STATIC_TEMPLATES, StaticTemplateDefinition } from '@/lib/static-templates';
 import { exportToPdf, exportToPdfDownload, exportToWord, exportToImage } from '@/lib/export-utils';
@@ -83,6 +84,8 @@ export default function CVBuilder() {
   const [entries, setEntries] = useState<Record<string, Array<Record<string, string>>>>({});
   const [photoUrl, setPhotoUrl] = useState<string>('');
 
+  const { user, profile, savedCvs, saveCvToCloud, deleteCvFromCloud, isConfigured } = useAuth();
+
   // UI state
   const [activeSectionId, setActiveSectionId] = useState<string>('personal');
   const [zoom, setZoom] = useState<number>(0.8);
@@ -95,6 +98,14 @@ export default function CVBuilder() {
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [exportMessage, setExportMessage] = useState<string>('');
   const [showExportMenu, setShowExportMenu] = useState<boolean>(false);
+
+  // Cloud & Profile sync state
+  const [showSaveModal, setShowSaveModal] = useState<boolean>(false);
+  const [showSavedListModal, setShowSavedListModal] = useState<boolean>(false);
+  const [cvDocTitle, setCvDocTitle] = useState<string>('');
+  const [isSavingCloud, setIsSavingCloud] = useState<boolean>(false);
+  const [cloudNotice, setCloudNotice] = useState<string | null>(null);
+  const [activeCvDocId, setActiveCvDocId] = useState<string | null>(null);
 
   const selectedTemplate = useMemo(() => {
     return STATIC_TEMPLATES.find((tpl) => tpl.id === selectedTemplateId) || null;
@@ -545,6 +556,131 @@ export default function CVBuilder() {
     });
   };
 
+  // Cloud & Profile persistence handlers
+  const handleOpenSaveModal = () => {
+    const candidateName = singletonValues.fullName || 'My Resume';
+    const tplName = selectedTemplate?.name || 'Modern CV';
+    if (!cvDocTitle) {
+      setCvDocTitle(`${candidateName} (${tplName})`);
+    }
+    setShowSaveModal(true);
+  };
+
+  const handleSaveCvToCloud = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!selectedTemplate) return;
+    setIsSavingCloud(true);
+    try {
+      const titleToUse =
+        cvDocTitle.trim() || `${singletonValues.fullName || 'My Resume'} (${selectedTemplate.name})`;
+      const result = await saveCvToCloud({
+        id: activeCvDocId || undefined,
+        title: titleToUse,
+        templateId: selectedTemplate.id,
+        singletonData: singletonValues,
+        entriesData: entries,
+        styleOverrides: styleOverrides as Record<string, unknown>,
+        photoUrl: photoUrl || undefined,
+      });
+      if (result.id) {
+        setActiveCvDocId(result.id);
+      }
+      setCloudNotice('CV saved successfully!');
+      setTimeout(() => setCloudNotice(null), 3500);
+      setShowSaveModal(false);
+    } catch (err) {
+      console.error('Error saving CV to cloud:', err);
+      setCloudNotice('Saved locally (offline mode)');
+      setTimeout(() => setCloudNotice(null), 3500);
+    } finally {
+      setIsSavingCloud(false);
+    }
+  };
+
+  const handleLoadSavedCv = (cv: SavedCvDocument) => {
+    const tpl = STATIC_TEMPLATES.find((t) => t.id === cv.templateId);
+    if (tpl) {
+      setSelectedTemplateId(tpl.id);
+      setSingletonValues(cv.singletonData || {});
+      setEntries(cv.entriesData || {});
+      setStyleOverrides((cv.styleOverrides as Partial<TemplateStyle>) || {});
+      if (cv.photoUrl) setPhotoUrl(cv.photoUrl);
+      setActiveCvDocId(cv.id);
+      setCvDocTitle(cv.title);
+      setShowSavedListModal(false);
+      setCloudNotice(`Loaded "${cv.title}"`);
+      setTimeout(() => setCloudNotice(null), 3500);
+    }
+  };
+
+  const handleFillFromProfile = () => {
+    if (!profile) {
+      setCloudNotice('No profile found. Please create one in Profile settings.');
+      setTimeout(() => setCloudNotice(null), 3500);
+      return;
+    }
+
+    setSingletonValues((prev) => ({
+      ...prev,
+      fullName: profile.fullName || prev.fullName || '',
+      jobTitle: profile.headline || prev.jobTitle || '',
+      email: profile.email || prev.email || '',
+      phone: profile.phone || prev.phone || '',
+      location: profile.location || prev.location || '',
+      summary: profile.bio || prev.summary || '',
+      linkedin: profile.linkedin || prev.linkedin || '',
+      github: profile.github || prev.github || '',
+      portfolio: profile.portfolio || prev.portfolio || '',
+    }));
+
+    if (profile.experience && profile.experience.length > 0) {
+      const expEntries = profile.experience.map((exp) => ({
+        company: exp.company || '',
+        position: exp.position || '',
+        duration: exp.duration || '',
+        responsibilities: (exp.responsibilities || []).join('\n'),
+      }));
+      setEntries((prev) => ({
+        ...prev,
+        experience: expEntries,
+      }));
+    }
+
+    if (profile.education && profile.education.length > 0) {
+      const eduEntries = profile.education.map((edu) => ({
+        university: edu.university || '',
+        degree: edu.degree || '',
+        department: edu.department || '',
+        graduationYear: edu.graduationYear?.toString() || '',
+        cgpa: edu.cgpa?.toString() || '',
+      }));
+      setEntries((prev) => ({
+        ...prev,
+        education: eduEntries,
+      }));
+    }
+
+    if (profile.skills) {
+      const allSkills = [
+        ...(profile.skills.technical || []),
+        ...(profile.skills.soft || []),
+      ].join(', ');
+      if (allSkills) {
+        setSingletonValues((prev) => ({
+          ...prev,
+          skills: allSkills,
+        }));
+      }
+    }
+
+    if (profile.avatarUrl && !photoUrl) {
+      setPhotoUrl(profile.avatarUrl);
+    }
+
+    setCloudNotice('Profile info applied to CV!');
+    setTimeout(() => setCloudNotice(null), 3500);
+  };
+
   // ----------------------------------------------------
   // VIEW 1: TEMPLATE SELECTION GALLERY
   // ----------------------------------------------------
@@ -600,6 +736,29 @@ export default function CVBuilder() {
                 </button>
               );
             })}
+          </div>
+
+          {/* Cloud Storage & Saved CVs Quick Access Bar */}
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            {savedCvs.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowSavedListModal(true)}
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors shadow-xs"
+              >
+                <span>📂</span>
+                <span>My Saved CVs ({savedCvs.length})</span>
+              </button>
+            )}
+            {profile && (
+              <a
+                href="/profile"
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-gray-50 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 border border-gray-200 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
+              >
+                <span>👤</span>
+                <span>Profile: {profile.fullName || user?.email}</span>
+              </a>
+            )}
           </div>
         </div>
 
@@ -788,6 +947,52 @@ export default function CVBuilder() {
             </select>
           </div>
 
+          {/* Profile Autofill Button */}
+          {profile && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleFillFromProfile}
+              className="gap-1 text-xs border-purple-300 dark:border-purple-800 text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100"
+              title="Fill fields from your profile"
+            >
+              <span>⚡</span>
+              <span className="hidden sm:inline">Autofill Profile</span>
+            </Button>
+          )}
+
+          {/* Cloud Save Button */}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleOpenSaveModal}
+            className="gap-1 text-xs border-blue-300 dark:border-blue-800 text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100"
+            title="Save CV to Cloud"
+          >
+            <span>💾</span>
+            <span>{isSavingCloud ? 'Saving...' : 'Save'}</span>
+          </Button>
+
+          {/* Saved CVs List Button */}
+          {savedCvs.length > 0 && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowSavedListModal(true)}
+              className="gap-1 text-xs text-gray-700 dark:text-zinc-300"
+              title="Open saved CVs"
+            >
+              <span>📂</span>
+              <span className="hidden sm:inline">My CVs</span>
+              <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 font-bold">
+                {savedCvs.length}
+              </span>
+            </Button>
+          )}
+
           {/* Export Dropdown Menu */}
           <div className="relative">
             <Button
@@ -844,6 +1049,23 @@ export default function CVBuilder() {
           </div>
         </div>
       </div>
+
+      {/* Cloud & Profile Action Notice Toast */}
+      {cloudNotice && (
+        <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200 px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between shadow-xs animate-fadeIn">
+          <div className="flex items-center gap-2">
+            <span>✨</span>
+            <span>{cloudNotice}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setCloudNotice(null)}
+            className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-100 text-sm font-bold"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Quick Template Switcher Carousel (Sticky on Mobile & Desktop) */}
       <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl p-3 shadow-xs space-y-2">
@@ -1767,6 +1989,156 @@ export default function CVBuilder() {
                   onPhotoClick={() => photoInputRef.current?.click()}
                 />
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Save CV Modal */}
+      {showSaveModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200 dark:border-zinc-800 space-y-4">
+            <div className="flex items-center justify-between border-b border-gray-100 dark:border-zinc-800 pb-3">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-zinc-100 flex items-center gap-2">
+                <span>💾</span>
+                <span>Save CV to Cloud</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowSaveModal(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 text-sm font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveCvToCloud} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
+                  CV Title / Version Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={cvDocTitle}
+                  onChange={(e) => setCvDocTitle(e.target.value)}
+                  placeholder="e.g. Software Engineer - Modern CV"
+                  className={BASE_INPUT_CLASS}
+                />
+              </div>
+
+              <div className="p-3 bg-gray-50 dark:bg-zinc-800/50 rounded-lg text-xs text-gray-600 dark:text-zinc-400 space-y-1">
+                <div className="flex justify-between">
+                  <span className="font-semibold">Template:</span>
+                  <span>{selectedTemplate?.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-semibold">Candidate:</span>
+                  <span>{singletonValues.fullName || 'Untitled'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-semibold">Storage Destination:</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold">
+                    {user ? 'Supabase Cloud Database' : 'Local Storage (Login for Cloud)'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowSaveModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="sm"
+                  disabled={isSavingCloud}
+                >
+                  {isSavingCloud ? 'Saving...' : 'Confirm & Save'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Saved CVs List Modal */}
+      {showSavedListModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl max-w-lg w-full max-h-[85vh] flex flex-col p-6 shadow-2xl border border-gray-200 dark:border-zinc-800 space-y-4">
+            <div className="flex items-center justify-between border-b border-gray-100 dark:border-zinc-800 pb-3">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-zinc-100 flex items-center gap-2">
+                <span>📂</span>
+                <span>My Saved CVs ({savedCvs.length})</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowSavedListModal(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 text-sm font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
+              {savedCvs.length === 0 ? (
+                <div className="text-center py-8 text-sm text-gray-500 dark:text-zinc-400">
+                  No saved CVs found yet. Save your current CV to access it anytime!
+                </div>
+              ) : (
+                savedCvs.map((cv) => (
+                  <div
+                    key={cv.id}
+                    className="p-3.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-800/30 flex items-center justify-between gap-3 hover:border-blue-400 transition-colors"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate">
+                        {cv.title}
+                      </h4>
+                      <p className="text-xs text-gray-500 dark:text-zinc-400 truncate">
+                        Template: {STATIC_TEMPLATES.find((t) => t.id === cv.templateId)?.name || cv.templateId} •{' '}
+                        {new Date(cv.updatedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Button
+                        type="button"
+                        variant="primary"
+                        size="sm"
+                        className="text-xs px-3 py-1"
+                        onClick={() => handleLoadSavedCv(cv)}
+                      >
+                        Load
+                      </Button>
+                      <button
+                        type="button"
+                        onClick={() => deleteCvFromCloud(cv.id)}
+                        className="text-red-500 hover:text-red-700 p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-950 text-xs"
+                        title="Delete CV"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-gray-100 dark:border-zinc-800">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSavedListModal(false)}
+              >
+                Close
+              </Button>
             </div>
           </div>
         </div>
