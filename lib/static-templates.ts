@@ -27,6 +27,7 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
       confidence: 0.98,
       layout: {
         type: 'sidebar-left',
+        headerPlacement: 'main-column',
         columns: [
           { id: 'sidebar', width: 0.3 },
           { id: 'main', width: 0.7 },
@@ -242,6 +243,7 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
       confidence: 0.97,
       layout: {
         type: 'sidebar-left',
+        headerPlacement: 'main-column',
         columns: [
           { id: 'sidebar', width: 0.32 },
           { id: 'main', width: 0.68 },
@@ -431,6 +433,7 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
       confidence: 0.96,
       layout: {
         type: 'sidebar-left',
+        headerPlacement: 'main-column',
         columns: [
           { id: 'sidebar', width: 0.32 },
           { id: 'main', width: 0.68 },
@@ -627,6 +630,7 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
       confidence: 0.97,
       layout: {
         type: 'sidebar-left',
+        headerPlacement: 'top-full-width',
         columns: [
           { id: 'sidebar', width: 0.32 },
           { id: 'main', width: 0.68 },
@@ -815,6 +819,7 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
       confidence: 0.97,
       layout: {
         type: 'sidebar-left',
+        headerPlacement: 'main-column',
         columns: [
           { id: 'sidebar', width: 0.32 },
           { id: 'main', width: 0.68 },
@@ -1005,6 +1010,7 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
       confidence: 0.97,
       layout: {
         type: 'sidebar-left',
+        headerPlacement: 'main-column',
         columns: [
           { id: 'sidebar', width: 0.32 },
           { id: 'main', width: 0.68 },
@@ -1191,6 +1197,7 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
       confidence: 0.98,
       layout: {
         type: 'two-column',
+        headerPlacement: 'top-full-width',
         hideInlineHeader: true,
         columns: [
           { id: 'main-left', width: 0.54 },

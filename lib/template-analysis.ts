@@ -207,10 +207,15 @@ export function parseAndSanitizeAnalysis(input: unknown): TemplateAnalysis {
     const T = Math.max(0, Math.min(0.98, top));
     return { left: l, top: T, width: w, height: h };
   };
-  const crop = rawCrop();
+  const HEADER_PLACEMENTS = ['top-full-width', 'main-column', 'sidebar-top', 'inline'];
+  const rawHeaderPlacement = str(rawLayout.headerPlacement ?? (rawLayout as Record<string, unknown>).headerSpan);
+  const headerPlacement: TemplateAnalysis['layout']['headerPlacement'] = HEADER_PLACEMENTS.includes(rawHeaderPlacement)
+    ? (rawHeaderPlacement as TemplateAnalysis['layout']['headerPlacement'])
+    : undefined;
 
   const layout: TemplateAnalysis['layout'] = {
     type: layoutType,
+    headerPlacement: headerPlacement || undefined,
     orderedSections,
     sidebarSections: sidebarSections.length > 0 ? sidebarSections : undefined,
     photo: bool(rawPhoto.included, false)
@@ -418,6 +423,7 @@ Extract EVERYTHING visible in the template and return STRICT JSON (no prose, no 
   "confidence": number 0..1,
   "layout": {
     "type": "single-column" | "two-column" | "sidebar-left" | "sidebar-right",
+    "headerPlacement": "top-full-width" | "main-column" | "sidebar-top", // REQUIRED: "top-full-width" if the name/header banner spans 100% across the whole top of the page above the columns; "main-column" if the sidebar runs full-height to the top edge and the header is only inside the main column; "sidebar-top" if the candidate name is inside the sidebar.
     "orderedSections": string[],  // every visible section in display order (read column by column for multi-column layouts)
     "sidebarSections": string[] | undefined,  // section ids placed in the colored sidebar (for sidebar layouts)
     "photo": { "included": boolean, "position": "top-center" | "top-left" | "top-right" | "sidebar", "shape": "circle" | "square" | "rounded", "size": "small" | "medium" | "large", "crop": { "left": number, "top": number, "width": number, "height": number } | null },
@@ -433,7 +439,7 @@ Extract EVERYTHING visible in the template and return STRICT JSON (no prose, no 
     "textColor": "#hex",
     "accentColor": "#hex",    // most vivid accent
     "fontFamily": "e.g. Georgia, serif",
-    "headerStyle": "centered" | "left-aligned" | "right-aligned",
+    "headerStyle": "centered" | "left-aligned" | "right-aligned" | "banner-full",
     "sectionDivider": "line" | "space" | "border",
     "nameSize": number,
     "bodySize": number,
@@ -476,6 +482,9 @@ Extract EVERYTHING visible in the template and return STRICT JSON (no prose, no 
 
 Rules — the template is the exact source of truth:
 - DO NOT omit any section that exists in the template (header/contact, about/summary, skills, experience, education, projects, certifications, languages, interests, references, achievements, volunteering...). Every visible section must appear in orderedSections AND in sections.
+- HEADER PLACEMENT (CRITICAL):
+  * If the candidate name/title is in a full-width header band spanning 100% across the whole top of the document (with the sidebar starting underneath the header banner), set "headerPlacement": "top-full-width" and "theme.headerBackground" to its exact color.
+  * If the sidebar goes all the way from the top edge to bottom, and the header is only located inside the main body column next to the sidebar, set "headerPlacement": "main-column".
 - For each section list EVERY field a user would need to fill (labels visible on the page). Fields like name, title, email, phone, address, website, linkedin must be in the contact/personal section.
 - Sections that clearly contain MULTIPLE repeated entries (e.g. several experience or education rows) must have repeatable=true.
 - Colors: sample the ACTUAL pixels. Report exact #hex for each theme slot. Never substitute generic names (no "blue"/"gray") — give the precise hex value from the image. headerBackground covers a full name/header band if one exists; sidebarBackground covers the colored rail; headingColor is the section-heading text color; borderColor is lines/dividers; iconColor is icons or bullet marks.

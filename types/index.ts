@@ -260,6 +260,7 @@ export interface TemplatePhotoCrop {
 
 export interface TemplateLayout {
   type: 'single-column' | 'two-column' | 'sidebar-left' | 'sidebar-right';
+  headerPlacement?: 'top-full-width' | 'main-column' | 'sidebar-top' | 'inline';
   orderedSections: string[];
   sidebarSections?: string[];
   photo?: {
@@ -304,7 +305,7 @@ export interface TemplateStyle {
   textColor: string;
   accentColor: string;
   fontFamily: string;
-  headerStyle: 'centered' | 'left-aligned' | 'right-aligned';
+  headerStyle: 'centered' | 'left-aligned' | 'right-aligned' | 'banner-full';
   sectionDivider: 'line' | 'space' | 'border';
   nameSize?: number;
   headingSize?: number;

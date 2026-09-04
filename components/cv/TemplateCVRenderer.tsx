@@ -20,6 +20,7 @@ export interface TemplateCVRendererProps {
   photoUrl?: string;
   styleOverrides?: Partial<TemplateStyle>;
   layoutType?: TemplateAnalysis['layout']['type'];
+  layoutOverrides?: Partial<TemplateAnalysis['layout']>;
   customLayout?: CustomLayout;
   zoom?: number;
   onPhotoClick?: () => void;
@@ -111,6 +112,7 @@ export default function TemplateCVRenderer({
   photoUrl,
   styleOverrides,
   layoutType,
+  layoutOverrides,
   customLayout,
   zoom = 1,
   onPhotoClick,
@@ -128,7 +130,10 @@ export default function TemplateCVRenderer({
       ...(styleOverrides?.componentStyle || {}),
     },
   };
-  const layout = analysis.layout;
+  const layout: TemplateAnalysis['layout'] = {
+    ...analysis.layout,
+    ...(layoutOverrides || {}),
+  };
   const resolvedLayout = layoutType || layout.type;
   const cs = resolveComponentStyle(style);
   const theme = resolveThemeTokens(style);
@@ -713,14 +718,24 @@ export default function TemplateCVRenderer({
   const bandTextColor = autoContrastColor(theme.headerBackground || '#1e293b');
   const photoInRow = showPhoto && (photoPos === 'top-left' || photoPos === 'top-right');
 
+  const isFullWidthHeader =
+    resolvedLayout === 'single-column' ||
+    resolvedLayout === 'two-column' ||
+    layout.headerPlacement === 'top-full-width' ||
+    style.headerStyle === 'banner-full' ||
+    (isSidebar &&
+      layout.headerPlacement !== 'main-column' &&
+      layout.headerPlacement !== 'sidebar-top' &&
+      (hasHeaderBand || style.headerStyle === 'centered'));
+
   const renderHeaderContent = (forMainCol = false) => (
     <div
       style={{
         width: '100%',
         backgroundColor: theme.headerBackground || undefined,
         color: bandTextColor,
-        paddingTop: Math.max(pagePad.top, 24),
-        paddingBottom: Math.max(pagePad.top, 24),
+        paddingTop: Math.max(pagePad.top, 22),
+        paddingBottom: Math.max(pagePad.top, 22),
         paddingRight: pagePad.right,
         paddingLeft: pagePad.left,
         minHeight: headerH || undefined,
@@ -735,10 +750,11 @@ export default function TemplateCVRenderer({
           justifyContent: headerAlign === 'center' ? 'center' : headerAlign === 'right' ? 'flex-end' : 'flex-start',
           gap: 24,
           flexWrap: 'wrap',
+          width: '100%',
         }}
       >
         {(!forMainCol || photoPos !== 'sidebar') && photoInRow && photoEl(photoPos === 'top-right' ? 'right' : undefined)}
-        <div>
+        <div style={{ textAlign: headerAlign, width: headerAlign === 'center' ? '100%' : undefined }}>
           <h1
             style={{
               fontFamily: typo.name.family,
@@ -748,17 +764,18 @@ export default function TemplateCVRenderer({
               textTransform: tt(typo.name.textTransform),
               lineHeight: typo.name.lineHeight,
               color: bandTextColor,
+              textAlign: headerAlign,
             }}
           >
             {name}
           </h1>
           {jobTitle && (
-            <p style={{ fontFamily: typo.jobTitle.family, fontSize: typo.jobTitle.size, fontWeight: typo.jobTitle.weight, letterSpacing: typo.jobTitle.letterSpacing, textTransform: tt(typo.jobTitle.textTransform), color: bandTextColor, opacity: 0.92, marginTop: 4 }}>
+            <p style={{ fontFamily: typo.jobTitle.family, fontSize: typo.jobTitle.size, fontWeight: typo.jobTitle.weight, letterSpacing: typo.jobTitle.letterSpacing, textTransform: tt(typo.jobTitle.textTransform), color: bandTextColor, opacity: 0.92, marginTop: 4, textAlign: headerAlign }}>
               {jobTitle}
             </p>
           )}
           {contactLines.length > 0 && (
-            <p style={{ fontFamily: typo.body.family, fontSize: typo.body.size, lineHeight: 1.6, color: bandTextColor, opacity: 0.85, marginTop: 8 }}>
+            <p style={{ fontFamily: typo.body.family, fontSize: typo.body.size, lineHeight: 1.6, color: bandTextColor, opacity: 0.85, marginTop: 8, textAlign: headerAlign }}>
               {contactLines.map((line, i) => (
                 <span key={i} style={{ display: 'block' }}>
                   {line}
@@ -776,21 +793,21 @@ export default function TemplateCVRenderer({
   const mainColHeaderBand = hasHeaderBand && renderHeaderContent(true);
 
   const inlineHeader = !hasHeaderBand && !layout.hideInlineHeader && (
-    <div style={{ textAlign: headerAlign, marginBottom: isTwoCol ? 18 : 22, borderBottom: isSidebar ? 'none' : `3px solid ${theme.borderColor}`, paddingBottom: 14 }}>
+    <div style={{ textAlign: headerAlign, width: '100%', marginBottom: isTwoCol ? 18 : 22, borderBottom: isSidebar && !isFullWidthHeader ? 'none' : `3px solid ${theme.borderColor}`, paddingBottom: 14 }}>
       {showPhoto && photoPos === 'top-center' && <div className="flex justify-center mb-3">{photoEl('center')}</div>}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: headerAlign === 'center' ? 'center' : headerAlign === 'right' ? 'flex-end' : 'flex-start', gap: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: headerAlign === 'center' ? 'center' : headerAlign === 'right' ? 'flex-end' : 'flex-start', gap: 24, width: '100%' }}>
         {photoInRow && photoEl(photoPos === 'top-right' ? 'right' : undefined)}
-        <div>
-          <h1 style={{ fontFamily: typo.name.family, fontSize: typo.name.size, fontWeight: typo.name.weight, letterSpacing: typo.name.letterSpacing, textTransform: tt(typo.name.textTransform), color: theme.headingColor }}>
+        <div style={{ textAlign: headerAlign, width: headerAlign === 'center' ? '100%' : undefined }}>
+          <h1 style={{ fontFamily: typo.name.family, fontSize: typo.name.size, fontWeight: typo.name.weight, letterSpacing: typo.name.letterSpacing, textTransform: tt(typo.name.textTransform), color: theme.headingColor, textAlign: headerAlign }}>
             {name}
           </h1>
           {jobTitle && (
-            <p style={{ fontFamily: typo.jobTitle.family, fontSize: typo.jobTitle.size, fontWeight: typo.jobTitle.weight, letterSpacing: typo.jobTitle.letterSpacing, textTransform: tt(typo.jobTitle.textTransform), color: theme.headingColor, marginTop: 4 }}>
+            <p style={{ fontFamily: typo.jobTitle.family, fontSize: typo.jobTitle.size, fontWeight: typo.jobTitle.weight, letterSpacing: typo.jobTitle.letterSpacing, textTransform: tt(typo.jobTitle.textTransform), color: theme.headingColor, marginTop: 4, textAlign: headerAlign }}>
               {jobTitle}
             </p>
           )}
           {contactLines.length > 0 && (
-            <p style={{ fontSize: typo.body.size, lineHeight: 1.6, color: theme.textColor, marginTop: 8 }}>
+            <p style={{ fontSize: typo.body.size, lineHeight: 1.6, color: theme.textColor, marginTop: 8, textAlign: headerAlign }}>
               {contactLines.map((line, i) => (
                 <span key={i} style={{ display: 'block' }}>
                   {line}
@@ -811,14 +828,14 @@ export default function TemplateCVRenderer({
     <div
       className="w-full h-full"
       style={{
-        paddingTop: isSidebar && hasHeaderBand ? 20 : pagePad.top,
+        paddingTop: isFullWidthHeader ? Math.min(22, Math.round(pagePad.top * 0.9)) : isSidebar && hasHeaderBand ? 20 : pagePad.top,
         paddingRight: pagePad.right,
         paddingBottom: pagePad.bottom,
         paddingLeft: pagePad.left,
         boxSizing: 'border-box',
       }}
     >
-      {inlineHeader}
+      {!isFullWidthHeader && inlineHeader}
       {!isTwoCol && mainSections.map((sId, i) => renderSection(sId, false, i, mainSections.length))}
       {isTwoCol && (
         <div className="flex" style={{ gap: colGap }}>
@@ -840,16 +857,16 @@ export default function TemplateCVRenderer({
         width: railWidth,
         backgroundColor: theme.sidebarBackground,
         color: theme.sidebarHeadingColor,
-        paddingTop: Math.round(geo0.columnTopPad * S),
+        paddingTop: isFullWidthHeader ? Math.min(22, Math.round(pagePad.top * 0.9)) : Math.round(geo0.columnTopPad * S),
         paddingRight: sidebarPadH,
         paddingBottom: pagePad.bottom,
         paddingLeft: sidebarPadH,
-        minHeight: pageH,
+        height: '100%',
         boxSizing: 'border-box',
         fontFamily,
       }}
     >
-      {(showPhoto && photoPos === 'sidebar') && <div className="flex justify-center mb-4">{photoEl('center')}</div>}
+      {showPhoto && photoPos === 'sidebar' && <div className="flex justify-center mb-4">{photoEl('center')}</div>}
       {visibleSidebarIds.length > 0 && (
         <div>
           {visibleSidebarIds.map((sId, i, arr) => renderSection(sId, true, i, arr.length))}
@@ -860,7 +877,7 @@ export default function TemplateCVRenderer({
 
   const mainColumn = (
     <div className="h-full overflow-hidden flex flex-col" style={{ backgroundColor: theme.mainBackground, fontFamily, color: theme.textColor }}>
-      {isSidebar && hasHeaderBand && mainColHeaderBand}
+      {!isFullWidthHeader && isSidebar && hasHeaderBand && mainColHeaderBand}
       <div className="flex-1">{mainContent}</div>
     </div>
   );
@@ -908,8 +925,8 @@ export default function TemplateCVRenderer({
               overflow: 'hidden',
             }}
           >
-            {!isSidebar && hasHeaderBand && headerBand}
-            <div className="flex flex-1" style={{ overflow: 'hidden' }}>
+            {isFullWidthHeader && (hasHeaderBand ? headerBand : inlineHeader)}
+            <div className="flex flex-1" style={{ overflow: 'hidden', minHeight: 0 }}>
               {isSidebar ? (
                 <>
                   {!sidebarRight && rail}
@@ -917,7 +934,7 @@ export default function TemplateCVRenderer({
                   {sidebarRight && rail}
                 </>
               ) : (
-                <div className="flex-1" style={{ overflow: 'hidden' }}>{mainColumn}</div>
+                <div className="flex-1" style={{ overflow: 'hidden', height: '100%' }}>{mainColumn}</div>
               )}
             </div>
           </div>

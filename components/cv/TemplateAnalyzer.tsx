@@ -99,6 +99,7 @@ export default function TemplateAnalyzer() {
   const [viewMode, setViewMode] = useState<'visual' | 'text'>('visual');
   const [styleOverrides, setStyleOverrides] = useState<Partial<TemplateStyle>>({});
   const [layoutType, setLayoutType] = useState<TemplateAnalysis['layout']['type'] | undefined>(undefined);
+  const [layoutOverrides, setLayoutOverrides] = useState<Partial<TemplateAnalysis['layout']>>({});
   const [showLayoutEditor, setShowLayoutEditor] = useState(false);
   const [customLayout, setCustomLayout] = useState<CustomLayout | null>(null);
   const [cvZoom, setCvZoom] = useState<number>(0.75);
@@ -504,6 +505,7 @@ export default function TemplateAnalyzer() {
     setShowEditor(false);
     setStyleOverrides({});
     setLayoutType(undefined);
+    setLayoutOverrides({});
     setPalette([]);
   };
 
@@ -728,6 +730,25 @@ export default function TemplateAnalyzer() {
                   {opt.replace('-', ' ')}
                 </option>
               ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">
+              Header Band Placement
+            </label>
+            <select
+              className={BASE_FIELD_CLASS}
+              value={layoutOverrides.headerPlacement || analysis.layout.headerPlacement || 'top-full-width'}
+              onChange={(e) =>
+                setLayoutOverrides((prev) => ({
+                  ...prev,
+                  headerPlacement: e.target.value as any,
+                }))
+              }
+            >
+              <option value="top-full-width">Top Full-Width (100% across top)</option>
+              <option value="main-column">In Main Column (Sidebar to top)</option>
             </select>
           </div>
 
@@ -1565,6 +1586,7 @@ export default function TemplateAnalyzer() {
                     photoUrl={photoUrl || undefined}
                     styleOverrides={styleOverrides}
                     layoutType={layoutType}
+                    layoutOverrides={layoutOverrides}
                     customLayout={customLayout ?? undefined}
                     zoom={cvZoom}
                   />
