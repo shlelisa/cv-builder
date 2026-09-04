@@ -20,9 +20,19 @@ create table if not exists public.profiles (
   skills jsonb default '[]'::jsonb,
   projects jsonb default '[]'::jsonb,
   avatar_url text,
+  last_ip text,
+  last_location text,
+  last_device text,
+  last_sign_in_at timestamp with time zone,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
+
+-- In case profiles table already exists, ensure new columns are present:
+alter table public.profiles add column if not exists last_ip text;
+alter table public.profiles add column if not exists last_location text;
+alter table public.profiles add column if not exists last_device text;
+alter table public.profiles add column if not exists last_sign_in_at timestamp with time zone;
 
 -- Enable RLS on Profiles
 alter table public.profiles enable row level security;
@@ -102,7 +112,31 @@ create policy "Users can delete their own saved letters"
   on public.saved_letters for delete
   using (auth.uid() = user_id);
 
--- 4. Trigger to automatically create a profile when a new user signs up via Email or OAuth
+-- 4. Create User Access Logs Table (Device, Place, IP Audit History)
+create table if not exists public.user_access_logs (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users on delete cascade not null,
+  ip_address text,
+  city text,
+  country text,
+  device text,
+  browser text,
+  os text,
+  user_agent text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.user_access_logs enable row level security;
+
+create policy "Users can view their own access logs"
+  on public.user_access_logs for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert their own access logs"
+  on public.user_access_logs for insert
+  with check (auth.uid() = user_id);
+
+-- 5. Trigger to automatically create a profile when a new user signs up via Email or OAuth
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin

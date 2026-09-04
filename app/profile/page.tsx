@@ -198,9 +198,10 @@ export default function ProfilePage() {
               variant="outline"
               size="sm"
               onClick={() => signOut()}
-              className="text-xs text-red-600 hover:text-red-700 hover:border-red-300"
+              className="gap-1.5 text-xs text-red-600 dark:text-red-400 border-red-200 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-950/30"
             >
-              Sign Out
+              <span>🚪</span>
+              <span>Sign Out</span>
             </Button>
           )}
 
@@ -229,6 +230,52 @@ export default function ProfilePage() {
           </button>
         </div>
       </div>
+
+      {/* Session Security, Place, IP & Device Details */}
+      {user && (profile?.lastIp || profile?.lastDevice || profile?.lastLocation) && (
+        <div className="p-4 bg-gray-50 dark:bg-zinc-800/60 border border-gray-200 dark:border-zinc-800 rounded-2xl flex flex-wrap items-center justify-between gap-4 text-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-sm font-bold shrink-0">
+              🛡️
+            </span>
+            <div>
+              <p className="font-bold text-gray-900 dark:text-zinc-100">
+                Active Session &amp; Access Audit
+              </p>
+              <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                Audited &amp; securely saved in your database profile
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4 text-[11px] text-gray-600 dark:text-zinc-300">
+            {profile.lastIp && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-gray-400 font-semibold">IP:</span>
+                <code className="px-2 py-0.5 rounded-md bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 font-mono text-blue-600 dark:text-blue-400">
+                  {profile.lastIp}
+                </code>
+              </div>
+            )}
+            {profile.lastLocation && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-gray-400 font-semibold">Place:</span>
+                <span className="font-medium text-gray-800 dark:text-zinc-200">
+                  📍 {profile.lastLocation}
+                </span>
+              </div>
+            )}
+            {profile.lastDevice && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-gray-400 font-semibold">Device:</span>
+                <span className="font-medium text-gray-800 dark:text-zinc-200">
+                  💻 {profile.lastDevice}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Main Tab Navigation */}
       <div className="flex items-center gap-2 border-b border-gray-200 dark:border-zinc-800 pb-2">

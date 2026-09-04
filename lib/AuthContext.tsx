@@ -45,6 +45,10 @@ export interface UserProfileData {
     url?: string;
   }>;
   avatarUrl?: string;
+  lastIp?: string;
+  lastLocation?: string;
+  lastDevice?: string;
+  lastSignInAt?: string;
   updatedAt?: string;
 }
 
@@ -171,6 +175,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               skills: data.skills || {},
               projects: data.projects || [],
               avatarUrl: data.avatar_url || '',
+              lastIp: data.last_ip || '',
+              lastLocation: data.last_location || '',
+              lastDevice: data.last_device || '',
+              lastSignInAt: data.last_sign_in_at || '',
               updatedAt: data.updated_at,
             };
             setProfile(mapped);
@@ -229,6 +237,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [supabase]
   );
 
+  // Record Client IP, Device, and Location place in Supabase
+  const recordSessionAudit = useCallback(
+    async (userId: string) => {
+      try {
+        const res = await fetch('/api/auth/record-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId }),
+        });
+        if (!res.ok) return;
+        const meta = await res.json();
+
+        if (supabase && userId) {
+          // Update profile with latest sign-in metadata
+          await supabase
+            .from('profiles')
+            .update({
+              last_ip: meta.ip,
+              last_location: meta.place,
+              last_device: meta.device,
+              last_sign_in_at: meta.timestamp,
+            })
+            .eq('id', userId);
+
+          // Update local profile state
+          setProfile((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  lastIp: meta.ip,
+                  lastLocation: meta.place,
+                  lastDevice: meta.device,
+                  lastSignInAt: meta.timestamp,
+                }
+              : prev
+          );
+
+          // Record in user_access_logs audit table if table exists
+          try {
+            await supabase.from('user_access_logs').insert({
+              user_id: userId,
+              ip_address: meta.ip,
+              city: meta.city || '',
+              country: meta.country || '',
+              device: meta.rawDevice || '',
+              browser: meta.browser || '',
+              os: meta.os || '',
+              user_agent: meta.device || '',
+              created_at: meta.timestamp,
+            });
+          } catch {
+            // Table might not exist yet
+          }
+        }
+      } catch (err) {
+        console.warn('[AuthContext] Session audit error:', err);
+      }
+    },
+    [supabase]
+  );
+
   // Initialize Session
   useEffect(() => {
     if (!supabase) {
@@ -238,13 +307,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (local) {
           try {
             setProfile(JSON.parse(local));
-          } catch {}
+          } catch { }
         }
         const localCvs = localStorage.getItem(LOCAL_SAVED_CVS_KEY);
         if (localCvs) {
           try {
             setSavedCvs(JSON.parse(localCvs));
-          } catch {}
+          } catch { }
         }
       }
       setLoading(false);
@@ -256,6 +325,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       if (session?.user) {
         loadProfile(session.user.id, session.user.email);
+        recordSessionAudit(session.user.id);
       }
       setLoading(false);
     });
@@ -267,6 +337,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       if (session?.user) {
         loadProfile(session.user.id, session.user.email);
+        recordSessionAudit(session.user.id);
       } else {
         setProfile(null);
       }
@@ -274,7 +345,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase, loadProfile]);
+  }, [supabase, loadProfile, recordSessionAudit]);
 
   useEffect(() => {
     refreshSavedCvs();
