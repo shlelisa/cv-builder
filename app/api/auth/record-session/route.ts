@@ -16,23 +16,36 @@ export async function POST(req: NextRequest) {
     let country = req.headers.get('x-vercel-ip-country') || '';
     let region = req.headers.get('x-vercel-ip-country-region') || '';
 
-    // If local development or missing geo headers, try public lookup fallback
-    if (!city && !country && clientIp && clientIp !== '127.0.0.1' && clientIp !== '::1') {
+    // If local development (::1 / 127.0.0.1) or missing geo headers, resolve public IP & location
+    const isLocalhost = !clientIp || clientIp === '127.0.0.1' || clientIp === '::1' || clientIp.startsWith('192.168.') || clientIp.startsWith('10.');
+
+    if (isLocalhost || (!city && !country)) {
       try {
-        const geoRes = await fetch(`https://ipapi.co/${clientIp}/json/`, { next: { revalidate: 3600 } });
+        const queryUrl = isLocalhost ? 'https://ipapi.co/json/' : `https://ipapi.co/${clientIp}/json/`;
+        const geoRes = await fetch(queryUrl, { cache: 'no-store' });
         if (geoRes.ok) {
           const geo = await geoRes.json();
-          city = geo.city || '';
-          country = geo.country_name || geo.country || '';
-          region = geo.region || '';
+          if (geo.ip) clientIp = geo.ip;
+          if (geo.city) city = geo.city;
+          if (geo.country_name || geo.country) country = geo.country_name || geo.country;
+          if (geo.region) region = geo.region;
         }
-      } catch {
-        // ignore fallback errors
+      } catch (e) {
+        // secondary fallback for IP only if geo provider is rate limited
+        if (isLocalhost) {
+          try {
+            const ipRes = await fetch('https://api.ipify.org?format=json', { cache: 'no-store' });
+            if (ipRes.ok) {
+              const ipData = await ipRes.json();
+              if (ipData.ip) clientIp = ipData.ip;
+            }
+          } catch {}
+        }
       }
     }
 
     const locationParts = [city, region, country].filter(Boolean);
-    const place = locationParts.length > 0 ? locationParts.join(', ') : 'Unknown Location';
+    const place = locationParts.length > 0 ? locationParts.join(', ') : (isLocalhost ? 'Local Development' : 'Unknown Location');
 
     return NextResponse.json({
       ip: clientIp || 'Unknown IP',
