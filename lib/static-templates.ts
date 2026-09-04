@@ -1404,7 +1404,6 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
           mainWidth: 0.67,
           gap: 0,
           verticalGap: 11,
-          columnTopPad: 0,
         },
         orderedSections: [
           'personal',
