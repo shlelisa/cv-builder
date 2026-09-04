@@ -421,6 +421,50 @@ export default function TemplateCVRenderer({
             );
           }
 
+          if (field.id === 'headline' || field.id === 'summaryHeadline') {
+            return (
+              <h2
+                key={field.id}
+                style={{
+                  fontSize: Math.max(15, size + 5),
+                  fontWeight: 700,
+                  lineHeight: 1.3,
+                  marginTop: 0,
+                  marginBottom: 8,
+                  color: theme.headingColor || style.primaryColor || '#1d78c1',
+                  minWidth: 0,
+                  maxWidth: '100%',
+                  overflowWrap: 'anywhere',
+                  wordBreak: 'break-word',
+                }}
+              >
+                {raw}
+              </h2>
+            );
+          }
+
+          if (field.id === 'company' || field.id === 'institution' || field.id === 'organization') {
+            return (
+              <p
+                key={field.id}
+                style={{
+                  fontSize: size,
+                  fontWeight: 600,
+                  lineHeight: lh,
+                  marginTop: 1,
+                  marginBottom: 3,
+                  color: theme.headingColor || style.primaryColor || '#1d78c1',
+                  minWidth: 0,
+                  maxWidth: '100%',
+                  overflowWrap: 'anywhere',
+                  wordBreak: 'break-word',
+                }}
+              >
+                {raw}
+              </p>
+            );
+          }
+
           if (field.type === 'textarea') {
             const isPlainColonList = sectionId === 'technicalSkills';
             return raw
@@ -428,9 +472,11 @@ export default function TemplateCVRenderer({
               .map((l) => l.trim())
               .filter(Boolean)
               .map((line, lineIndex) => {
+                const colonIdx = line.indexOf(':');
+                const hasColonPrefix = colonIdx > 0 && colonIdx < 35;
+
                 if (isPlainColonList) {
-                  const colonIdx = line.indexOf(':');
-                  if (colonIdx > 0) {
+                  if (hasColonPrefix) {
                     const prefix = line.substring(0, colonIdx + 1);
                     const rest = line.substring(colonIdx + 1);
                     return (
@@ -470,6 +516,8 @@ export default function TemplateCVRenderer({
                   );
                 }
 
+                const bulletChar = rail && cs.bulletStyle === 'square' ? '▪' : rail ? '•' : char;
+
                 return (
                   <div
                     key={`${field.id}-${lineIndex}`}
@@ -491,13 +539,13 @@ export default function TemplateCVRenderer({
                     {!isSummarySec && (
                       <span
                         style={{
-                          color: theme.iconColor || fg,
-                          fontSize: 9,
+                          color: rail && cs.bulletStyle === 'square' ? (theme.iconColor || theme.sidebarHeadingColor || fg) : (!rail ? (theme.textColor || fg) : (theme.iconColor || fg)),
+                          fontSize: rail && cs.bulletStyle === 'square' ? 10 : 9,
                           lineHeight: 1,
                           flexShrink: 0,
                         }}
                       >
-                        {rail ? '•' : char}
+                        {bulletChar}
                       </span>
                     )}
                     <span
@@ -511,7 +559,14 @@ export default function TemplateCVRenderer({
                         whiteSpace: 'pre-wrap',
                       }}
                     >
-                      {isSummarySec ? line : cleanBulletText(line)}
+                      {hasColonPrefix && rail ? (
+                        <>
+                          <strong style={{ fontWeight: 700 }}>{line.substring(0, colonIdx + 1)}</strong>
+                          {line.substring(colonIdx + 1)}
+                        </>
+                      ) : (
+                        isSummarySec ? line : cleanBulletText(line)
+                      )}
                     </span>
                   </div>
                 );
@@ -519,6 +574,9 @@ export default function TemplateCVRenderer({
           }
 
           if (rail && (sectionId.toLowerCase().includes('skill') || sectionId.toLowerCase().includes('language'))) {
+            const colonIdx = raw.indexOf(':');
+            const hasColonPrefix = colonIdx > 0 && colonIdx < 35;
+            const bulletChar = cs.bulletStyle === 'square' ? '▪' : '•';
             return (
               <div
                 key={field.id}
@@ -532,7 +590,9 @@ export default function TemplateCVRenderer({
                   maxWidth: '100%',
                 }}
               >
-                <span style={{ color: theme.iconColor || fg, fontSize: 10, lineHeight: 1, flexShrink: 0 }}>•</span>
+                <span style={{ color: theme.iconColor || fg, fontSize: cs.bulletStyle === 'square' ? 10 : 10, lineHeight: 1, flexShrink: 0 }}>
+                  {bulletChar}
+                </span>
                 <span
                   style={{
                     fontSize: size,
@@ -546,7 +606,14 @@ export default function TemplateCVRenderer({
                     wordBreak: 'break-word',
                   }}
                 >
-                  {cleanBulletText(raw)}
+                  {hasColonPrefix ? (
+                    <>
+                      <strong style={{ fontWeight: 700 }}>{raw.substring(0, colonIdx + 1)}</strong>
+                      {raw.substring(colonIdx + 1)}
+                    </>
+                  ) : (
+                    cleanBulletText(raw)
+                  )}
                 </span>
               </div>
             );
@@ -604,11 +671,13 @@ export default function TemplateCVRenderer({
           if (firstField) skipIds.add(firstField.id);
 
           if (rail) {
+            const isAffil = sectionId.toLowerCase().includes('affil');
+            const dateColor = isAffil ? (theme.headingColor || '#1d78c1') : fg;
             return (
               <div key={`${sectionId}-${index}`} style={{ marginBottom: 9, paddingBottom: 4, minWidth: 0, maxWidth: '100%' }}>
-                <p style={{ fontWeight: 700, fontSize: titleFs, color: titleFg, marginBottom: 2, minWidth: 0, overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{title}</p>
+                <p style={{ fontWeight: 700, fontSize: titleFs, color: isAffil ? '#1e293b' : titleFg, marginBottom: 2, minWidth: 0, overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{title}</p>
                 {dateText && (
-                  <p style={{ fontSize: Math.max(9, titleFs - 1.5), color: fg, opacity: 0.8, marginBottom: 2, minWidth: 0, overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
+                  <p style={{ fontSize: Math.max(9, titleFs - 1.5), color: dateColor, fontWeight: isAffil ? 600 : 400, opacity: isAffil ? 1 : 0.8, marginBottom: 2, minWidth: 0, overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
                     {dateText}
                   </p>
                 )}
@@ -695,7 +764,9 @@ export default function TemplateCVRenderer({
     };
 
     let heading: React.ReactNode;
-    if (myVariant === 'plain') {
+    if (!rail && layout.headerPlacement === 'sidebar-top' && (sectionId === 'profile' || sectionId === 'summary')) {
+      heading = null;
+    } else if (myVariant === 'plain') {
       heading = <h2 style={{ ...headingBase, marginBottom: rail ? 6 : 8 }}>{section.name}</h2>;
     } else if (myVariant === 'border') {
       heading = (
@@ -1001,7 +1072,11 @@ export default function TemplateCVRenderer({
         width: railWidth,
         backgroundColor: theme.sidebarBackground,
         color: theme.sidebarHeadingColor,
-        paddingTop: isFullWidthHeader ? Math.min(22, Math.round(pagePad.top * 0.9)) : Math.round(geo0.columnTopPad * S),
+        paddingTop: isFullWidthHeader
+          ? Math.min(22, Math.round(pagePad.top * 0.9))
+          : layout.headerPlacement === 'sidebar-top'
+            ? 0
+            : Math.round(geo0.columnTopPad * S),
         paddingRight: sidebarPadH,
         paddingBottom: pagePad.bottom,
         paddingLeft: sidebarPadH,
@@ -1014,6 +1089,73 @@ export default function TemplateCVRenderer({
         wordBreak: 'break-word',
       }}
     >
+      {layout.headerPlacement === 'sidebar-top' && (
+        <div
+          style={{
+            backgroundColor: theme.headerBackground || theme.headingColor || '#1d78c1',
+            color: '#ffffff',
+            paddingTop: 28,
+            paddingBottom: 22,
+            paddingLeft: 12,
+            paddingRight: 12,
+            marginLeft: -sidebarPadH,
+            marginRight: -sidebarPadH,
+            marginBottom: 20,
+            position: 'relative',
+            textAlign: 'center',
+          }}
+        >
+          <h1
+            style={{
+              fontFamily: typo.name.family,
+              fontSize: typo.name.size,
+              fontWeight: typo.name.weight,
+              letterSpacing: typo.name.letterSpacing,
+              textTransform: tt(typo.name.textTransform),
+              lineHeight: typo.name.lineHeight,
+              color: '#ffffff',
+              margin: 0,
+              textAlign: 'center',
+            }}
+          >
+            {name}
+          </h1>
+          {jobTitle && (
+            <p
+              style={{
+                fontFamily: typo.jobTitle.family,
+                fontSize: typo.jobTitle.size,
+                fontWeight: typo.jobTitle.weight,
+                color: 'rgba(255,255,255,0.92)',
+                marginTop: 4,
+                textAlign: 'center',
+              }}
+            >
+              {jobTitle}
+            </p>
+          )}
+          {/* Smooth arc wave extending downward */}
+          <svg
+            viewBox="0 0 100 20"
+            preserveAspectRatio="none"
+            style={{
+              position: 'absolute',
+              bottom: -15,
+              left: 0,
+              width: '100%',
+              height: 16,
+              display: 'block',
+              zIndex: 1,
+              pointerEvents: 'none',
+            }}
+          >
+            <path
+              d="M0,0 Q50,20 100,0 L100,0 L0,0 Z"
+              fill={theme.headerBackground || theme.headingColor || '#1d78c1'}
+            />
+          </svg>
+        </div>
+      )}
       {showPhoto && photoPos === 'sidebar' && <div className="flex justify-center mb-4">{photoEl('center')}</div>}
       {visibleSidebarIds.length > 0 && (
         <div style={{ minWidth: 0 }}>

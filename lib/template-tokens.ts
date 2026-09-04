@@ -229,6 +229,8 @@ export const SECTION_ICON: Record<string, string> = {
   projects: 'folder',
   project: 'folder',
   achievements: 'award',
+  affiliations: 'award',
+  hobbies: 'heart',
   certifications: 'medal',
   certificates: 'medal',
   references: 'users',
