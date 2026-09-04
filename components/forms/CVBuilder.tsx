@@ -88,7 +88,7 @@ export default function CVBuilder() {
   const [zoom, setZoom] = useState<number>(0.8);
   const [viewMode, setViewMode] = useState<'split' | 'fullA4'>('split');
   const [editorTab, setEditorTab] = useState<'content' | 'design'>('content');
-  const [mobilePane, setMobilePane] = useState<'editor' | 'preview'>('editor');
+  const [mobilePane, setMobilePane] = useState<'editor' | 'preview' | 'templates'>('editor');
   const [styleOverrides, setStyleOverrides] = useState<Partial<TemplateStyle>>({});
   const [fontScale, setFontScale] = useState<'compact' | 'standard' | 'spacious'>('standard');
   const [fontTarget, setFontTarget] = useState<'all' | 'name' | 'headings' | 'body'>('all');
@@ -104,6 +104,21 @@ export default function CVBuilder() {
     if (categoryFilter === 'All') return STATIC_TEMPLATES;
     return STATIC_TEMPLATES.filter((tpl) => tpl.category === categoryFilter);
   }, [categoryFilter]);
+
+  // Auto-detect mobile screen and adjust default zoom to fit mobile screen width
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const handleResize = () => {
+        if (window.innerWidth < 640) {
+          const calc = Math.min(0.55, Math.max(0.38, (window.innerWidth - 32) / 794));
+          setZoom(Math.round(calc * 100) / 100);
+        }
+      };
+      handleResize();
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, []);
 
   // Select a template and populate with starter data
   const handleSelectTemplate = (template: StaticTemplateDefinition, loadDefaults = true) => {
@@ -764,10 +779,12 @@ export default function CVBuilder() {
               onChange={(e) => setZoom(Number(e.target.value))}
               className="bg-transparent text-gray-800 dark:text-zinc-200 font-semibold cursor-pointer focus:outline-none"
             >
-              <option value={0.8}>A4 Fit View (80%)</option>
-              <option value={1.0}>Actual A4 (100%)</option>
-              <option value={0.85}>Large (85%)</option>
+              <option value={0.42}>Mobile Fit (42%)</option>
+              <option value={0.55}>Compact (55%)</option>
               <option value={0.7}>Standard (70%)</option>
+              <option value={0.8}>A4 Fit View (80%)</option>
+              <option value={0.85}>Large (85%)</option>
+              <option value={1.0}>Actual A4 (100%)</option>
             </select>
           </div>
 
@@ -828,6 +845,52 @@ export default function CVBuilder() {
         </div>
       </div>
 
+      {/* Quick Template Switcher Carousel (Sticky on Mobile & Desktop) */}
+      <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl p-3 shadow-xs space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-zinc-400 flex items-center gap-1.5">
+            <span>🎨</span>
+            <span>Switch Template ({STATIC_TEMPLATES.length} Designs):</span>
+          </span>
+          <button
+            type="button"
+            onClick={() => setSelectedTemplateId(null)}
+            className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline cursor-pointer"
+          >
+            Browse Full Gallery →
+          </button>
+        </div>
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+          {STATIC_TEMPLATES.map((tpl) => {
+            const isSel = tpl.id === selectedTemplate.id;
+            return (
+              <button
+                key={tpl.id}
+                type="button"
+                onClick={() => handleSelectTemplate(tpl, false)}
+                className={`shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
+                  isSel
+                    ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 ring-1 ring-blue-600 shadow-xs'
+                    : 'border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-800/80 text-gray-700 dark:text-zinc-300 hover:border-gray-300 dark:hover:border-zinc-700'
+                }`}
+              >
+                <div className="flex items-center -space-x-1">
+                  {tpl.colorPreview.slice(0, 2).map((hex, i) => (
+                    <span
+                      key={i}
+                      className="w-2.5 h-2.5 rounded-full border border-white dark:border-zinc-900 shadow-xs"
+                      style={{ backgroundColor: hex }}
+                    />
+                  ))}
+                </div>
+                <span>{tpl.name}</span>
+                {isSel && <span className="text-blue-600 font-bold text-[11px]">✓</span>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {isExporting && (
         <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 px-4 py-2.5 rounded-lg text-sm flex items-center gap-2">
           <span className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
@@ -835,30 +898,46 @@ export default function CVBuilder() {
         </div>
       )}
 
-      {/* Mobile Tab Switcher (Visible only on mobile/tablet < lg) */}
+      {/* Mobile Tab Switcher (Sticky on mobile < lg) */}
       {viewMode === 'split' && (
-        <div className="lg:hidden flex p-1 bg-gray-200/80 dark:bg-zinc-800/90 rounded-xl shadow-inner">
+        <div className="lg:hidden sticky top-2 z-40 flex p-1 bg-gray-200/90 dark:bg-zinc-800/90 backdrop-blur rounded-xl shadow-md">
           <button
             type="button"
             onClick={() => setMobilePane('editor')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-bold rounded-lg transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-bold rounded-lg transition-all ${
               mobilePane === 'editor'
                 ? 'bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-sm'
                 : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900'
             }`}
           >
-            <span>{tb.mobileEditorTab}</span>
+            <span>📝 Form</span>
           </button>
           <button
             type="button"
-            onClick={() => setMobilePane('preview')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-bold rounded-lg transition-all ${
+            onClick={() => {
+              setMobilePane('preview');
+              if (window.innerWidth < 640 && zoom > 0.6) {
+                setZoom(Math.round(Math.min(0.55, Math.max(0.38, (window.innerWidth - 32) / 794)) * 100) / 100);
+              }
+            }}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-bold rounded-lg transition-all ${
               mobilePane === 'preview'
                 ? 'bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-sm'
                 : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900'
             }`}
           >
-            <span>{tb.mobilePreviewTab}</span>
+            <span>👁️ Live Preview</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobilePane('templates')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-bold rounded-lg transition-all ${
+              mobilePane === 'templates'
+                ? 'bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-sm'
+                : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900'
+            }`}
+          >
+            <span>🎨 Templates ({STATIC_TEMPLATES.length})</span>
           </button>
         </div>
       )}
@@ -1536,9 +1615,92 @@ export default function CVBuilder() {
             )}
           </div>
 
+          {/* Mobile Templates Picker Pane (< lg only) */}
+          {mobilePane === 'templates' && (
+            <div className="lg:hidden col-span-12 space-y-4">
+              <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl p-4 shadow-xs">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-zinc-100 flex items-center gap-1.5">
+                    <span>🎨</span>
+                    <span>Select a Template Design ({STATIC_TEMPLATES.length})</span>
+                  </h3>
+                  <span className="text-xs text-gray-500">Tap to apply</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  {STATIC_TEMPLATES.map((tpl) => {
+                    const isSel = tpl.id === selectedTemplate.id;
+                    return (
+                      <div
+                        key={tpl.id}
+                        onClick={() => {
+                          handleSelectTemplate(tpl, false);
+                          setMobilePane('preview');
+                        }}
+                        className={`rounded-xl border p-3.5 cursor-pointer transition-all flex flex-col gap-2 ${
+                          isSel
+                            ? 'border-blue-600 bg-blue-50/70 dark:bg-blue-950/40 ring-2 ring-blue-600 shadow-sm'
+                            : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-gray-900 dark:text-zinc-100">{tpl.name}</span>
+                          <div className="flex items-center gap-1">
+                            {tpl.colorPreview.map((hex, i) => (
+                              <span key={i} className="w-2.5 h-2.5 rounded-full border border-white dark:border-zinc-800 shadow-xs" style={{ backgroundColor: hex }} />
+                            ))}
+                          </div>
+                        </div>
+                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 line-clamp-2">{tpl.description}</p>
+                        <div className="flex items-center justify-between pt-1 border-t border-gray-100 dark:border-zinc-800">
+                          <span className="text-[10px] uppercase font-bold text-gray-400">{tpl.category}</span>
+                          <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
+                            {isSel ? '✓ Active Template' : 'Use Template →'}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Right Column: Live A4 Preview (7 of 12 cols, sticky) */}
           <div className={`lg:col-span-7 sticky top-20 ${mobilePane === 'preview' ? 'block' : 'hidden lg:block'}`}>
             <div className="bg-gray-100 dark:bg-zinc-800/50 p-2 sm:p-4 rounded-xl border border-gray-200 dark:border-zinc-800 overflow-x-auto overflow-y-auto max-h-[calc(100vh-6rem)]">
+              {/* Mobile Quick Zoom Bar */}
+              <div className="flex sm:hidden items-center justify-between text-[11px] text-gray-500 dark:text-zinc-400 mb-2 px-1">
+                <span>Scale: {Math.round(zoom * 100)}%</span>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setZoom(0.42)}
+                    className={`px-2 py-0.5 rounded text-[11px] font-bold border transition-colors ${
+                      zoom <= 0.45 ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300'
+                    }`}
+                  >
+                    Fit Phone
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setZoom(0.65)}
+                    className={`px-2 py-0.5 rounded text-[11px] font-bold border transition-colors ${
+                      zoom > 0.45 && zoom < 0.8 ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300'
+                    }`}
+                  >
+                    65%
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setZoom(0.85)}
+                    className={`px-2 py-0.5 rounded text-[11px] font-bold border transition-colors ${
+                      zoom >= 0.8 ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300'
+                    }`}
+                  >
+                    85%
+                  </button>
+                </div>
+              </div>
               <div className="w-fit min-w-full flex justify-center">
                 <TemplateCVRenderer
                   analysis={selectedTemplate.analysis}
