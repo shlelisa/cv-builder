@@ -106,55 +106,58 @@ function onColorFor(textColor: string | undefined, bg: string): string {
 
 export function resolveTypography(style: TemplateStyle): ResolvedTypography {
   const typo = style.typography || {};
+  const globalFam = style.fontFamily;
+  const globalLh = style.lineHeight;
+
   return {
-    name: spec(typo.name, {
-      family: familyOf(style),
-      size: style.nameSize || 23,
-      weight: 700,
-      letterSpacing: 1.5,
-      textTransform: 'uppercase',
-      lineHeight: 1.15,
-    }),
-    jobTitle: spec(typo.jobTitle, {
-      family: familyOf(style),
-      size: style.nameSize ? Math.max(11, style.nameSize - 10) : 13,
-      weight: 600,
-      letterSpacing: 1.2,
-      textTransform: 'uppercase',
-      lineHeight: 1.2,
-    }),
-    sectionHeading: spec(typo.sectionHeading, {
-      family: familyOf(style),
-      size: style.headingSize || 12.5,
-      weight: 700,
-      letterSpacing: 1.5,
-      textTransform: 'uppercase',
-      lineHeight: 1.2,
-    }),
-    sidebarHeading: spec(typo.sidebarHeading, {
-      family: familyOf(style),
-      size: (style.headingSize || 12.5) - 1.5,
-      weight: 700,
-      letterSpacing: 1.2,
-      textTransform: 'uppercase',
-      lineHeight: 1.2,
-    }),
-    body: spec(typo.body, {
-      family: familyOf(style),
-      size: style.bodySize || 10,
-      weight: 400,
-      letterSpacing: 0,
-      textTransform: 'none',
-      lineHeight: 1.42,
-    }),
-    sidebarText: spec(typo.sidebarText, {
-      family: familyOf(style),
-      size: (style.bodySize || 10) - 0.5,
-      weight: 400,
-      letterSpacing: 0,
-      textTransform: 'none',
-      lineHeight: 1.38,
-    }),
+    name: {
+      family: typo.name?.family || globalFam || 'Inter, sans-serif',
+      size: typo.name?.size || style.nameSize || 23,
+      weight: typo.name?.weight ?? 700,
+      letterSpacing: typo.name?.letterSpacing ?? 1.5,
+      textTransform: typo.name?.textTransform || 'uppercase',
+      lineHeight: typo.name?.lineHeight || 1.15,
+    },
+    jobTitle: {
+      family: typo.jobTitle?.family || globalFam || 'Inter, sans-serif',
+      size: typo.jobTitle?.size || (style.nameSize ? Math.max(11, style.nameSize - 10) : 13),
+      weight: typo.jobTitle?.weight ?? 600,
+      letterSpacing: typo.jobTitle?.letterSpacing ?? 1.2,
+      textTransform: typo.jobTitle?.textTransform || 'uppercase',
+      lineHeight: typo.jobTitle?.lineHeight || 1.2,
+    },
+    sectionHeading: {
+      family: typo.sectionHeading?.family || globalFam || 'Inter, sans-serif',
+      size: typo.sectionHeading?.size || style.headingSize || 12.5,
+      weight: typo.sectionHeading?.weight ?? 700,
+      letterSpacing: typo.sectionHeading?.letterSpacing ?? 1.5,
+      textTransform: typo.sectionHeading?.textTransform || 'uppercase',
+      lineHeight: typo.sectionHeading?.lineHeight || 1.2,
+    },
+    sidebarHeading: {
+      family: typo.sidebarHeading?.family || globalFam || 'Inter, sans-serif',
+      size: typo.sidebarHeading?.size || ((style.headingSize || 12.5) - 1.5),
+      weight: typo.sidebarHeading?.weight ?? 700,
+      letterSpacing: typo.sidebarHeading?.letterSpacing ?? 1.2,
+      textTransform: typo.sidebarHeading?.textTransform || 'uppercase',
+      lineHeight: typo.sidebarHeading?.lineHeight || 1.2,
+    },
+    body: {
+      family: typo.body?.family || globalFam || 'Inter, sans-serif',
+      size: typo.body?.size || style.bodySize || 10,
+      weight: typo.body?.weight ?? 400,
+      letterSpacing: typo.body?.letterSpacing ?? 0,
+      textTransform: typo.body?.textTransform || 'none',
+      lineHeight: typo.body?.lineHeight || globalLh || 1.42,
+    },
+    sidebarText: {
+      family: typo.sidebarText?.family || globalFam || 'Inter, sans-serif',
+      size: typo.sidebarText?.size || ((style.bodySize || 10) - 0.5),
+      weight: typo.sidebarText?.weight ?? 400,
+      letterSpacing: typo.sidebarText?.letterSpacing ?? 0,
+      textTransform: typo.sidebarText?.textTransform || 'none',
+      lineHeight: typo.sidebarText?.lineHeight || (globalLh ? Math.max(1.1, globalLh - 0.05) : 1.38),
+    },
   };
 }
 

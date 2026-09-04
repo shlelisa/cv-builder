@@ -294,6 +294,7 @@ export default function TemplateCVRenderer({
   ) => {
     const fields = analysis.fields.filter((f) => f.section === sectionId && !skipFieldIds.has(f.id));
     const fg = rail ? theme.sidebarHeadingColor : theme.textColor;
+    const font = rail ? typo.sidebarText.family : typo.body.family;
     const size = rail ? typo.sidebarText.size : typo.body.size;
     const lh = rail ? typo.sidebarText.lineHeight : typo.body.lineHeight;
     const char = BULLET_CHAR[cs.bulletStyle] || '•';
@@ -539,6 +540,7 @@ export default function TemplateCVRenderer({
     const iconName = SECTION_ICON[sectionId] || 'tag';
 
     const headingBase: React.CSSProperties = {
+      fontFamily: headingToken.family,
       fontSize: headingToken.size || fallbackHeadingSize,
       fontWeight: headingToken.weight,
       letterSpacing: headingToken.letterSpacing,

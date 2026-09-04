@@ -112,35 +112,144 @@ export default function TemplateAnalyzer() {
   const [useRewrites, setUseRewrites] = useState(true);
   const [fontTarget, setFontTarget] = useState<'all' | 'name' | 'headings' | 'body'>('all');
 
-  const currentFontFamily = styleOverrides.fontFamily || analysis?.style.fontFamily || 'Arial, sans-serif';
-
-  const currentActiveFontSize = useMemo(() => {
-    const styleNow = { ...analysis?.style, ...styleOverrides };
-    if (fontTarget === 'name') return styleNow.nameSize || 24;
-    if (fontTarget === 'headings') return styleNow.headingSize || 12.5;
-    if (fontTarget === 'body') return styleNow.bodySize || 9.5;
-    return styleNow.bodySize || 9.5;
+  const currentFontFamily = useMemo(() => {
+    const styleNow = {
+      ...analysis?.style,
+      ...styleOverrides,
+      typography: { ...(analysis?.style.typography || {}), ...(styleOverrides.typography || {}) },
+    };
+    if (fontTarget === 'name') return styleNow.typography?.name?.family || styleNow.fontFamily || 'Arial, sans-serif';
+    if (fontTarget === 'headings') return styleNow.typography?.sectionHeading?.family || styleNow.fontFamily || 'Arial, sans-serif';
+    if (fontTarget === 'body') return styleNow.typography?.body?.family || styleNow.fontFamily || 'Arial, sans-serif';
+    return styleNow.fontFamily || styleNow.typography?.body?.family || 'Arial, sans-serif';
   }, [fontTarget, analysis, styleOverrides]);
 
+  const currentActiveFontSize = useMemo(() => {
+    const styleNow = {
+      ...analysis?.style,
+      ...styleOverrides,
+      typography: { ...(analysis?.style.typography || {}), ...(styleOverrides.typography || {}) },
+    };
+    if (fontTarget === 'name') return styleNow.typography?.name?.size || styleNow.nameSize || 24;
+    if (fontTarget === 'headings') return styleNow.typography?.sectionHeading?.size || styleNow.headingSize || 12.5;
+    if (fontTarget === 'body') return styleNow.typography?.body?.size || styleNow.bodySize || 9.5;
+    return styleNow.bodySize || styleNow.typography?.body?.size || 9.5;
+  }, [fontTarget, analysis, styleOverrides]);
+
+  const currentLineHeight = useMemo(() => {
+    const styleNow = {
+      ...analysis?.style,
+      ...styleOverrides,
+      typography: { ...(analysis?.style.typography || {}), ...(styleOverrides.typography || {}) },
+    };
+    return styleNow.typography?.body?.lineHeight || styleNow.lineHeight || 1.45;
+  }, [analysis, styleOverrides]);
+
   const handleWordFontFamilyChange = (fontId: string) => {
-    setStyleOverrides((prev) => ({
-      ...prev,
-      fontFamily: fontId,
-    }));
+    setStyleOverrides((prev) => {
+      const prevTypo = prev.typography || {};
+      if (fontTarget === 'all') {
+        return {
+          ...prev,
+          fontFamily: fontId,
+          typography: {
+            ...prevTypo,
+            name: { ...(prevTypo.name || {}), family: fontId },
+            jobTitle: { ...(prevTypo.jobTitle || {}), family: fontId },
+            sectionHeading: { ...(prevTypo.sectionHeading || {}), family: fontId },
+            sidebarHeading: { ...(prevTypo.sidebarHeading || {}), family: fontId },
+            body: { ...(prevTypo.body || {}), family: fontId },
+            sidebarText: { ...(prevTypo.sidebarText || {}), family: fontId },
+          },
+        };
+      }
+      if (fontTarget === 'name') {
+        return {
+          ...prev,
+          typography: {
+            ...prevTypo,
+            name: { ...(prevTypo.name || {}), family: fontId },
+            jobTitle: { ...(prevTypo.jobTitle || {}), family: fontId },
+          },
+        };
+      }
+      if (fontTarget === 'headings') {
+        return {
+          ...prev,
+          typography: {
+            ...prevTypo,
+            sectionHeading: { ...(prevTypo.sectionHeading || {}), family: fontId },
+            sidebarHeading: { ...(prevTypo.sidebarHeading || {}), family: fontId },
+          },
+        };
+      }
+      if (fontTarget === 'body') {
+        return {
+          ...prev,
+          typography: {
+            ...prevTypo,
+            body: { ...(prevTypo.body || {}), family: fontId },
+            sidebarText: { ...(prevTypo.sidebarText || {}), family: fontId },
+          },
+        };
+      }
+      return prev;
+    });
   };
 
   const handleWordFontSizeChange = (newSizePt: number) => {
     setStyleOverrides((prev) => {
-      if (fontTarget === 'name') return { ...prev, nameSize: newSizePt };
-      if (fontTarget === 'headings') return { ...prev, headingSize: newSizePt };
-      if (fontTarget === 'body') return { ...prev, bodySize: newSizePt };
-      const currentBody = prev.bodySize || analysis?.style.bodySize || 9.5;
+      const prevTypo = prev.typography || {};
+      if (fontTarget === 'name') {
+        return {
+          ...prev,
+          nameSize: newSizePt,
+          typography: {
+            ...prevTypo,
+            name: { ...(prevTypo.name || {}), size: newSizePt },
+          },
+        };
+      }
+      if (fontTarget === 'headings') {
+        return {
+          ...prev,
+          headingSize: newSizePt,
+          typography: {
+            ...prevTypo,
+            sectionHeading: { ...(prevTypo.sectionHeading || {}), size: newSizePt },
+            sidebarHeading: { ...(prevTypo.sidebarHeading || {}), size: Math.max(7, newSizePt - 1) },
+          },
+        };
+      }
+      if (fontTarget === 'body') {
+        return {
+          ...prev,
+          bodySize: newSizePt,
+          typography: {
+            ...prevTypo,
+            body: { ...(prevTypo.body || {}), size: newSizePt },
+            sidebarText: { ...(prevTypo.sidebarText || {}), size: Math.max(6, newSizePt - 0.5) },
+          },
+        };
+      }
+      // 'all'
+      const currentBody = prev.bodySize || prevTypo.body?.size || analysis?.style.bodySize || 9.5;
       const ratio = newSizePt / currentBody;
+      const newNameSize = Math.round(((prev.nameSize || prevTypo.name?.size || analysis?.style.nameSize || 24) * ratio) * 10) / 10;
+      const newHeadingSize = Math.round(((prev.headingSize || prevTypo.sectionHeading?.size || analysis?.style.headingSize || 12.5) * ratio) * 10) / 10;
       return {
         ...prev,
         bodySize: newSizePt,
-        nameSize: Math.round(((prev.nameSize || analysis?.style.nameSize || 24) * ratio) * 10) / 10,
-        headingSize: Math.round(((prev.headingSize || analysis?.style.headingSize || 12.5) * ratio) * 10) / 10,
+        nameSize: newNameSize,
+        headingSize: newHeadingSize,
+        typography: {
+          ...prevTypo,
+          body: { ...(prevTypo.body || {}), size: newSizePt },
+          sidebarText: { ...(prevTypo.sidebarText || {}), size: Math.max(6, newSizePt - 0.5) },
+          name: { ...(prevTypo.name || {}), size: newNameSize },
+          sectionHeading: { ...(prevTypo.sectionHeading || {}), size: newHeadingSize },
+          sidebarHeading: { ...(prevTypo.sidebarHeading || {}), size: Math.max(7, newHeadingSize - 1) },
+        },
       };
     });
   };
@@ -157,10 +266,18 @@ export default function TemplateAnalyzer() {
   };
 
   const handleLineHeightChange = (lh: number) => {
-    setStyleOverrides((prev) => ({
-      ...prev,
-      lineHeight: lh,
-    }));
+    setStyleOverrides((prev) => {
+      const prevTypo = prev.typography || {};
+      return {
+        ...prev,
+        lineHeight: lh,
+        typography: {
+          ...prevTypo,
+          body: { ...(prevTypo.body || {}), lineHeight: lh },
+          sidebarText: { ...(prevTypo.sidebarText || {}), lineHeight: Math.max(1.1, lh - 0.05) },
+        },
+      };
+    });
   };
 
   const handleResetTypography = () => {
@@ -171,6 +288,7 @@ export default function TemplateAnalyzer() {
       delete next.headingSize;
       delete next.bodySize;
       delete next.lineHeight;
+      delete next.typography;
       return next;
     });
   };
@@ -1556,9 +1674,9 @@ export default function TemplateAnalyzer() {
                     {/* Line Spacing */}
                     <div className="flex items-center gap-1">
                       <select
-                        value={styleOverrides.lineHeight || 1.45}
+                        value={currentLineHeight}
                         onChange={(e) => handleLineHeightChange(parseFloat(e.target.value))}
-                        className="bg-gray-50 dark:bg-zinc-800 border border-gray-300 dark:border-zinc-700 text-xs font-semibold rounded-lg px-2 py-1.5 text-gray-900 dark:text-zinc-100 focus:outline-none cursor-pointer"
+                        className="bg-gray-50 dark:bg-zinc-800 border border-gray-300 dark:border-zinc-700 text-xs font-semibold rounded-lg px-2.5 py-1.5 text-gray-900 dark:text-zinc-100 focus:outline-none cursor-pointer"
                       >
                         <option value={1.15}>Spacing: 1.15</option>
                         <option value={1.35}>Spacing: 1.35</option>
