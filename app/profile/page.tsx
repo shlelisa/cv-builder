@@ -232,7 +232,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Session Security, Place, IP & Device Details */}
-      {user && (profile?.lastIp || profile?.lastDevice || profile?.lastLocation) && (
+      {/* {user && (profile?.lastIp || profile?.lastDevice || profile?.lastLocation) && (
         <div className="p-4 bg-gray-50 dark:bg-zinc-800/60 border border-gray-200 dark:border-zinc-800 rounded-2xl flex flex-wrap items-center justify-between gap-4 text-xs">
           <div className="flex items-center gap-2.5">
             <span className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-sm font-bold shrink-0">
@@ -275,29 +275,27 @@ export default function ProfilePage() {
             )}
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Main Tab Navigation */}
       <div className="flex items-center gap-2 border-b border-gray-200 dark:border-zinc-800 pb-2">
         <button
           type="button"
           onClick={() => setActiveTab('profile')}
-          className={`px-4 py-2 text-sm font-bold rounded-xl transition-all cursor-pointer ${
-            activeTab === 'profile'
+          className={`px-4 py-2 text-sm font-bold rounded-xl transition-all cursor-pointer ${activeTab === 'profile'
               ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800'
               : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-zinc-800'
-          }`}
+            }`}
         >
           👤 Master Profile
         </button>
         <button
           type="button"
           onClick={() => setActiveTab('saved_cvs')}
-          className={`px-4 py-2 text-sm font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
-            activeTab === 'saved_cvs'
+          className={`px-4 py-2 text-sm font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2 ${activeTab === 'saved_cvs'
               ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800'
               : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-zinc-800'
-          }`}
+            }`}
         >
           <span>📂 Saved Cloud CVs</span>
           <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-gray-200 dark:bg-zinc-700">
