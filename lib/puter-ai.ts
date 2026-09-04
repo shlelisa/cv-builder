@@ -20,6 +20,10 @@ declare global {
   }
 }
 
+import { TemplateAnalysis } from '@/types';
+import { buildAnalyzePrompt, parseAndSanitizeAnalysis } from '@/lib/template-analysis';
+import { buildCvPrompt } from '@/lib/cv-writing';
+
 /**
  * Executes an AI chat prompt via Puter.js in Browser or Node.js environment
  */
@@ -44,7 +48,7 @@ export async function callPuterAi(prompt: string, options: PuterAiOptions = {}):
   }
 
   // 2. Server runtime (Node.js): Use Puter REST API or @heyputer/puter.js if token available
-  const puterToken = process.env.PUTER_AUTH_TOKEN || process.env.PUTER_API_KEY;
+  const puterToken = typeof process !== 'undefined' ? (process.env.PUTER_AUTH_TOKEN || process.env.PUTER_API_KEY) : undefined;
   if (puterToken) {
     try {
       const res = await fetch('https://api.puter.com/drivers/ai/chat', {
@@ -77,4 +81,95 @@ export async function callPuterAi(prompt: string, options: PuterAiOptions = {}):
   }
 
   throw new Error('Puter AI runtime is currently unavailable.');
+}
+
+/**
+ * Client-Side Vision Analysis via Puter.js when Gemini backend hits free tier rate limits
+ */
+export async function analyzeWithPuterClient(
+  imageDataUrl: string,
+  palette?: string[],
+): Promise<TemplateAnalysis | null> {
+  if (typeof window === 'undefined' || !window.puter?.ai?.chat) {
+    return null;
+  }
+
+  const prompt = buildAnalyzePrompt(palette);
+  try {
+    const messages = [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: prompt },
+          { type: 'image_url', image_url: { url: imageDataUrl } },
+        ],
+      },
+    ];
+
+    const res = await window.puter.ai.chat(messages as any, {
+      model: 'gpt-4o',
+      temperature: 0.2,
+    });
+
+    const rawText =
+      typeof res === 'string'
+        ? res
+        : res?.message?.content || res?.text || JSON.stringify(res);
+
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+    const parsed = JSON.parse(jsonMatch[0]);
+    return parseAndSanitizeAnalysis(parsed);
+  } catch (err) {
+    console.warn('[analyzeWithPuterClient]', err);
+    return null;
+  }
+}
+
+/**
+ * Client-Side CV Content Generation via Puter.js when backend AI hits quota
+ */
+export async function writeCvWithPuterClient(
+  analysis: TemplateAnalysis,
+  singleton: Record<string, string>,
+  entries: Record<string, Array<Record<string, string>>>,
+  language = 'en',
+): Promise<{ cv: string; refinedSingleton?: Record<string, string>; refinedEntries?: Record<string, Array<Record<string, string>>> } | null> {
+  if (typeof window === 'undefined' || !window.puter?.ai?.chat) {
+    return null;
+  }
+
+  const prompt = buildCvPrompt(analysis, singleton, entries, language);
+  try {
+    const res = await window.puter.ai.chat(prompt, {
+      model: 'gpt-4o-mini',
+      temperature: 0.3,
+    });
+
+    const rawText =
+      typeof res === 'string'
+        ? res
+        : res?.message?.content || res?.text || String(res);
+
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (parsed && typeof parsed.cv === 'string') {
+          return {
+            cv: parsed.cv,
+            refinedSingleton: parsed.refined?.singleton,
+            refinedEntries: parsed.refined?.entries,
+          };
+        }
+      } catch {
+        // use rawText as CV text
+      }
+    }
+
+    return { cv: rawText };
+  } catch (err) {
+    console.warn('[writeCvWithPuterClient]', err);
+    return null;
+  }
 }

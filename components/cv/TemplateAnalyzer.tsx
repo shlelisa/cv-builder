@@ -12,6 +12,7 @@ import { TemplateAnalysis, TemplateField, TemplatePhotoCrop, TemplateSection, Te
 import { resizeDataUrl } from '@/lib/image-utils';
 import { applySampledColors, extractPalette } from '@/lib/palette';
 import { exportToWord, exportToImage, exportToPdfDownload, exportToPdf } from '@/lib/export-utils';
+import { analyzeWithPuterClient, writeCvWithPuterClient } from '@/lib/puter-ai';
 
 type Step = 'upload' | 'analyzing' | 'result' | 'form' | 'generated';
 
@@ -459,7 +460,19 @@ export default function TemplateAnalyzer() {
           apiError = e instanceof Error ? e.message : 'Network error';
         }
         if (!result) {
-          // If AI is unavailable, fall through to local mock — but show a warning
+          // If server AI (Gemini) reached quota or failed, try Puter.js AI vision client-side!
+          try {
+            const puterResult = await analyzeWithPuterClient(imageToAnalyze, pal);
+            if (puterResult) {
+              result = puterResult;
+              apiError = ''; // Puter AI successfully handled vision analysis
+            }
+          } catch (puterErr) {
+            console.warn('[Puter AI Client]', puterErr);
+          }
+        }
+        if (!result) {
+          // If all AI engines are unavailable, fall through to local estimation
           if (apiError) {
             console.warn('[analyze-template] AI unavailable:', apiError);
           }
@@ -598,7 +611,20 @@ export default function TemplateAnalyzer() {
         }
       }
     } catch {
-      // real AI unavailable — fall back to local CV text below
+      // real AI unavailable — fall back to Puter AI / local text below
+    }
+    if (!cv) {
+      // If server write-cv failed or hit Gemini rate limit, try client Puter AI
+      try {
+        const puterCv = await writeCvWithPuterClient(analysis, singletonValues, simpleEntries);
+        if (puterCv?.cv) {
+          cv = puterCv.cv;
+          refS = puterCv.refinedSingleton ?? null;
+          refE = puterCv.refinedEntries ?? null;
+        }
+      } catch (puterErr) {
+        console.warn('[Puter AI write-cv]', puterErr);
+      }
     }
     if (!cv) {
       cv = aiService.generateFromTemplate(analysis, singletonValues, simpleEntries, Boolean(photoUrl));
