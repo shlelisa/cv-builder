@@ -1,10 +1,18 @@
 import { AiConfig } from '@/lib/ai-config';
+import { callPuterAi } from '@/lib/puter-ai';
 
 interface ImageInput {
   dataUrl: string;
 }
 
-const GEMINI_FALLBACK_MODELS = ['gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-3.8-flash', 'gemini-flash-latest'];
+const GEMINI_FALLBACK_MODELS = [
+  'gemini-2.5-flash',
+  'gemini-3.6-flash',
+  'gemini-3.7-flash',
+  'gemini-3.8-flash',
+  'gemini-flash-latest',
+  'gemini-2.5-pro',
+];
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -24,7 +32,7 @@ function parseDataUrl(dataUrl: string): { mimeType: string; base64: string } {
   return { mimeType: match[1], base64: match[2] };
 }
 
-async function openaiJsonOnce(cfg: AiConfig, prompt: string, images: ImageInput[], temperature: number): Promise<string> {
+async function openaiJsonOnce(cfg: { baseUrl: string; key: string; model: string }, prompt: string, images: ImageInput[], temperature: number): Promise<string> {
   const content: Array<Record<string, unknown>> = [{ type: 'text', text: prompt }];
   images.forEach((img) => {
     content.push({ type: 'image_url', image_url: { url: img.dataUrl } });
@@ -90,7 +98,7 @@ async function geminiJsonOnce(
 const isRetryable = (status: number) => status === 429 || status >= 500;
 
 export async function openaiJson(
-  cfg: AiConfig,
+  cfg: { baseUrl: string; key: string; model: string },
   prompt: string,
   images: ImageInput[] = [],
   temperature = 0.2,
@@ -134,6 +142,38 @@ export async function geminiJson(
 }
 
 export async function aiJson(cfg: AiConfig, prompt: string, images: ImageInput[] = [], temperature = 0.2): Promise<string> {
-  if (cfg.provider === 'gemini') return geminiJson(cfg, prompt, images, temperature);
-  return openaiJson(cfg, prompt, images, temperature);
+  const primaryFn = async () => {
+    if (cfg.provider === 'gemini') return await geminiJson(cfg, prompt, images, temperature);
+    if (cfg.provider === 'puter') return await callPuterAi(prompt, { temperature });
+    return await openaiJson(cfg, prompt, images, temperature);
+  };
+
+  try {
+    return await primaryFn();
+  } catch (primaryErr) {
+    console.warn(`[AI Engine] Primary provider (${cfg.provider}) failed. Attempting secondary fallbacks...`, primaryErr);
+
+    // Try secondary providers (e.g. OpenAI / OpenRouter / Groq / Puter)
+    if (cfg.secondaryProviders && cfg.secondaryProviders.length > 0) {
+      for (const sec of cfg.secondaryProviders) {
+        try {
+          if (sec.provider === 'puter') {
+            return await callPuterAi(prompt, { model: sec.model, temperature });
+          }
+          return await openaiJson(sec, prompt, images, temperature);
+        } catch (secErr) {
+          console.warn(`[AI Engine] Secondary provider (${sec.provider} - ${sec.model}) failed:`, secErr);
+        }
+      }
+    }
+
+    // Try Puter AI as general fallback if no image or image supported
+    try {
+      return await callPuterAi(prompt, { temperature });
+    } catch {
+      // Puter not available — rethrow primary error
+    }
+
+    throw primaryErr;
+  }
 }

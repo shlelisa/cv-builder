@@ -34,6 +34,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:wght@300;400;700;900&family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;900&family=Roboto:wght@400;500;700;900&display=swap"
         />
+        {/* Puter.js Multi-AI Provider Bridge */}
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script src="https://js.puter.com/v2/"></script>
       </head>
       <body className="min-h-full flex flex-col">
         <AppProvider>
