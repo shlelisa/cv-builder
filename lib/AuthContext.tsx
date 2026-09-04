@@ -179,6 +179,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
             return;
           }
+
+          // If profile row doesn't exist in Supabase yet, create it immediately
+          if (error && (error.code === 'PGRST116' || error.message.includes('0 rows'))) {
+            const defaultName = userEmail?.split('@')[0] || 'User';
+            const initPayload = {
+              id: userId,
+              full_name: defaultName,
+              email: userEmail || '',
+              updated_at: new Date().toISOString(),
+            };
+            const { data: created } = await supabase
+              .from('profiles')
+              .upsert(initPayload)
+              .select('*')
+              .single();
+
+            if (created) {
+              const mapped: UserProfileData = {
+                id: created.id,
+                fullName: created.full_name || defaultName,
+                email: created.email || userEmail || '',
+                updatedAt: created.updated_at,
+              };
+              setProfile(mapped);
+              if (typeof window !== 'undefined') {
+                localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(mapped));
+              }
+              return;
+            }
+          }
         } catch (err) {
           console.warn('[AuthContext] Failed to load cloud profile:', err);
         }
@@ -287,6 +317,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) return { error: error.message };
+
+      // If user session is created immediately, save profile record to database
+      if (data?.user && data.session) {
+        try {
+          await supabase.from('profiles').upsert({
+            id: data.user.id,
+            full_name: fullName,
+            email: email,
+            updated_at: new Date().toISOString(),
+          });
+        } catch (e) {
+          console.warn('[AuthContext] Auto-insert profile on signup:', e);
+        }
+      }
+
       const needsEmailConfirmation = Boolean(data?.user && !data.session);
       return { error: null, needsEmailConfirmation };
     } catch (err: any) {
