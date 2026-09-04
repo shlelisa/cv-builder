@@ -1071,10 +1071,16 @@ export default function TemplateCVRenderer({
     <div
       className="w-full h-full"
       style={{
-        paddingTop: isFullWidthHeader ? Math.min(22, Math.round(pagePad.top * 0.9)) : isSidebar && hasHeaderBand ? 20 : pagePad.top,
-        paddingRight: pagePad.right,
-        paddingBottom: pagePad.bottom,
-        paddingLeft: pagePad.left,
+        paddingTop: isFullWidthHeader
+          ? Math.min(22, Math.round(pagePad.top * 0.9))
+          : layout.headerPlacement === 'sidebar-top'
+            ? 24
+            : isSidebar && hasHeaderBand
+              ? 20
+              : pagePad.top,
+        paddingRight: Math.max(20, pagePad.right),
+        paddingBottom: Math.max(18, pagePad.bottom),
+        paddingLeft: Math.max(22, pagePad.left),
         boxSizing: 'border-box',
       }}
     >
@@ -1122,8 +1128,8 @@ export default function TemplateCVRenderer({
           style={{
             backgroundColor: theme.headerBackground || theme.headingColor || '#1d78c1',
             color: '#ffffff',
-            paddingTop: 32,
-            paddingBottom: 24,
+            paddingTop: 30,
+            paddingBottom: 22,
             paddingLeft: 12,
             paddingRight: 12,
             marginLeft: -sidebarPadH,
@@ -1168,10 +1174,10 @@ export default function TemplateCVRenderer({
             preserveAspectRatio="none"
             style={{
               position: 'absolute',
-              bottom: -17,
+              bottom: -16,
               left: 0,
               width: '100%',
-              height: 20,
+              height: 18,
               display: 'block',
               zIndex: 1,
               pointerEvents: 'none',
@@ -1195,7 +1201,7 @@ export default function TemplateCVRenderer({
 
   const mainColumn = (
     <div className="h-full overflow-hidden flex flex-col" style={{ backgroundColor: theme.mainBackground, fontFamily, color: theme.textColor, minWidth: 0, flex: 1 }}>
-      {!isFullWidthHeader && isSidebar && hasHeaderBand && mainColHeaderBand}
+      {!isFullWidthHeader && isSidebar && hasHeaderBand && layout.headerPlacement !== 'sidebar-top' && mainColHeaderBand}
       <div className="flex-1" style={{ minWidth: 0, maxWidth: '100%' }}>{mainContent}</div>
     </div>
   );

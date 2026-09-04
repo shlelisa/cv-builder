@@ -1396,14 +1396,14 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
         page: {
           widthMm: 210,
           heightMm: 297,
-          margins: { top: 0, right: 6, bottom: 6, left: 0 },
+          margins: { top: 6, right: 7, bottom: 6, left: 7 },
         },
         geometry: {
           orientation: 'portrait',
           sidebarWidth: 0.33,
           mainWidth: 0.67,
           gap: 0,
-          verticalGap: 10,
+          verticalGap: 11,
           columnTopPad: 0,
         },
         orderedSections: [
