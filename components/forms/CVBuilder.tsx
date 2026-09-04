@@ -726,11 +726,10 @@ export default function CVBuilder() {
                   key={cat}
                   type="button"
                   onClick={() => setCategoryFilter(cat)}
-                  className={`px-4 py-1.5 text-xs sm:text-sm font-semibold rounded-full shrink-0 transition-colors ${
-                    categoryFilter === cat
+                  className={`px-4 py-1.5 text-xs sm:text-sm font-semibold rounded-full shrink-0 transition-colors ${categoryFilter === cat
                       ? 'bg-blue-600 text-white shadow-sm'
                       : 'bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-700'
-                  }`}
+                    }`}
                 >
                   {catLabel}
                 </button>
@@ -750,7 +749,7 @@ export default function CVBuilder() {
                 <span>My Saved CVs ({savedCvs.length})</span>
               </button>
             )}
-            {profile && (
+            {user && profile && (
               <a
                 href="/profile"
                 className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-gray-50 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 border border-gray-200 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
@@ -906,11 +905,10 @@ export default function CVBuilder() {
                 setViewMode('split');
                 setZoom(0.8);
               }}
-              className={`px-3 py-1 rounded-md transition-colors ${
-                viewMode === 'split'
+              className={`px-3 py-1 rounded-md transition-colors ${viewMode === 'split'
                   ? 'bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-sm'
                   : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100'
-              }`}
+                }`}
             >
               {tb.splitEditor}
             </button>
@@ -920,11 +918,10 @@ export default function CVBuilder() {
                 setViewMode('fullA4');
                 setZoom(1.0);
               }}
-              className={`px-3 py-1 rounded-md transition-colors ${
-                viewMode === 'fullA4'
+              className={`px-3 py-1 rounded-md transition-colors ${viewMode === 'fullA4'
                   ? 'bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-sm'
                   : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100'
-              }`}
+                }`}
             >
               {tb.fullA4View}
             </button>
@@ -948,7 +945,7 @@ export default function CVBuilder() {
           </div>
 
           {/* Profile Autofill Button */}
-          {profile && (
+          {user && profile && (
             <Button
               type="button"
               variant="outline"
@@ -1090,11 +1087,10 @@ export default function CVBuilder() {
                 key={tpl.id}
                 type="button"
                 onClick={() => handleSelectTemplate(tpl, false)}
-                className={`shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
-                  isSel
+                className={`shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${isSel
                     ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 ring-1 ring-blue-600 shadow-xs'
                     : 'border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-800/80 text-gray-700 dark:text-zinc-300 hover:border-gray-300 dark:hover:border-zinc-700'
-                }`}
+                  }`}
               >
                 <div className="flex items-center -space-x-1">
                   {tpl.colorPreview.slice(0, 2).map((hex, i) => (
@@ -1126,22 +1122,20 @@ export default function CVBuilder() {
           <button
             type="button"
             onClick={() => setMobilePane('split')}
-            className={`flex-1 flex items-center justify-center gap-1 py-2 px-1 text-[11px] font-bold rounded-lg transition-all ${
-              mobilePane === 'split'
+            className={`flex-1 flex items-center justify-center gap-1 py-2 px-1 text-[11px] font-bold rounded-lg transition-all ${mobilePane === 'split'
                 ? 'bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-sm'
                 : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900'
-            }`}
+              }`}
           >
             <span>📱 Split (Live)</span>
           </button>
           <button
             type="button"
             onClick={() => setMobilePane('editor')}
-            className={`flex-1 flex items-center justify-center gap-1 py-2 px-1 text-[11px] font-bold rounded-lg transition-all ${
-              mobilePane === 'editor'
+            className={`flex-1 flex items-center justify-center gap-1 py-2 px-1 text-[11px] font-bold rounded-lg transition-all ${mobilePane === 'editor'
                 ? 'bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-sm'
                 : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900'
-            }`}
+              }`}
           >
             <span>📝 Form</span>
           </button>
@@ -1153,22 +1147,20 @@ export default function CVBuilder() {
                 setZoom(Math.round(Math.min(0.55, Math.max(0.38, (window.innerWidth - 32) / 794)) * 100) / 100);
               }
             }}
-            className={`flex-1 flex items-center justify-center gap-1 py-2 px-1 text-[11px] font-bold rounded-lg transition-all ${
-              mobilePane === 'preview'
+            className={`flex-1 flex items-center justify-center gap-1 py-2 px-1 text-[11px] font-bold rounded-lg transition-all ${mobilePane === 'preview'
                 ? 'bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-sm'
                 : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900'
-            }`}
+              }`}
           >
             <span>👁️ Full Preview</span>
           </button>
           <button
             type="button"
             onClick={() => setMobilePane('templates')}
-            className={`flex-1 flex items-center justify-center gap-1 py-2 px-1 text-[11px] font-bold rounded-lg transition-all ${
-              mobilePane === 'templates'
+            className={`flex-1 flex items-center justify-center gap-1 py-2 px-1 text-[11px] font-bold rounded-lg transition-all ${mobilePane === 'templates'
                 ? 'bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-sm'
                 : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900'
-            }`}
+              }`}
           >
             <span>🎨 Templates</span>
           </button>
@@ -1347,22 +1339,20 @@ export default function CVBuilder() {
               <button
                 type="button"
                 onClick={() => setEditorTab('content')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 text-xs sm:text-sm font-bold rounded-lg transition-all ${
-                  editorTab === 'content'
+                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 text-xs sm:text-sm font-bold rounded-lg transition-all ${editorTab === 'content'
                     ? 'bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-sm'
                     : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100'
-                }`}
+                  }`}
               >
                 <span>📝 Content Form</span>
               </button>
               <button
                 type="button"
                 onClick={() => setEditorTab('design')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 text-xs sm:text-sm font-bold rounded-lg transition-all ${
-                  editorTab === 'design'
+                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 text-xs sm:text-sm font-bold rounded-lg transition-all ${editorTab === 'design'
                     ? 'bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-sm'
                     : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100'
-                }`}
+                  }`}
               >
                 <span>🎨 Colors, Fonts & Style</span>
                 {Object.keys(styleOverrides).length > 0 && (
@@ -1381,11 +1371,10 @@ export default function CVBuilder() {
                       key={sec.id}
                       type="button"
                       onClick={() => setActiveSectionId(sec.id)}
-                      className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition-all ${
-                        activeSectionId === sec.id
+                      className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition-all ${activeSectionId === sec.id
                           ? 'bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-200/60 dark:border-zinc-700'
                           : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 hover:bg-gray-200/60 dark:hover:bg-zinc-700/50'
-                      }`}
+                        }`}
                     >
                       {sec.name}
                     </button>
@@ -1672,11 +1661,10 @@ export default function CVBuilder() {
                           key={font.id}
                           type="button"
                           onClick={() => handleFontChange(font.id)}
-                          className={`p-3 rounded-lg border text-left transition-all ${
-                            isCurrent
+                          className={`p-3 rounded-lg border text-left transition-all ${isCurrent
                               ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-900/20 shadow-sm'
                               : 'border-gray-200 dark:border-zinc-800 hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-zinc-800/40'
-                          }`}
+                            }`}
                         >
                           <div className="flex items-center justify-between">
                             <span
@@ -1721,11 +1709,10 @@ export default function CVBuilder() {
                         key={scale.id}
                         type="button"
                         onClick={() => handleFontScaleChange(scale.id)}
-                        className={`p-2.5 rounded-lg border text-center transition-all ${
-                          fontScale === scale.id
+                        className={`p-2.5 rounded-lg border text-center transition-all ${fontScale === scale.id
                             ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-900/20 shadow-sm font-bold text-blue-600 dark:text-blue-400'
                             : 'border-gray-200 dark:border-zinc-800 hover:border-gray-300 text-gray-700 dark:text-zinc-300'
-                        }`}
+                          }`}
                       >
                         <span className="text-xs block">{scale.label}</span>
                         <span className="text-[10px] text-gray-400 block mt-0.5">{scale.desc}</span>
@@ -1913,11 +1900,10 @@ export default function CVBuilder() {
                           handleSelectTemplate(tpl, false);
                           setMobilePane('preview');
                         }}
-                        className={`rounded-xl border p-3.5 cursor-pointer transition-all flex flex-col gap-2 ${
-                          isSel
+                        className={`rounded-xl border p-3.5 cursor-pointer transition-all flex flex-col gap-2 ${isSel
                             ? 'border-blue-600 bg-blue-50/70 dark:bg-blue-950/40 ring-2 ring-blue-600 shadow-sm'
                             : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-bold text-gray-900 dark:text-zinc-100">{tpl.name}</span>
@@ -1952,27 +1938,24 @@ export default function CVBuilder() {
                   <button
                     type="button"
                     onClick={() => setZoom(0.42)}
-                    className={`px-2 py-0.5 rounded text-[11px] font-bold border transition-colors ${
-                      zoom <= 0.45 ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300'
-                    }`}
+                    className={`px-2 py-0.5 rounded text-[11px] font-bold border transition-colors ${zoom <= 0.45 ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300'
+                      }`}
                   >
                     Fit Phone
                   </button>
                   <button
                     type="button"
                     onClick={() => setZoom(0.65)}
-                    className={`px-2 py-0.5 rounded text-[11px] font-bold border transition-colors ${
-                      zoom > 0.45 && zoom < 0.8 ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300'
-                    }`}
+                    className={`px-2 py-0.5 rounded text-[11px] font-bold border transition-colors ${zoom > 0.45 && zoom < 0.8 ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300'
+                      }`}
                   >
                     65%
                   </button>
                   <button
                     type="button"
                     onClick={() => setZoom(0.85)}
-                    className={`px-2 py-0.5 rounded text-[11px] font-bold border transition-colors ${
-                      zoom >= 0.8 ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300'
-                    }`}
+                    className={`px-2 py-0.5 rounded text-[11px] font-bold border transition-colors ${zoom >= 0.8 ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300'
+                      }`}
                   >
                     85%
                   </button>

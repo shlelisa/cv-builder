@@ -41,17 +41,24 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
       return;
     }
 
+    const formatAuthError = (err: string) => {
+      if (err.includes('Unsupported provider') || err.includes('provider is not enabled')) {
+        return 'Email provider is not enabled yet in your Supabase project. Go to Supabase Dashboard → Authentication → Providers → Email and toggle "Enable Email provider" to ON, then save.';
+      }
+      return err;
+    };
+
     if (mode === 'signin') {
       const res = await signInWithEmail(email, password);
       if (res.error) {
-        setErrorMsg(res.error);
+        setErrorMsg(formatAuthError(res.error));
       } else {
         onClose();
       }
     } else {
       const res = await signUpWithEmail(email, password, fullName.trim());
       if (res.error) {
-        setErrorMsg(res.error);
+        setErrorMsg(formatAuthError(res.error));
       } else if (res.needsEmailConfirmation) {
         setSuccessMsg('Verification link sent! Please check your email inbox to confirm your account.');
       } else {

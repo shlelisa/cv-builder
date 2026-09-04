@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useApp } from '@/lib/AppContext';
@@ -12,8 +12,10 @@ import AuthModal from '@/components/auth/AuthModal';
 const Navbar: React.FC = () => {
   const pathname = usePathname();
   const { t, language, setLanguage, theme, toggleTheme } = useApp();
-  const { user, profile } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   const links = [
     { href: '/', label: t.nav.home },
@@ -21,7 +23,6 @@ const Navbar: React.FC = () => {
     { href: '/builder', label: t.nav.builder },
     { href: '/jobs', label: t.nav.jobs },
     { href: '/letters', label: t.nav.letters },
-    { href: '/profile', label: 'Profile' },
   ];
 
   const languages: { code: LanguageCode; label: string; natives: string }[] = [
@@ -29,6 +30,36 @@ const Navbar: React.FC = () => {
     { code: 'om', label: 'Afaan Oromo', natives: 'OM' },
     { code: 'am', label: 'አማርኛ', natives: 'አማ' },
   ];
+
+  // Close user dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    if (userMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [userMenuOpen]);
+
+  // Derive user display name
+  const displayName =
+    profile?.fullName?.trim() ||
+    user?.user_metadata?.full_name ||
+    user?.user_metadata?.name ||
+    user?.email?.split('@')[0] ||
+    'My Account';
+
+  const userInitial = displayName.charAt(0).toUpperCase();
+
+  const handleSignOut = async () => {
+    setUserMenuOpen(false);
+    await signOut();
+  };
 
   return (
     <>
@@ -44,31 +75,92 @@ const Navbar: React.FC = () => {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      pathname === link.href
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${pathname === link.href
                         ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 font-bold'
                         : 'text-gray-600 hover:bg-gray-100 dark:text-zinc-300 dark:hover:bg-zinc-800'
-                    }`}
+                      }`}
                   >
                     {link.label}
                   </Link>
                 ))}
               </div>
 
-              {/* User Auth Avatar / Sign In */}
-              {user || profile ? (
-                <Link
-                  href="/profile"
-                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl border border-blue-200 dark:border-blue-900 bg-blue-50/60 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-xs font-bold hover:bg-blue-100 transition-colors"
-                  title="View Profile & Saved CVs"
-                >
-                  <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">
-                    {profile?.fullName ? profile.fullName.charAt(0).toUpperCase() : '👤'}
-                  </span>
-                  <span className="hidden sm:inline truncate max-w-[90px]">
-                    {profile?.fullName ? profile.fullName.split(' ')[0] : 'Profile'}
-                  </span>
-                </Link>
+              {/* User Auth: User Name Dropdown or Sign In Button */}
+              {user ? (
+                <div className="relative" ref={userMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setUserMenuOpen((prev) => !prev)}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-blue-200 dark:border-blue-900 bg-blue-50/70 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-xs font-bold hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all shadow-xs cursor-pointer"
+                    aria-expanded={userMenuOpen}
+                    aria-label="User account menu"
+                  >
+                    <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-extrabold shadow-xs">
+                      {userInitial}
+                    </span>
+                    <span className="max-w-[110px] sm:max-w-[140px] truncate text-xs">
+                      {displayName}
+                    </span>
+                    <span className="text-[9px] text-blue-500 dark:text-blue-400 transition-transform duration-200">
+                      {userMenuOpen ? '▲' : '▼'}
+                    </span>
+                  </button>
+
+                  {/* Dropdown Menu Overlay */}
+                  {userMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-gray-200 dark:border-zinc-800 py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                      {/* User Info Header */}
+                      <div className="px-4 py-2.5 border-b border-gray-100 dark:border-zinc-800">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                            {userInitial}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-bold text-gray-900 dark:text-zinc-100 truncate">
+                              {displayName}
+                            </p>
+                            <p className="text-[11px] text-gray-500 dark:text-zinc-400 truncate">
+                              {user.email}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Menu Links */}
+                      <div className="py-1">
+                        <Link
+                          href="/profile"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-colors"
+                        >
+                          <span className="text-sm">👤</span>
+                          <span>Profile</span>
+                        </Link>
+
+                        <Link
+                          href="/profile#saved-cvs"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-colors"
+                        >
+                          <span className="text-sm">📂</span>
+                          <span>My Saved CVs</span>
+                        </Link>
+                      </div>
+
+                      {/* Log Out */}
+                      <div className="pt-1 border-t border-gray-100 dark:border-zinc-800">
+                        <button
+                          type="button"
+                          onClick={handleSignOut}
+                          className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors text-left cursor-pointer"
+                        >
+                          <span className="text-sm">🚪</span>
+                          <span>Logout</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <button
                   type="button"
@@ -118,11 +210,10 @@ const Navbar: React.FC = () => {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
-                  pathname === link.href
+                className={`px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${pathname === link.href
                     ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 font-bold'
                     : 'text-gray-600 dark:text-zinc-300'
-                }`}
+                  }`}
               >
                 {link.label}
               </Link>
