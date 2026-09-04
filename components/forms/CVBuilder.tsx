@@ -620,60 +620,309 @@ export default function CVBuilder() {
       return;
     }
 
-    setSingletonValues((prev) => ({
-      ...prev,
-      fullName: profile.fullName || prev.fullName || '',
-      jobTitle: profile.headline || prev.jobTitle || '',
-      email: profile.email || prev.email || '',
-      phone: profile.phone || prev.phone || '',
-      location: profile.location || prev.location || '',
-      summary: profile.bio || prev.summary || '',
-      linkedin: profile.linkedin || prev.linkedin || '',
-      github: profile.github || prev.github || '',
-      portfolio: profile.portfolio || prev.portfolio || '',
-    }));
+    // 1. Prepare computed string formats from profile
+    const techSkillsStr = (profile.skills?.technical || []).join('\n');
+    const softSkillsStr = (profile.skills?.soft || []).join('\n');
+    const langSkillsStr = (profile.skills?.languages || []).join('\n');
+    const allSkillsList = [
+      ...(profile.skills?.technical || []),
+      ...(profile.skills?.soft || []),
+    ];
+    const allSkillsStr = allSkillsList.join('\n');
 
-    if (profile.experience && profile.experience.length > 0) {
-      const expEntries = profile.experience.map((exp) => ({
-        company: exp.company || '',
-        position: exp.position || '',
-        duration: exp.duration || '',
-        responsibilities: (exp.responsibilities || []).join('\n'),
-      }));
-      setEntries((prev) => ({
-        ...prev,
-        experience: expEntries,
-      }));
-    }
+    // 2. Map Singleton Values intelligently across any active or future template field
+    setSingletonValues((prev) => {
+      const next: Record<string, string> = { ...prev };
 
-    if (profile.education && profile.education.length > 0) {
-      const eduEntries = profile.education.map((edu) => ({
-        university: edu.university || '',
-        degree: edu.degree || '',
-        department: edu.department || '',
-        graduationYear: edu.graduationYear?.toString() || '',
-        cgpa: edu.cgpa?.toString() || '',
-      }));
-      setEntries((prev) => ({
-        ...prev,
-        education: eduEntries,
-      }));
-    }
-
-    if (profile.skills) {
-      const allSkills = [
-        ...(profile.skills.technical || []),
-        ...(profile.skills.soft || []),
-      ].join(', ');
-      if (allSkills) {
-        setSingletonValues((prev) => ({
-          ...prev,
-          skills: allSkills,
-        }));
+      // Full Name
+      if (profile.fullName) {
+        next.fullName = profile.fullName;
+        next.name = profile.fullName;
+        next.candidateName = profile.fullName;
+        next.yourName = profile.fullName;
       }
-    }
 
-    if (profile.avatarUrl && !photoUrl) {
+      // Professional Title / Headline / Field
+      if (profile.headline) {
+        next.jobTitle = profile.headline;
+        next.title = profile.headline;
+        next.field = profile.headline;
+        next.profession = profile.headline;
+        next.designation = profile.headline;
+      }
+
+      // Contact Information
+      if (profile.email) {
+        next.email = profile.email;
+        next.emailAddress = profile.email;
+        next.mail = profile.email;
+      }
+
+      if (profile.phone) {
+        next.phone = profile.phone;
+        next.phoneNumber = profile.phone;
+        next.phoneNo = profile.phone;
+        next.tel = profile.phone;
+        next.mobile = profile.phone;
+      }
+
+      if (profile.location) {
+        next.location = profile.location;
+        next.address = profile.location;
+        next.city = profile.location;
+        next.fullAddress = profile.location;
+        next.residence = profile.location;
+      }
+
+      // Bio / Summary / Objective / About across various template aliases
+      if (profile.bio) {
+        next.summary = profile.bio;
+        next.bio = profile.bio;
+        next.aboutBio = profile.bio;
+        next.aboutMe = profile.bio;
+        next.aboutText = profile.bio;
+        next.intro = profile.bio;
+        next.summaryText = profile.bio;
+        next.profileSummary = profile.bio;
+        next.objective = profile.bio;
+        next.statement = profile.bio;
+        next.profile = profile.bio;
+        next.personalStatement = profile.bio;
+      }
+
+      // Links & Socials
+      if (profile.linkedin) {
+        next.linkedin = profile.linkedin;
+        next.linkedinUrl = profile.linkedin;
+      }
+      if (profile.github) {
+        next.github = profile.github;
+        next.githubUrl = profile.github;
+      }
+      const portfolioLink = profile.portfolio || profile.linkedin || '';
+      if (portfolioLink) {
+        next.portfolio = portfolioLink;
+        next.website = portfolioLink;
+        next.web = portfolioLink;
+        next.site = portfolioLink;
+      }
+
+      // Skills & Languages
+      if (techSkillsStr) {
+        next.techSkillsList = techSkillsStr;
+        next.technicalSkills = techSkillsStr;
+        next.techSkillsText = techSkillsStr;
+        next.techSkills = techSkillsStr;
+      }
+      if (softSkillsStr) {
+        next.softSkillsList = softSkillsStr;
+        next.personnelSkills = softSkillsStr;
+        next.softSkillsText = softSkillsStr;
+        next.softSkills = softSkillsStr;
+        next.personnelSkillsList = softSkillsStr;
+      }
+      if (langSkillsStr) {
+        next.languagesList = langSkillsStr;
+        next.languages = langSkillsStr;
+        next.langText = langSkillsStr;
+        next.languagesText = langSkillsStr;
+        next.languageList = langSkillsStr;
+      }
+      if (allSkillsStr) {
+        next.skillsList = allSkillsStr;
+        next.skills = allSkillsStr;
+        next.skillsMatrix = allSkillsStr;
+        next.competencies = allSkillsStr;
+        next.coreSkills = allSkillsStr;
+      }
+
+      // Dynamic inspection of selected template's defined fields
+      if (selectedTemplate?.analysis?.fields) {
+        for (const f of selectedTemplate.analysis.fields) {
+          const fid = f.id;
+          const sec = f.section || '';
+          const fidLower = fid.toLowerCase();
+          const labelLower = (f.label || '').toLowerCase();
+
+          // Summary / Bio / About field matching
+          if (
+            profile.bio &&
+            (fidLower.includes('summary') ||
+              fidLower.includes('bio') ||
+              fidLower.includes('about') ||
+              fidLower.includes('intro') ||
+              fidLower.includes('objective') ||
+              fidLower.includes('statement') ||
+              sec === 'profile' ||
+              sec === 'summary' ||
+              sec === 'aboutMe')
+          ) {
+            // If the field is an explicitly distinct headline/title inside the summary section, apply headline
+            if (fidLower.includes('headline') || fidLower.includes('title')) {
+              if (profile.headline) next[fid] = profile.headline;
+            } else {
+              next[fid] = profile.bio;
+            }
+          }
+
+          // Address / Location matching
+          if (profile.location && (fidLower.includes('address') || fidLower.includes('location') || fidLower.includes('city'))) {
+            next[fid] = profile.location;
+          }
+
+          // Job Title / Headline matching
+          if (profile.headline && (fidLower.includes('job') || fidLower.includes('title') || fidLower.includes('profession') || fidLower.includes('field') || sec === 'personal')) {
+            if (!fidLower.includes('name') && !fidLower.includes('full')) {
+              next[fid] = profile.headline;
+            }
+          }
+
+          // Technical skills matching
+          if (techSkillsStr && (fidLower.includes('tech') || labelLower.includes('technical'))) {
+            next[fid] = techSkillsStr;
+          }
+
+          // Soft skills matching
+          if (softSkillsStr && (fidLower.includes('soft') || fidLower.includes('person') || labelLower.includes('soft') || labelLower.includes('personal'))) {
+            next[fid] = softSkillsStr;
+          }
+
+          // General skills matching
+          if (allSkillsStr && (fidLower.includes('skill') || labelLower.includes('skill')) && !fidLower.includes('tech') && !fidLower.includes('soft')) {
+            next[fid] = allSkillsStr;
+          }
+
+          // Language matching
+          if (langSkillsStr && (fidLower.includes('lang') || labelLower.includes('language'))) {
+            next[fid] = langSkillsStr;
+          }
+        }
+      }
+
+      return next;
+    });
+
+    // 3. Map Section Entries (Experience, Education, Projects)
+    setEntries((prev) => {
+      const next: Record<string, Array<Record<string, string>>> = { ...prev };
+
+      // Experience
+      if (profile.experience && profile.experience.length > 0) {
+        const mappedExp = profile.experience.map((exp) => {
+          const resps = Array.isArray(exp.responsibilities)
+            ? exp.responsibilities.join('\n')
+            : String(exp.responsibilities || '');
+
+          return {
+            role: exp.position || '',
+            position: exp.position || '',
+            jobTitle: exp.position || '',
+            title: exp.position || '',
+            company: exp.company || '',
+            companyLocation: exp.company || '',
+            employer: exp.company || '',
+            organization: exp.company || '',
+            expPeriod: exp.duration || '',
+            expDates: exp.duration || '',
+            duration: exp.duration || '',
+            period: exp.duration || '',
+            dates: exp.duration || '',
+            year: exp.duration || '',
+            responsibilities: resps,
+            expDesc: resps,
+            desc: resps,
+            bullets: resps,
+            description: resps,
+            achievements: resps,
+          };
+        });
+
+        const expSectionKeys = ['experience', 'workExperience', 'work_experience', 'employment', 'work'];
+        for (const k of expSectionKeys) {
+          next[k] = mappedExp;
+        }
+      }
+
+      // Education
+      if (profile.education && profile.education.length > 0) {
+        const mappedEdu = profile.education.map((edu) => {
+          const yearStr = edu.graduationYear?.toString() || '';
+          const gradeStr = edu.cgpa
+            ? typeof edu.cgpa === 'number' || !edu.cgpa.toString().toLowerCase().includes('gpa')
+              ? `GPA: ${edu.cgpa}`
+              : edu.cgpa.toString()
+            : '';
+          const schoolFull = edu.university
+            ? `${edu.university}${edu.department ? ' | ' + edu.department : ''}${gradeStr ? '\n' + gradeStr : ''}`
+            : '';
+
+          return {
+            degree: edu.degree || '',
+            program: edu.degree || '',
+            qualification: edu.degree || '',
+            institution: edu.university || '',
+            university: edu.university || '',
+            school: schoolFull || edu.university || '',
+            college: edu.university || '',
+            department: edu.department || '',
+            eduYear: yearStr,
+            eduDates: yearStr,
+            gradYear: yearStr,
+            graduationYear: yearStr,
+            period: yearStr,
+            grade: gradeStr,
+            cgpa: gradeStr || edu.cgpa?.toString() || '',
+            gpa: edu.cgpa?.toString() || '',
+            score: edu.cgpa?.toString() || '',
+            exitExam: (edu.achievements || []).join(', '),
+            eduModules: (edu.achievements || []).join('\n'),
+          };
+        });
+
+        const eduSectionKeys = ['education', 'academics', 'academic', 'education_history'];
+        for (const k of eduSectionKeys) {
+          next[k] = mappedEdu;
+        }
+      }
+
+      // Projects
+      if (profile.projects && profile.projects.length > 0) {
+        const mappedProjects = profile.projects.map((proj) => {
+          const techList = Array.isArray(proj.technologies)
+            ? proj.technologies.join(', ')
+            : String(proj.technologies || '');
+          let fullDesc = proj.description || '';
+          if (techList) fullDesc += `\nTechnologies: ${techList}`;
+          if (proj.url) fullDesc += `\nURL: ${proj.url}`;
+
+          return {
+            projectName: proj.name || '',
+            title: proj.name || '',
+            name: proj.name || '',
+            projectTitle: proj.name || '',
+            projectDesc: fullDesc,
+            description: proj.description || '',
+            details: fullDesc,
+            summary: fullDesc,
+            technologies: techList,
+            techStack: techList,
+            tools: techList,
+            url: proj.url || '',
+            link: proj.url || '',
+          };
+        });
+
+        const projSectionKeys = ['projects', 'keyProjects', 'softwareProjects'];
+        for (const k of projSectionKeys) {
+          next[k] = mappedProjects;
+        }
+      }
+
+      return next;
+    });
+
+    // 4. Photo
+    if (profile.avatarUrl) {
       setPhotoUrl(profile.avatarUrl);
     }
 
@@ -945,7 +1194,7 @@ export default function CVBuilder() {
           </div>
 
           {/* Profile Autofill Button */}
-          {user && profile && (
+          {profile && (
             <Button
               type="button"
               variant="outline"
