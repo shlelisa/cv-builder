@@ -21,8 +21,12 @@ declare global {
 }
 
 import { TemplateAnalysis } from '@/types';
-import { buildAnalyzePrompt, parseAndSanitizeAnalysis } from '@/lib/template-analysis';
-import { buildCvPrompt } from '@/lib/cv-writing';
+import {
+  buildAnalyzePrompt,
+  parseAndSanitizeAnalysis,
+  buildWritePrompt,
+  sanitizeWriteResult,
+} from '@/lib/template-analysis';
 
 /**
  * Executes an AI chat prompt via Puter.js in Browser or Node.js environment
@@ -139,7 +143,7 @@ export async function writeCvWithPuterClient(
     return null;
   }
 
-  const prompt = buildCvPrompt(analysis, singleton, entries, language);
+  const prompt = buildWritePrompt(analysis, singleton, entries, language);
   try {
     const res = await window.puter.ai.chat(prompt, {
       model: 'gpt-4o-mini',
@@ -155,13 +159,12 @@ export async function writeCvWithPuterClient(
     if (jsonMatch) {
       try {
         const parsed = JSON.parse(jsonMatch[0]);
-        if (parsed && typeof parsed.cv === 'string') {
-          return {
-            cv: parsed.cv,
-            refinedSingleton: parsed.refined?.singleton,
-            refinedEntries: parsed.refined?.entries,
-          };
-        }
+        const result = sanitizeWriteResult(parsed, singleton, entries);
+        return {
+          cv: result.cv,
+          refinedSingleton: result.refined?.singleton,
+          refinedEntries: result.refined?.entries,
+        };
       } catch {
         // use rawText as CV text
       }
