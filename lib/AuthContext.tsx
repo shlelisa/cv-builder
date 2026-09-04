@@ -320,6 +320,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // Clean Supabase URL hash fragments (e.g. # or #access_token=...)
+    const cleanUrlHash = () => {
+      if (typeof window !== 'undefined' && window.location.hash) {
+        if (
+          window.location.hash === '#' ||
+          window.location.hash.includes('access_token') ||
+          window.location.hash.includes('refresh_token') ||
+          window.location.hash.includes('error')
+        ) {
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+      }
+    };
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -327,6 +341,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loadProfile(session.user.id, session.user.email);
         recordSessionAudit(session.user.id);
       }
+      cleanUrlHash();
       setLoading(false);
     });
 
@@ -341,6 +356,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setProfile(null);
       }
+      cleanUrlHash();
       setLoading(false);
     });
 
