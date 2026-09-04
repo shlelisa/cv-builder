@@ -344,9 +344,10 @@ export default function TemplateCVRenderer({
     const lh = rail ? typo.sidebarText.lineHeight : typo.body.lineHeight;
     const char = BULLET_CHAR[cs.bulletStyle] || '•';
     const isContactSec = sectionId.toLowerCase().includes('contact');
+    const isSummarySec = /profile|summary|about|objective|bio|statement/i.test(sectionId);
 
     return (
-      <>
+      <div style={{ minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
         {fields.map((field) => {
           const raw = entry[field.id] || '';
           if (!raw.trim()) return null;
@@ -362,6 +363,8 @@ export default function TemplateCVRenderer({
                   gap: 10,
                   marginTop: 5,
                   marginBottom: 6,
+                  minWidth: 0,
+                  maxWidth: '100%',
                 }}
               >
                 <span
@@ -384,6 +387,7 @@ export default function TemplateCVRenderer({
                     fontSize: size,
                     fontWeight: 400,
                     color: fg,
+                    overflowWrap: 'anywhere',
                     wordBreak: 'break-word',
                     flex: 1,
                     minWidth: 0,
@@ -398,7 +402,20 @@ export default function TemplateCVRenderer({
 
           if (sectionId === 'personalInfo') {
             return (
-              <p key={field.id} style={{ fontSize: size, fontWeight: 400, lineHeight: 1.5, marginTop: 1, color: fg }}>
+              <p
+                key={field.id}
+                style={{
+                  fontSize: size,
+                  fontWeight: 400,
+                  lineHeight: 1.5,
+                  marginTop: 1,
+                  color: fg,
+                  minWidth: 0,
+                  maxWidth: '100%',
+                  overflowWrap: 'anywhere',
+                  wordBreak: 'break-word',
+                }}
+              >
                 <strong style={{ fontWeight: 700 }}>{field.label}: </strong>{raw}
               </p>
             );
@@ -417,13 +434,37 @@ export default function TemplateCVRenderer({
                     const prefix = line.substring(0, colonIdx + 1);
                     const rest = line.substring(colonIdx + 1);
                     return (
-                      <p key={`${field.id}-${lineIndex}`} style={{ fontSize: size, lineHeight: lh, marginTop: 3, color: fg }}>
+                      <p
+                        key={`${field.id}-${lineIndex}`}
+                        style={{
+                          fontSize: size,
+                          lineHeight: lh,
+                          marginTop: 3,
+                          color: fg,
+                          minWidth: 0,
+                          maxWidth: '100%',
+                          overflowWrap: 'anywhere',
+                          wordBreak: 'break-word',
+                        }}
+                      >
                         <strong style={{ fontWeight: 700 }}>{prefix}</strong>{rest}
                       </p>
                     );
                   }
                   return (
-                    <p key={`${field.id}-${lineIndex}`} style={{ fontSize: size, lineHeight: lh, marginTop: 3, color: fg }}>
+                    <p
+                      key={`${field.id}-${lineIndex}`}
+                      style={{
+                        fontSize: size,
+                        lineHeight: lh,
+                        marginTop: 3,
+                        color: fg,
+                        minWidth: 0,
+                        maxWidth: '100%',
+                        overflowWrap: 'anywhere',
+                        wordBreak: 'break-word',
+                      }}
+                    >
                       {line}
                     </p>
                   );
@@ -441,20 +482,37 @@ export default function TemplateCVRenderer({
                       fontSize: size,
                       color: fg,
                       lineHeight: lh,
-                      paddingLeft: rail ? 2 : 12,
+                      paddingLeft: rail ? 2 : isSummarySec ? 0 : 12,
+                      minWidth: 0,
+                      maxWidth: '100%',
+                      boxSizing: 'border-box',
                     }}
                   >
+                    {!isSummarySec && (
+                      <span
+                        style={{
+                          color: theme.iconColor || fg,
+                          fontSize: 9,
+                          lineHeight: 1,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {rail ? '•' : char}
+                      </span>
+                    )}
                     <span
                       style={{
-                        color: theme.iconColor || fg,
-                        fontSize: 9,
-                        lineHeight: 1,
-                        flexShrink: 0,
+                        fontWeight: 400,
+                        flex: 1,
+                        minWidth: 0,
+                        maxWidth: '100%',
+                        overflowWrap: 'anywhere',
+                        wordBreak: 'break-word',
+                        whiteSpace: 'pre-wrap',
                       }}
                     >
-                      {rail ? '•' : char}
+                      {isSummarySec ? line : cleanBulletText(line)}
                     </span>
-                    <span style={{ fontWeight: 400 }}>{cleanBulletText(line)}</span>
                   </div>
                 );
               });
@@ -462,20 +520,59 @@ export default function TemplateCVRenderer({
 
           if (rail && (sectionId.toLowerCase().includes('skill') || sectionId.toLowerCase().includes('language'))) {
             return (
-              <div key={field.id} style={{ display: 'flex', alignItems: 'baseline', gap: 7, marginTop: 3, marginBottom: 3 }}>
+              <div
+                key={field.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'baseline',
+                  gap: 7,
+                  marginTop: 3,
+                  marginBottom: 3,
+                  minWidth: 0,
+                  maxWidth: '100%',
+                }}
+              >
                 <span style={{ color: theme.iconColor || fg, fontSize: 10, lineHeight: 1, flexShrink: 0 }}>•</span>
-                <span style={{ fontSize: size, fontWeight: 400, lineHeight: lh, color: fg }}>{cleanBulletText(raw)}</span>
+                <span
+                  style={{
+                    fontSize: size,
+                    fontWeight: 400,
+                    lineHeight: lh,
+                    color: fg,
+                    flex: 1,
+                    minWidth: 0,
+                    maxWidth: '100%',
+                    overflowWrap: 'anywhere',
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {cleanBulletText(raw)}
+                </span>
               </div>
             );
           }
 
           return (
-            <p key={field.id} style={{ fontSize: size, fontWeight: 400, lineHeight: lh, marginTop: 2, color: fg }}>
+            <p
+              key={field.id}
+              style={{
+                fontSize: size,
+                fontWeight: 400,
+                lineHeight: lh,
+                marginTop: 2,
+                color: fg,
+                minWidth: 0,
+                maxWidth: '100%',
+                overflowWrap: 'anywhere',
+                wordBreak: 'break-word',
+                whiteSpace: 'pre-wrap',
+              }}
+            >
               {raw}
             </p>
           );
         })}
-      </>
+      </div>
     );
   };
 
@@ -488,7 +585,7 @@ export default function TemplateCVRenderer({
     const fg = rail ? theme.sidebarHeadingColor : theme.textColor;
 
     return (
-      <div style={{ marginBottom: rail ? 12 : 16 }}>
+      <div style={{ marginBottom: rail ? 12 : 16, minWidth: 0, maxWidth: '100%' }}>
         {group.map((entry, index) => {
           const sectionFields = analysis.fields.filter((f) => f.section === sectionId);
           const firstField = sectionFields.find((f) => (entry[f.id] || '').trim());
@@ -508,14 +605,14 @@ export default function TemplateCVRenderer({
 
           if (rail) {
             return (
-              <div key={`${sectionId}-${index}`} style={{ marginBottom: 9, paddingBottom: 4 }}>
-                <p style={{ fontWeight: 700, fontSize: titleFs, color: titleFg, marginBottom: 2 }}>{title}</p>
+              <div key={`${sectionId}-${index}`} style={{ marginBottom: 9, paddingBottom: 4, minWidth: 0, maxWidth: '100%' }}>
+                <p style={{ fontWeight: 700, fontSize: titleFs, color: titleFg, marginBottom: 2, minWidth: 0, overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{title}</p>
                 {dateText && (
-                  <p style={{ fontSize: Math.max(9, titleFs - 1.5), color: fg, opacity: 0.8, marginBottom: 2 }}>
+                  <p style={{ fontSize: Math.max(9, titleFs - 1.5), color: fg, opacity: 0.8, marginBottom: 2, minWidth: 0, overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
                     {dateText}
                   </p>
                 )}
-                <div>{renderEntryBody(sectionId, entry, rail, skipIds)}</div>
+                <div style={{ minWidth: 0 }}>{renderEntryBody(sectionId, entry, rail, skipIds)}</div>
               </div>
             );
           }
@@ -523,7 +620,7 @@ export default function TemplateCVRenderer({
 
           if (cs.timeline) {
             return (
-              <div key={`${sectionId}-${index}`} style={{ display: 'flex', marginBottom: 10 }}>
+              <div key={`${sectionId}-${index}`} style={{ display: 'flex', marginBottom: 10, minWidth: 0, maxWidth: '100%' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: 8, width: 14 }}>
                   <span
                     style={{
@@ -538,32 +635,32 @@ export default function TemplateCVRenderer({
                   />
                   {index < group.length - 1 && <span style={{ width: 1.5, flex: 1, backgroundColor: '#cbd5e1' }} />}
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 4 }}>
-                    <p style={{ fontWeight: 700, fontSize: titleFs, color: titleFg }}>{title}</p>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 4, minWidth: 0 }}>
+                    <p style={{ fontWeight: 700, fontSize: titleFs, color: titleFg, minWidth: 0, overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{title}</p>
                     {dateText && (
-                      <span style={{ fontSize: Math.max(10, titleFs - 1.5), color: theme.textColor, opacity: 0.8, fontWeight: 500 }}>
+                      <span style={{ fontSize: Math.max(10, titleFs - 1.5), color: theme.textColor, opacity: 0.8, fontWeight: 500, flexShrink: 0 }}>
                         {dateText}
                       </span>
                     )}
                   </div>
-                  <div>{renderEntryBody(sectionId, entry, rail, skipIds)}</div>
+                  <div style={{ minWidth: 0 }}>{renderEntryBody(sectionId, entry, rail, skipIds)}</div>
                 </div>
               </div>
             );
           }
 
           return (
-            <div key={`${sectionId}-${index}`} style={{ marginBottom: 10 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 4 }}>
-                <p style={{ fontWeight: 700, fontSize: titleFs, color: titleFg }}>{title}</p>
+            <div key={`${sectionId}-${index}`} style={{ marginBottom: 10, minWidth: 0, maxWidth: '100%' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 4, minWidth: 0 }}>
+                <p style={{ fontWeight: 700, fontSize: titleFs, color: titleFg, minWidth: 0, overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{title}</p>
                 {dateText && (
-                  <span style={{ fontSize: Math.max(10, titleFs - 1.5), color: theme.textColor, opacity: 0.8, fontWeight: 500 }}>
+                  <span style={{ fontSize: Math.max(10, titleFs - 1.5), color: theme.textColor, opacity: 0.8, fontWeight: 500, flexShrink: 0 }}>
                     {dateText}
                   </span>
                 )}
               </div>
-              <div>{renderEntryBody(sectionId, entry, rail, skipIds)}</div>
+              <div style={{ minWidth: 0 }}>{renderEntryBody(sectionId, entry, rail, skipIds)}</div>
             </div>
           );
         })}
@@ -885,11 +982,11 @@ export default function TemplateCVRenderer({
       {!isFullWidthHeader && inlineHeader}
       {!isTwoCol && mainSections.map((sId, i) => renderSection(sId, false, i, mainSections.length))}
       {isTwoCol && (
-        <div className="flex" style={{ gap: colGap }}>
-          <div style={{ width: twoLeftW, flexShrink: 0 }}>
+        <div className="flex" style={{ gap: colGap, minWidth: 0, width: '100%' }}>
+          <div style={{ width: twoLeftW, flexShrink: 0, minWidth: 0 }}>
             {leftSections.map((sId, i, arr) => renderSection(sId, false, i, arr.length))}
           </div>
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             {rightSections.map((sId, i, arr) => renderSection(sId, false, i, arr.length))}
           </div>
         </div>
@@ -911,11 +1008,15 @@ export default function TemplateCVRenderer({
         height: '100%',
         boxSizing: 'border-box',
         fontFamily,
+        minWidth: 0,
+        flexShrink: 0,
+        overflowWrap: 'anywhere',
+        wordBreak: 'break-word',
       }}
     >
       {showPhoto && photoPos === 'sidebar' && <div className="flex justify-center mb-4">{photoEl('center')}</div>}
       {visibleSidebarIds.length > 0 && (
-        <div>
+        <div style={{ minWidth: 0 }}>
           {visibleSidebarIds.map((sId, i, arr) => renderSection(sId, true, i, arr.length))}
         </div>
       )}
@@ -923,9 +1024,9 @@ export default function TemplateCVRenderer({
   );
 
   const mainColumn = (
-    <div className="h-full overflow-hidden flex flex-col" style={{ backgroundColor: theme.mainBackground, fontFamily, color: theme.textColor }}>
+    <div className="h-full overflow-hidden flex flex-col" style={{ backgroundColor: theme.mainBackground, fontFamily, color: theme.textColor, minWidth: 0, flex: 1 }}>
       {!isFullWidthHeader && isSidebar && hasHeaderBand && mainColHeaderBand}
-      <div className="flex-1">{mainContent}</div>
+      <div className="flex-1" style={{ minWidth: 0, maxWidth: '100%' }}>{mainContent}</div>
     </div>
   );
 
