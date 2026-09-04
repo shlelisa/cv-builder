@@ -1375,7 +1375,7 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
     description: 'Ocean-blue curved header badge, ice-blue sidebar with square bullet skills & affiliations, and crisp clean main column with employment highlights.',
     badge: 'Trending',
     category: 'Creative',
-    colorPreview: ['#1d78c1', '#f0f6fa', '#1d78c1', '#1e293b'],
+    colorPreview: ['#1d78c1', '#eef6fc', '#1d78c1', '#1e293b'],
     analysis: {
       templateName: 'Azure Wave Marketer',
       description: 'Ocean blue wave header badge and ice blue sidebar layout with square bullet skills',
@@ -1431,7 +1431,7 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
       },
       style: {
         primaryColor: '#1d78c1',
-        secondaryColor: '#f0f6fa',
+        secondaryColor: '#eef6fc',
         accentColor: '#1d78c1',
         backgroundColor: '#ffffff',
         textColor: '#1e293b',
@@ -1443,7 +1443,7 @@ export const STATIC_TEMPLATES: StaticTemplateDefinition[] = [
         bodySize: 9.3,
         theme: {
           headerBackground: '#1d78c1',
-          sidebarBackground: '#f0f6fa',
+          sidebarBackground: '#eef6fc',
           mainBackground: '#ffffff',
           headingColor: '#1d78c1',
           sidebarHeadingColor: '#1d78c1',

@@ -105,25 +105,17 @@ export default function CVBuilder() {
     return STATIC_TEMPLATES.filter((tpl) => tpl.category === categoryFilter);
   }, [categoryFilter]);
 
-  // Select a template and populate with starter data if empty
-  const handleSelectTemplate = (template: StaticTemplateDefinition) => {
+  // Select a template and populate with starter data
+  const handleSelectTemplate = (template: StaticTemplateDefinition, loadDefaults = true) => {
     setSelectedTemplateId(template.id);
     setStyleOverrides({});
     setFontScale('standard');
     setEditorTab('content');
 
-    // If user hasn't typed their name yet, prefill starter data
-    const hasExistingData = Boolean(
-      singletonValues.fullName ||
-        singletonValues.name ||
-        Object.keys(entries).some((k) => entries[k]?.length > 0),
-    );
-
-    if (!hasExistingData) {
+    if (loadDefaults) {
       setSingletonValues({ ...template.defaultSingleton });
       setEntries(JSON.parse(JSON.stringify(template.defaultEntries)));
     } else {
-      // Merge with template defaults for any missing fields
       setSingletonValues((prev) => ({
         ...template.defaultSingleton,
         ...prev,
@@ -143,11 +135,9 @@ export default function CVBuilder() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const tplParam = params.get('template');
-      if (tplParam) {
-        const found = STATIC_TEMPLATES.find((t) => t.id === tplParam);
-        if (found) {
-          handleSelectTemplate(found);
-        }
+      const found = tplParam ? STATIC_TEMPLATES.find((t) => t.id === tplParam) : STATIC_TEMPLATES[0];
+      if (found) {
+        handleSelectTemplate(found, true);
       }
     }
   }, []);

@@ -7,6 +7,7 @@ import {
   PAGE_W,
   SECTION_ICON,
   autoContrastColor,
+  luminance,
   resolveComponentStyle,
   resolveGeometry,
   resolveThemeTokens,
@@ -224,6 +225,10 @@ export default function TemplateCVRenderer({
   const fontFamily = typo.body.family;
   const tt = (v: string) => v as React.CSSProperties['textTransform'];
 
+  const isDarkSidebar = luminance(theme.sidebarBackground) < 140;
+  const sidebarHeadingFg = isDarkSidebar ? '#ffffff' : (theme.sidebarHeadingColor || theme.headingColor || '#1d78c1');
+  const sidebarBodyFg = isDarkSidebar ? 'rgba(255,255,255,0.92)' : (theme.textColor || '#1e293b');
+
   function sectionHasData(sectionId: string) {
     const section = analysis.sections.find((s) => s.id === sectionId);
     if (!section) return false;
@@ -338,7 +343,7 @@ export default function TemplateCVRenderer({
     skipFieldIds: Set<string> = new Set(),
   ) => {
     const fields = analysis.fields.filter((f) => f.section === sectionId && !skipFieldIds.has(f.id));
-    const fg = rail ? theme.sidebarHeadingColor : theme.textColor;
+    const fg = rail ? sidebarBodyFg : theme.textColor;
     const font = rail ? typo.sidebarText.family : typo.body.family;
     const size = rail ? typo.sidebarText.size : typo.body.size;
     const lh = rail ? typo.sidebarText.lineHeight : typo.body.lineHeight;
@@ -361,7 +366,7 @@ export default function TemplateCVRenderer({
                   display: 'flex',
                   alignItems: 'center',
                   gap: 10,
-                  marginTop: 5,
+                  marginTop: 6,
                   marginBottom: 6,
                   minWidth: 0,
                   maxWidth: '100%',
@@ -369,18 +374,19 @@ export default function TemplateCVRenderer({
               >
                 <span
                   style={{
-                    width: 20,
-                    height: 20,
+                    width: 22,
+                    height: 22,
                     borderRadius: '50%',
-                    backgroundColor: rail ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.06)',
+                    backgroundColor: rail ? (isDarkSidebar ? 'rgba(255,255,255,0.15)' : '#ffffff') : 'rgba(0,0,0,0.06)',
+                    boxShadow: rail && !isDarkSidebar ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: theme.iconColor || theme.sidebarHeadingColor,
+                    color: theme.iconColor || (isDarkSidebar ? '#ffffff' : theme.sidebarHeadingColor),
                     flexShrink: 0,
                   }}
                 >
-                  {renderIconPath(icon, 11, theme.iconColor || theme.sidebarHeadingColor)}
+                  {renderIconPath(icon, 12, theme.iconColor || (isDarkSidebar ? '#ffffff' : theme.sidebarHeadingColor))}
                 </span>
                 <span
                   style={{
@@ -426,11 +432,11 @@ export default function TemplateCVRenderer({
               <h2
                 key={field.id}
                 style={{
-                  fontSize: Math.max(15, size + 5),
+                  fontSize: Math.max(16, typo.sectionHeading.size + 4),
                   fontWeight: 700,
-                  lineHeight: 1.3,
+                  lineHeight: 1.25,
                   marginTop: 0,
-                  marginBottom: 8,
+                  marginBottom: 10,
                   color: theme.headingColor || style.primaryColor || '#1d78c1',
                   minWidth: 0,
                   maxWidth: '100%',
@@ -462,6 +468,28 @@ export default function TemplateCVRenderer({
               >
                 {raw}
               </p>
+            );
+          }
+
+          if (isSummarySec && field.type === 'textarea') {
+            return (
+              <div key={field.id} style={{ marginBottom: 12 }}>
+                <p
+                  style={{
+                    fontSize: typo.body.size,
+                    lineHeight: typo.body.lineHeight,
+                    color: theme.textColor,
+                    minWidth: 0,
+                    maxWidth: '100%',
+                    overflowWrap: 'anywhere',
+                    wordBreak: 'break-word',
+                    whiteSpace: 'pre-wrap',
+                  }}
+                >
+                  {raw}
+                </p>
+                <div style={{ height: 1, backgroundColor: '#e2e8f0', marginTop: 12, marginBottom: 12 }} />
+              </div>
             );
           }
 
@@ -648,8 +676,8 @@ export default function TemplateCVRenderer({
     if (!section) return null;
     const group = entries[sectionId] || [];
     const titleFs = rail ? typo.sidebarText.size + 0.8 : typo.body.size + 1;
-    const titleFg = rail ? theme.sidebarHeadingColor : theme.headingColor;
-    const fg = rail ? theme.sidebarHeadingColor : theme.textColor;
+    const titleFg = rail ? (isDarkSidebar ? '#ffffff' : '#1e293b') : theme.headingColor;
+    const fg = rail ? sidebarBodyFg : theme.textColor;
 
     return (
       <div style={{ marginBottom: rail ? 12 : 16, minWidth: 0, maxWidth: '100%' }}>
@@ -672,12 +700,12 @@ export default function TemplateCVRenderer({
 
           if (rail) {
             const isAffil = sectionId.toLowerCase().includes('affil');
-            const dateColor = isAffil ? (theme.headingColor || '#1d78c1') : fg;
+            const dateColor = isAffil ? (isDarkSidebar ? 'rgba(255,255,255,0.85)' : (theme.headingColor || '#1d78c1')) : fg;
             return (
-              <div key={`${sectionId}-${index}`} style={{ marginBottom: 9, paddingBottom: 4, minWidth: 0, maxWidth: '100%' }}>
-                <p style={{ fontWeight: 700, fontSize: titleFs, color: isAffil ? '#1e293b' : titleFg, marginBottom: 2, minWidth: 0, overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{title}</p>
+              <div key={`${sectionId}-${index}`} style={{ marginBottom: 10, paddingBottom: 4, minWidth: 0, maxWidth: '100%' }}>
+                <p style={{ fontWeight: 700, fontSize: titleFs, color: isDarkSidebar ? '#ffffff' : '#1e293b', marginBottom: 2, minWidth: 0, overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{title}</p>
                 {dateText && (
-                  <p style={{ fontSize: Math.max(9, titleFs - 1.5), color: dateColor, fontWeight: isAffil ? 600 : 400, opacity: isAffil ? 1 : 0.8, marginBottom: 2, minWidth: 0, overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
+                  <p style={{ fontSize: Math.max(9, titleFs - 1.5), color: dateColor, fontWeight: isAffil ? 600 : 400, opacity: isAffil ? 1 : 0.85, marginBottom: 2, minWidth: 0, overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
                     {dateText}
                   </p>
                 )}
@@ -746,7 +774,7 @@ export default function TemplateCVRenderer({
 
     const headingToken = rail ? typo.sidebarHeading : typo.sectionHeading;
     const fallbackHeadingSize = rail ? typo.sidebarHeading.size : typo.sectionHeading.size;
-    const headlineColor = rail ? theme.sidebarHeadingColor : theme.headingColor;
+    const headlineColor = rail ? sidebarHeadingFg : theme.headingColor;
     const myVariant = cs.headingVariant;
     const iconName = SECTION_ICON[sectionId] || 'tag';
 
@@ -776,7 +804,7 @@ export default function TemplateCVRenderer({
             border: `1.5px solid ${theme.borderColor}`,
             padding: '3px 8px',
             marginBottom: rail ? 6 : 8,
-            color: rail ? theme.sidebarHeadingColor : theme.headingColor,
+            color: rail ? sidebarHeadingFg : theme.headingColor,
             backgroundColor: rail ? 'rgba(255,255,255,0.08)' : 'transparent',
           }}
         >
@@ -834,7 +862,7 @@ export default function TemplateCVRenderer({
       heading = (
         <div
           style={{
-            borderBottom: `1.5px solid ${theme.iconColor || theme.sidebarHeadingColor}`,
+            borderBottom: isDarkSidebar ? '1.5px solid rgba(255,255,255,0.2)' : '1px solid #d0e3f2',
             display: 'flex',
             alignItems: 'center',
             gap: 6,
@@ -842,8 +870,8 @@ export default function TemplateCVRenderer({
             paddingBottom: 4,
           }}
         >
-          <span style={{ color: theme.iconColor || theme.sidebarHeadingColor, flexShrink: 0 }}>
-            {renderIconPath(iconName, 13, theme.iconColor || theme.sidebarHeadingColor)}
+          <span style={{ color: sidebarHeadingFg, flexShrink: 0 }}>
+            {renderIconPath(iconName, 13, sidebarHeadingFg)}
           </span>
           <h2 style={headingBase}>{section.name}</h2>
         </div>
@@ -1071,7 +1099,7 @@ export default function TemplateCVRenderer({
       style={{
         width: railWidth,
         backgroundColor: theme.sidebarBackground,
-        color: theme.sidebarHeadingColor,
+        color: sidebarBodyFg,
         paddingTop: isFullWidthHeader
           ? Math.min(22, Math.round(pagePad.top * 0.9))
           : layout.headerPlacement === 'sidebar-top'
@@ -1094,8 +1122,8 @@ export default function TemplateCVRenderer({
           style={{
             backgroundColor: theme.headerBackground || theme.headingColor || '#1d78c1',
             color: '#ffffff',
-            paddingTop: 28,
-            paddingBottom: 22,
+            paddingTop: 32,
+            paddingBottom: 24,
             paddingLeft: 12,
             paddingRight: 12,
             marginLeft: -sidebarPadH,
@@ -1136,21 +1164,21 @@ export default function TemplateCVRenderer({
           )}
           {/* Smooth arc wave extending downward */}
           <svg
-            viewBox="0 0 100 20"
+            viewBox="0 0 100 22"
             preserveAspectRatio="none"
             style={{
               position: 'absolute',
-              bottom: -15,
+              bottom: -17,
               left: 0,
               width: '100%',
-              height: 16,
+              height: 20,
               display: 'block',
               zIndex: 1,
               pointerEvents: 'none',
             }}
           >
             <path
-              d="M0,0 Q50,20 100,0 L100,0 L0,0 Z"
+              d="M0,0 Q50,22 100,0 L100,0 L0,0 Z"
               fill={theme.headerBackground || theme.headingColor || '#1d78c1'}
             />
           </svg>
