@@ -182,9 +182,6 @@ export class AIService {
   }
 
   matchJobRequirements(profile: UserProfile, jobDescription: JobDescription): JobMatchResult {
-    const jobAnalysis = this.analyzeJobDescription(jobDescription);
-    
-    // Combine all profile text for deep semantic matching
     const profileText = [
       profile.personalInfo.fullName,
       profile.personalInfo.location,
@@ -198,53 +195,19 @@ export class AIService {
       ...profile.skills.databases,
       ...profile.skills.softSkills,
       ...profile.skills.languages,
-    ].join(' ').toLowerCase();
+    ].join(' ');
 
-    const matchedTechnicalSkills = jobAnalysis.requiredTechnicalSkills.filter(skill => {
-      const lower = skill.toLowerCase();
-      // Test words longer than 2 characters
-      const words = lower.split(/[^a-z0-9+#.]+/).filter(w => w.length > 2);
-      return words.some(w => profileText.includes(w)) || profileText.includes(lower);
-    });
+    const { heuristicSemanticJobMatch } = require('@/lib/job-analysis');
+    const result = heuristicSemanticJobMatch(
+      {
+        position: jobDescription.position,
+        company: jobDescription.company,
+        requirements: jobDescription.requirements,
+      },
+      profileText
+    );
 
-    const matchedEducation = jobAnalysis.requiredEducation.filter(edu => {
-      const lower = edu.toLowerCase();
-      const words = lower.split(/[^a-z0-9]+/).filter(w => w.length > 3);
-      return words.some(w => profileText.includes(w)) || profile.education.length > 0;
-    });
-
-    const matchedExperience = jobAnalysis.requiredExperience.filter(exp => {
-      const lower = exp.toLowerCase();
-      return profile.experience.length > 0 || profile.internships.length > 0 || profileText.includes(lower);
-    });
-
-    const totalKeyReqs = jobAnalysis.requiredTechnicalSkills.length + jobAnalysis.requiredEducation.length + jobAnalysis.requiredExperience.length;
-    const matchedCount = matchedTechnicalSkills.length + matchedEducation.length + matchedExperience.length;
-
-    let matchScore = 50;
-    if (totalKeyReqs > 0) {
-      matchScore = Math.min(98, Math.max(15, Math.round((matchedCount / totalKeyReqs) * 100)));
-    } else if (profileText.trim().length > 50) {
-      matchScore = 75;
-    }
-
-    const missingRequirements = [
-      ...jobAnalysis.requiredTechnicalSkills.filter(s => !matchedTechnicalSkills.includes(s)),
-      ...jobAnalysis.requiredEducation.filter(e => !matchedEducation.includes(e)),
-      ...jobAnalysis.requiredExperience.filter(ex => !matchedExperience.includes(ex)),
-    ];
-
-    const recommendations = this.generateRecommendations(profile, missingRequirements);
-
-    return {
-      matchScore,
-      matchedQualifications: matchedEducation,
-      matchedTechnicalSkills,
-      matchedExperience,
-      matchedEducation,
-      missingRequirements,
-      recommendations,
-    };
+    return result.matchResult;
   }
 
   checkATS(profile: UserProfile, jobDescription: JobDescription): {

@@ -155,14 +155,34 @@ export interface JobAnalysis {
   keywords: string[];
 }
 
+export interface JobMatchAnalysisDetail {
+  category: 'domain' | 'experience' | 'education' | 'skills' | 'culture';
+  title: string;
+  status: 'match' | 'partial' | 'mismatch';
+  candidateValue: string;
+  requiredValue: string;
+  commentary: string;
+}
+
 export interface JobMatchResult {
   matchScore: number;
+  atsScore?: number;
+  verdictTitle?: string;
+  verdictSummary?: string;
+  domainMatchStatus?: 'match' | 'partial' | 'mismatch';
+  jobDomain?: string;
+  candidateDomain?: string;
+  domainExplanation?: string;
   matchedQualifications: string[];
   matchedTechnicalSkills: string[];
   matchedExperience: string[];
   matchedEducation: string[];
   missingRequirements: string[];
+  transferableSkills?: string[];
+  comparisonDetails?: JobMatchAnalysisDetail[];
   recommendations: string[];
+  recruiterAdvice?: string[];
+  atsOptimizationTips?: string[];
 }
 
 export type DocumentType = 'cv' | 'application-letter' | 'cover-letter';

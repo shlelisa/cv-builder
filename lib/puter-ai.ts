@@ -176,3 +176,40 @@ export async function writeCvWithPuterClient(
     return null;
   }
 }
+
+/**
+ * Client-Side Job Analysis via Puter.js
+ */
+export async function analyzeJobWithPuterClient(
+  job: { position: string; company: string; requirements: string[] },
+  profileText: string,
+  language = 'en'
+): Promise<any | null> {
+  if (typeof window === 'undefined' || !window.puter?.ai?.chat) {
+    return null;
+  }
+
+  const { buildJobMatchPrompt, sanitizeJobMatchResult } = await import('@/lib/job-analysis');
+  const prompt = buildJobMatchPrompt(job, profileText, language);
+
+  try {
+    const res = await window.puter.ai.chat(prompt, {
+      model: 'gpt-4o-mini',
+      temperature: 0.2,
+    });
+
+    const rawText =
+      typeof res === 'string'
+        ? res
+        : res?.message?.content || res?.text || String(res);
+
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+    const parsed = JSON.parse(jsonMatch[0]);
+    return sanitizeJobMatchResult(parsed, job, profileText);
+  } catch (err) {
+    console.warn('[analyzeJobWithPuterClient]', err);
+    return null;
+  }
+}
+
