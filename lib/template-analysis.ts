@@ -171,17 +171,17 @@ export function parseAndSanitizeAnalysis(input: unknown): TemplateAnalysis {
     .filter((p) => !PERSONAL_IDS_SET.has(p.sectionId));
   const providedPlacements = Array.isArray(rawLayout.placements)
     ? rawLayout.placements
-        .map((p) => {
-          const pl = (p && typeof p === 'object' ? p : {}) as Record<string, unknown>;
-          const id = str(pl.sectionId);
-          if (!knownSectionIds.has(id)) return null;
-          return {
-            sectionId: id,
-            column: normalizeColumn(pl.column, layoutType),
-            order: typeof pl.order === 'number' ? pl.order : 0,
-          };
-        })
-        .filter((p): p is NonNullable<TemplateAnalysis['layout']['placements']>[number] => p !== null)
+      .map((p) => {
+        const pl = (p && typeof p === 'object' ? p : {}) as Record<string, unknown>;
+        const id = str(pl.sectionId);
+        if (!knownSectionIds.has(id)) return null;
+        return {
+          sectionId: id,
+          column: normalizeColumn(pl.column, layoutType),
+          order: typeof pl.order === 'number' ? pl.order : 0,
+        };
+      })
+      .filter((p): p is NonNullable<TemplateAnalysis['layout']['placements']>[number] => p !== null)
     : null;
 
   const clampFrac = (v: unknown): number | undefined =>
@@ -207,6 +207,7 @@ export function parseAndSanitizeAnalysis(input: unknown): TemplateAnalysis {
     const T = Math.max(0, Math.min(0.98, top));
     return { left: l, top: T, width: w, height: h };
   };
+  const crop = rawCrop();
   const HEADER_PLACEMENTS = ['top-full-width', 'main-column', 'sidebar-top', 'inline'];
   const rawHeaderPlacement = str(rawLayout.headerPlacement ?? (rawLayout as Record<string, unknown>).headerSpan);
   const headerPlacement: TemplateAnalysis['layout']['headerPlacement'] = HEADER_PLACEMENTS.includes(rawHeaderPlacement)
@@ -220,57 +221,57 @@ export function parseAndSanitizeAnalysis(input: unknown): TemplateAnalysis {
     sidebarSections: sidebarSections.length > 0 ? sidebarSections : undefined,
     photo: bool(rawPhoto.included, false)
       ? {
-          included: bool(rawPhoto.included, false),
+        included: bool(rawPhoto.included, false),
+        position: PHOTO_POSITIONS.includes(rawPhoto.position as string) ? (rawPhoto.position as PhotoConfig['position']) : 'sidebar',
+        shape: PHOTO_SHAPES.includes(rawPhoto.shape as string) ? (rawPhoto.shape as PhotoConfig['shape']) : 'circle',
+        size: PHOTO_SIZES.includes(rawPhoto.size as string) ? (rawPhoto.size as PhotoConfig['size']) : 'medium',
+        ...(crop ? { crop } : {}),
+      }
+      : crop
+        ? {
+          included: true,
           position: PHOTO_POSITIONS.includes(rawPhoto.position as string) ? (rawPhoto.position as PhotoConfig['position']) : 'sidebar',
           shape: PHOTO_SHAPES.includes(rawPhoto.shape as string) ? (rawPhoto.shape as PhotoConfig['shape']) : 'circle',
           size: PHOTO_SIZES.includes(rawPhoto.size as string) ? (rawPhoto.size as PhotoConfig['size']) : 'medium',
-          ...(crop ? { crop } : {}),
+          crop,
         }
-      : crop
-        ? {
-            included: true,
-            position: PHOTO_POSITIONS.includes(rawPhoto.position as string) ? (rawPhoto.position as PhotoConfig['position']) : 'sidebar',
-            shape: PHOTO_SHAPES.includes(rawPhoto.shape as string) ? (rawPhoto.shape as PhotoConfig['shape']) : 'circle',
-            size: PHOTO_SIZES.includes(rawPhoto.size as string) ? (rawPhoto.size as PhotoConfig['size']) : 'medium',
-            crop,
-          }
         : undefined,
     page:
       rawPage && (rawPage.widthMm !== undefined || rawPage.heightMm !== undefined || rawMargins.top !== undefined)
         ? {
-            widthMm: mm(rawPage.widthMm, 210),
-            heightMm: mm(rawPage.heightMm, 297),
-            margins: {
-              top: mm(rawMargins.top, 12),
-              right: mm(rawMargins.right, 12),
-              bottom: mm(rawMargins.bottom, 12),
-              left: mm(rawMargins.left, 12),
-            },
-          }
+          widthMm: mm(rawPage.widthMm, 210),
+          heightMm: mm(rawPage.heightMm, 297),
+          margins: {
+            top: mm(rawMargins.top, 12),
+            right: mm(rawMargins.right, 12),
+            bottom: mm(rawMargins.bottom, 12),
+            left: mm(rawMargins.left, 12),
+          },
+        }
         : undefined,
     columns:
       rawColumns.length > 0
         ? rawColumns
-            .map((c) => {
-              const col = (c && typeof c === 'object' ? c : {}) as Record<string, unknown>;
-              return {
-                id: col.id === 'sidebar' ? ('sidebar' as const) : ('main' as const),
-                width: typeof col.width === 'number' && col.width > 0 && col.width < 1 ? col.width : undefined,
-                background: str(col.background) || undefined,
-                padding: typeof col.padding === 'number' && col.padding >= 0 ? col.padding : undefined,
-              };
-            })
+          .map((c) => {
+            const col = (c && typeof c === 'object' ? c : {}) as Record<string, unknown>;
+            return {
+              id: col.id === 'sidebar' ? ('sidebar' as const) : ('main' as const),
+              width: typeof col.width === 'number' && col.width > 0 && col.width < 1 ? col.width : undefined,
+              background: str(col.background) || undefined,
+              padding: typeof col.padding === 'number' && col.padding >= 0 ? col.padding : undefined,
+            };
+          })
         : undefined,
     placements: providedPlacements || defaultPlacements,
     geometry: rawGeometry && (rawGeometry.orientation !== undefined || rawGeometry.sidebarWidth !== undefined)
       ? {
-          ...(rawGeometry.orientation === 'landscape' ? { orientation: 'landscape' as const } : {}),
-          ...(px(rawGeometry.headerHeight) ? { headerHeight: px(rawGeometry.headerHeight) } : {}),
-          ...(frac(rawGeometry.sidebarWidth) ? { sidebarWidth: frac(rawGeometry.sidebarWidth) } : {}),
-          ...(frac(rawGeometry.mainWidth) ? { mainWidth: frac(rawGeometry.mainWidth) } : {}),
-          ...(px(rawGeometry.gap) ? { gap: px(rawGeometry.gap) } : {}),
-          ...(px(rawGeometry.verticalGap) ? { verticalGap: px(rawGeometry.verticalGap) } : {}),
-        }
+        ...(rawGeometry.orientation === 'landscape' ? { orientation: 'landscape' as const } : {}),
+        ...(px(rawGeometry.headerHeight) ? { headerHeight: px(rawGeometry.headerHeight) } : {}),
+        ...(frac(rawGeometry.sidebarWidth) ? { sidebarWidth: frac(rawGeometry.sidebarWidth) } : {}),
+        ...(frac(rawGeometry.mainWidth) ? { mainWidth: frac(rawGeometry.mainWidth) } : {}),
+        ...(px(rawGeometry.gap) ? { gap: px(rawGeometry.gap) } : {}),
+        ...(px(rawGeometry.verticalGap) ? { verticalGap: px(rawGeometry.verticalGap) } : {}),
+      }
       : undefined,
   };
   const style: TemplateAnalysis['style'] = {
@@ -297,31 +298,31 @@ export function parseAndSanitizeAnalysis(input: unknown): TemplateAnalysis {
     },
     typography: Object.keys(rawTypography).length > 0
       ? {
-          ...(pt(rawTypography.name) ? { name: pt(rawTypography.name) } : {}),
-          ...(pt(rawTypography.jobTitle) ? { jobTitle: pt(rawTypography.jobTitle) } : {}),
-          ...(pt(rawTypography.sectionHeading) ? { sectionHeading: pt(rawTypography.sectionHeading) } : {}),
-          ...(pt(rawTypography.body) ? { body: pt(rawTypography.body) } : {}),
-          ...(pt(rawTypography.sidebarHeading) ? { sidebarHeading: pt(rawTypography.sidebarHeading) } : {}),
-          ...(pt(rawTypography.sidebarText) ? { sidebarText: pt(rawTypography.sidebarText) } : {}),
-        }
+        ...(pt(rawTypography.name) ? { name: pt(rawTypography.name) } : {}),
+        ...(pt(rawTypography.jobTitle) ? { jobTitle: pt(rawTypography.jobTitle) } : {}),
+        ...(pt(rawTypography.sectionHeading) ? { sectionHeading: pt(rawTypography.sectionHeading) } : {}),
+        ...(pt(rawTypography.body) ? { body: pt(rawTypography.body) } : {}),
+        ...(pt(rawTypography.sidebarHeading) ? { sidebarHeading: pt(rawTypography.sidebarHeading) } : {}),
+        ...(pt(rawTypography.sidebarText) ? { sidebarText: pt(rawTypography.sidebarText) } : {}),
+      }
       : undefined,
     componentStyle:
       HEADING_VARIANTS.includes(rawComponent.headingVariant as string) ||
-      BULLET_STYLES.includes(rawComponent.bulletStyle as string) ||
-      rawComponent.timeline !== undefined ||
-      rawComponent.icons !== undefined ||
-      rawComponent.headerBackground !== undefined
+        BULLET_STYLES.includes(rawComponent.bulletStyle as string) ||
+        rawComponent.timeline !== undefined ||
+        rawComponent.icons !== undefined ||
+        rawComponent.headerBackground !== undefined
         ? {
-            ...(HEADING_VARIANTS.includes(rawComponent.headingVariant as string)
-              ? { headingVariant: rawComponent.headingVariant as TemplateComponentStyle['headingVariant'] }
-              : {}),
-            ...(BULLET_STYLES.includes(rawComponent.bulletStyle as string)
-              ? { bulletStyle: rawComponent.bulletStyle as TemplateComponentStyle['bulletStyle'] }
-              : {}),
-            ...(typeof rawComponent.timeline === 'boolean' ? { timeline: rawComponent.timeline } : {}),
-            ...(typeof rawComponent.icons === 'boolean' ? { icons: rawComponent.icons } : {}),
-            ...(typeof rawComponent.headerBackground === 'boolean' ? { headerBackground: rawComponent.headerBackground } : {}),
-          }
+          ...(HEADING_VARIANTS.includes(rawComponent.headingVariant as string)
+            ? { headingVariant: rawComponent.headingVariant as TemplateComponentStyle['headingVariant'] }
+            : {}),
+          ...(BULLET_STYLES.includes(rawComponent.bulletStyle as string)
+            ? { bulletStyle: rawComponent.bulletStyle as TemplateComponentStyle['bulletStyle'] }
+            : {}),
+          ...(typeof rawComponent.timeline === 'boolean' ? { timeline: rawComponent.timeline } : {}),
+          ...(typeof rawComponent.icons === 'boolean' ? { icons: rawComponent.icons } : {}),
+          ...(typeof rawComponent.headerBackground === 'boolean' ? { headerBackground: rawComponent.headerBackground } : {}),
+        }
         : undefined,
   };
 
