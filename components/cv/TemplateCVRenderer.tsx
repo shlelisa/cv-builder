@@ -117,13 +117,58 @@ export default function TemplateCVRenderer({
   zoom = 1,
   onPhotoClick,
 }: TemplateCVRendererProps) {
+  const userTypo = styleOverrides?.typography;
+  const userTheme = styleOverrides?.theme;
+
   const style: TemplateStyle = {
     ...analysis.style,
     ...(styleOverrides || {}),
-    theme: { ...(analysis.style.theme || {}), ...(styleOverrides?.theme || {}) },
+    theme: {
+      ...(analysis.style.theme || {}),
+      ...(styleOverrides?.primaryColor ? { headingColor: styleOverrides.primaryColor, borderColor: styleOverrides.primaryColor } : {}),
+      ...(styleOverrides?.secondaryColor ? { sidebarBackground: styleOverrides.secondaryColor } : {}),
+      ...(styleOverrides?.accentColor ? { iconColor: styleOverrides.accentColor } : {}),
+      ...(styleOverrides?.backgroundColor ? { mainBackground: styleOverrides.backgroundColor } : {}),
+      ...(styleOverrides?.textColor ? { textColor: styleOverrides.textColor } : {}),
+      ...(userTheme || {}),
+    },
     typography: {
       ...(analysis.style.typography || {}),
-      ...(styleOverrides?.typography || {}),
+      ...(styleOverrides?.fontFamily
+        ? {
+            name: { ...(analysis.style.typography?.name || {}), family: styleOverrides.fontFamily },
+            jobTitle: { ...(analysis.style.typography?.jobTitle || {}), family: styleOverrides.fontFamily },
+            sectionHeading: { ...(analysis.style.typography?.sectionHeading || {}), family: styleOverrides.fontFamily },
+            sidebarHeading: { ...(analysis.style.typography?.sidebarHeading || {}), family: styleOverrides.fontFamily },
+            body: { ...(analysis.style.typography?.body || {}), family: styleOverrides.fontFamily },
+            sidebarText: { ...(analysis.style.typography?.sidebarText || {}), family: styleOverrides.fontFamily },
+          }
+        : {}),
+      ...(styleOverrides?.nameSize
+        ? {
+            name: { ...(analysis.style.typography?.name || {}), size: styleOverrides.nameSize },
+            jobTitle: { ...(analysis.style.typography?.jobTitle || {}), size: Math.max(11, styleOverrides.nameSize - 10) },
+          }
+        : {}),
+      ...(styleOverrides?.headingSize
+        ? {
+            sectionHeading: { ...(analysis.style.typography?.sectionHeading || {}), size: styleOverrides.headingSize },
+            sidebarHeading: { ...(analysis.style.typography?.sidebarHeading || {}), size: Math.max(7, styleOverrides.headingSize - 1.5) },
+          }
+        : {}),
+      ...(styleOverrides?.bodySize
+        ? {
+            body: { ...(analysis.style.typography?.body || {}), size: styleOverrides.bodySize },
+            sidebarText: { ...(analysis.style.typography?.sidebarText || {}), size: Math.max(6, styleOverrides.bodySize - 0.5) },
+          }
+        : {}),
+      ...(styleOverrides?.lineHeight
+        ? {
+            body: { ...(analysis.style.typography?.body || {}), lineHeight: styleOverrides.lineHeight },
+            sidebarText: { ...(analysis.style.typography?.sidebarText || {}), lineHeight: Math.max(1.1, styleOverrides.lineHeight - 0.05) },
+          }
+        : {}),
+      ...(userTypo || {}),
     },
     componentStyle: {
       ...(analysis.style.componentStyle || {}),

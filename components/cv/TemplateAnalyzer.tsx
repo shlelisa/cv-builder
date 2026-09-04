@@ -145,10 +145,10 @@ export default function TemplateAnalyzer() {
     return styleNow.typography?.body?.lineHeight || styleNow.lineHeight || 1.45;
   }, [analysis, styleOverrides]);
 
-  const handleWordFontFamilyChange = (fontId: string) => {
+  const handleWordFontFamilyChange = (fontId: string, target = fontTarget) => {
     setStyleOverrides((prev) => {
       const prevTypo = prev.typography || {};
-      if (fontTarget === 'all') {
+      if (target === 'all') {
         return {
           ...prev,
           fontFamily: fontId,
@@ -163,7 +163,7 @@ export default function TemplateAnalyzer() {
           },
         };
       }
-      if (fontTarget === 'name') {
+      if (target === 'name') {
         return {
           ...prev,
           typography: {
@@ -173,7 +173,7 @@ export default function TemplateAnalyzer() {
           },
         };
       }
-      if (fontTarget === 'headings') {
+      if (target === 'headings') {
         return {
           ...prev,
           typography: {
@@ -183,7 +183,7 @@ export default function TemplateAnalyzer() {
           },
         };
       }
-      if (fontTarget === 'body') {
+      if (target === 'body') {
         return {
           ...prev,
           typography: {
@@ -197,20 +197,21 @@ export default function TemplateAnalyzer() {
     });
   };
 
-  const handleWordFontSizeChange = (newSizePt: number) => {
+  const handleWordFontSizeChange = (newSizePt: number, target = fontTarget) => {
     setStyleOverrides((prev) => {
       const prevTypo = prev.typography || {};
-      if (fontTarget === 'name') {
+      if (target === 'name') {
         return {
           ...prev,
           nameSize: newSizePt,
           typography: {
             ...prevTypo,
             name: { ...(prevTypo.name || {}), size: newSizePt },
+            jobTitle: { ...(prevTypo.jobTitle || {}), size: Math.max(11, newSizePt - 10) },
           },
         };
       }
-      if (fontTarget === 'headings') {
+      if (target === 'headings') {
         return {
           ...prev,
           headingSize: newSizePt,
@@ -221,7 +222,7 @@ export default function TemplateAnalyzer() {
           },
         };
       }
-      if (fontTarget === 'body') {
+      if (target === 'body') {
         return {
           ...prev,
           bodySize: newSizePt,
@@ -984,15 +985,13 @@ export default function TemplateAnalyzer() {
                 type="text"
                 className={BASE_FIELD_CLASS}
                 value={styleNow.fontFamily || ''}
-                onChange={(e) => setStyleOverrides((prev) => ({ ...prev, fontFamily: e.target.value }))}
+                onChange={(e) => handleWordFontFamilyChange(e.target.value, 'all')}
                 placeholder="Font Family CSS (e.g. Arial, Inter, Calibri)"
               />
               <select
                 className={`${BASE_FIELD_CLASS} w-52 shrink-0`}
                 value={styleNow.fontFamily || ''}
-                onChange={(e) =>
-                  setStyleOverrides((prev) => ({ ...prev, fontFamily: e.target.value }))
-                }
+                onChange={(e) => handleWordFontFamilyChange(e.target.value, 'all')}
               >
                 <option value="" disabled>Presets</option>
                 <optgroup label="Word Office Standards">
@@ -1030,7 +1029,7 @@ export default function TemplateAnalyzer() {
                 <div className="flex items-center gap-1.5 bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 rounded-lg p-1">
                   <button
                     type="button"
-                    onClick={() => setStyleOverrides((prev) => ({ ...prev, nameSize: Math.max(12, ((prev.nameSize || styleNow.nameSize || 24) - 1)) }))}
+                    onClick={() => handleWordFontSizeChange(Math.max(12, ((styleNow.nameSize || 24) - 1)), 'name')}
                     className="w-7 h-7 flex items-center justify-center font-bold text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded"
                   >
                     -
@@ -1040,7 +1039,7 @@ export default function TemplateAnalyzer() {
                   </span>
                   <button
                     type="button"
-                    onClick={() => setStyleOverrides((prev) => ({ ...prev, nameSize: Math.min(40, ((prev.nameSize || styleNow.nameSize || 24) + 1)) }))}
+                    onClick={() => handleWordFontSizeChange(Math.min(40, ((styleNow.nameSize || 24) + 1)), 'name')}
                     className="w-7 h-7 flex items-center justify-center font-bold text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded"
                   >
                     +
@@ -1054,7 +1053,7 @@ export default function TemplateAnalyzer() {
                 <div className="flex items-center gap-1.5 bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 rounded-lg p-1">
                   <button
                     type="button"
-                    onClick={() => setStyleOverrides((prev) => ({ ...prev, headingSize: Math.max(8, ((prev.headingSize || styleNow.headingSize || 12.5) - 0.5)) }))}
+                    onClick={() => handleWordFontSizeChange(Math.max(8, ((styleNow.headingSize || 12.5) - 0.5)), 'headings')}
                     className="w-7 h-7 flex items-center justify-center font-bold text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded"
                   >
                     -
@@ -1064,7 +1063,7 @@ export default function TemplateAnalyzer() {
                   </span>
                   <button
                     type="button"
-                    onClick={() => setStyleOverrides((prev) => ({ ...prev, headingSize: Math.min(24, ((prev.headingSize || styleNow.headingSize || 12.5) + 0.5)) }))}
+                    onClick={() => handleWordFontSizeChange(Math.min(24, ((styleNow.headingSize || 12.5) + 0.5)), 'headings')}
                     className="w-7 h-7 flex items-center justify-center font-bold text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded"
                   >
                     +
@@ -1078,7 +1077,7 @@ export default function TemplateAnalyzer() {
                 <div className="flex items-center gap-1.5 bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 rounded-lg p-1">
                   <button
                     type="button"
-                    onClick={() => setStyleOverrides((prev) => ({ ...prev, bodySize: Math.max(6.5, ((prev.bodySize || styleNow.bodySize || 9.5) - 0.5)) }))}
+                    onClick={() => handleWordFontSizeChange(Math.max(6.5, ((styleNow.bodySize || 9.5) - 0.5)), 'body')}
                     className="w-7 h-7 flex items-center justify-center font-bold text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded"
                   >
                     -
@@ -1088,7 +1087,7 @@ export default function TemplateAnalyzer() {
                   </span>
                   <button
                     type="button"
-                    onClick={() => setStyleOverrides((prev) => ({ ...prev, bodySize: Math.min(16, ((prev.bodySize || styleNow.bodySize || 9.5) + 0.5)) }))}
+                    onClick={() => handleWordFontSizeChange(Math.min(16, ((styleNow.bodySize || 9.5) + 0.5)), 'body')}
                     className="w-7 h-7 flex items-center justify-center font-bold text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded"
                   >
                     +
@@ -1132,9 +1131,21 @@ export default function TemplateAnalyzer() {
                     <input
                       type="color"
                       value={styleNow[ckey] || (ckey === 'primaryColor' ? '#1e3a8a' : ckey === 'textColor' ? '#1f2937' : '#ffffff')}
-                      onChange={(e) =>
-                        setStyleOverrides((prev) => ({ ...prev, [ckey]: e.target.value }))
-                      }
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setStyleOverrides((prev) => ({
+                          ...prev,
+                          [ckey]: val,
+                          theme: {
+                            ...(prev.theme || {}),
+                            ...(ckey === 'primaryColor' ? { headingColor: val, borderColor: val } : {}),
+                            ...(ckey === 'secondaryColor' ? { sidebarBackground: val } : {}),
+                            ...(ckey === 'accentColor' ? { iconColor: val } : {}),
+                            ...(ckey === 'backgroundColor' ? { mainBackground: val } : {}),
+                            ...(ckey === 'textColor' ? { textColor: val } : {}),
+                          },
+                        }));
+                      }}
                       className="h-9 w-12 cursor-pointer rounded border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800"
                     />
                     <span className="text-xs text-gray-500 dark:text-zinc-400 font-mono">
