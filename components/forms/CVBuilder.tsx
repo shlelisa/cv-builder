@@ -1532,6 +1532,7 @@ export default function CVBuilder() {
               zoom={zoom}
               styleOverrides={styleOverrides}
               onPhotoClick={() => photoInputRef.current?.click()}
+              isPrintRoot={true}
             />
           </div>
         </div>
@@ -1577,6 +1578,7 @@ export default function CVBuilder() {
                       zoom={zoom < 0.6 ? zoom : 0.42}
                       styleOverrides={styleOverrides}
                       onPhotoClick={() => photoInputRef.current?.click()}
+                      isPrintRoot={true}
                     />
                   </div>
                 </div>
@@ -2219,6 +2221,7 @@ export default function CVBuilder() {
                   zoom={zoom}
                   styleOverrides={styleOverrides}
                   onPhotoClick={() => photoInputRef.current?.click()}
+                  isPrintRoot={true}
                 />
               </div>
             </div>

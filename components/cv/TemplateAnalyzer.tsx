@@ -1744,6 +1744,7 @@ export default function TemplateAnalyzer() {
                     layoutOverrides={layoutOverrides}
                     customLayout={customLayout ?? undefined}
                     zoom={cvZoom}
+                    isPrintRoot={true}
                   />
                 </div>
               ) : (

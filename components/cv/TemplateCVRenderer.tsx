@@ -25,6 +25,7 @@ export interface TemplateCVRendererProps {
   customLayout?: CustomLayout;
   zoom?: number;
   onPhotoClick?: () => void;
+  isPrintRoot?: boolean;
 }
 
 const PAGE_H_PORTRAIT = 1123;
@@ -117,6 +118,7 @@ export default function TemplateCVRenderer({
   customLayout,
   zoom = 1,
   onPhotoClick,
+  isPrintRoot = false,
 }: TemplateCVRendererProps) {
   const userTypo = styleOverrides?.typography;
   const userTheme = styleOverrides?.theme;
@@ -1220,7 +1222,7 @@ export default function TemplateCVRenderer({
         <span className="text-[11px] opacity-75 font-mono">100% Single-Page A4</span>
       </div>
 
-      <div id="cv-print-root">
+      <div id={isPrintRoot ? "cv-print-root" : undefined}>
         <div
           className="cv-scale transition-all"
           style={{

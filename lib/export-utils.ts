@@ -87,6 +87,7 @@ async function captureCvPage(elementId = "cv-print-root") {
     return await html2canvas(pageEl, {
       scale: 2,
       useCORS: true,
+      allowTaint: true,
       logging: false,
       backgroundColor: "#ffffff",
       // width/height must match the real, unscaled layout or the capture clips.

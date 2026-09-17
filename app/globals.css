@@ -58,6 +58,12 @@ body {
     display: none !important;
   }
 
+  /* Ensure parent containers containing #cv-print-root remain visible */
+  :has(#cv-print-root) {
+    display: block !important;
+    visibility: visible !important;
+  }
+
   /* Ensure the CV print root is cleanly positioned and fully visible */
   #cv-print-root {
     display: block !important;
